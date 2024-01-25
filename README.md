@@ -1,5 +1,5 @@
-# CSCI420-Project
-Database Project for CSCI 420
+# CSCI421-Project
+Database Project for CSCI 421
 
 ## Authors:
 - Chen, Celina, cc9759
