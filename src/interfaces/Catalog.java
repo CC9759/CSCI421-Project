@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public interface Catalog {
 
     /*
@@ -16,18 +18,18 @@ public interface Catalog {
      * @param pageSize size
      * @return
      */
-    public static Catalog createCatalog(string dbLocation, int pageSize);
+    public Catalog createCatalog(String dbLocation, int pageSize);
 
     /**
      * Retrieve the Catalog instance
      * @return Catalog instance
      */
-    public static Catalog getCatalog();
+    public Catalog getCatalog();
 
     /**
      * Read the Catalogue from file
      */
-    public static void readBinary();
+    public void readBinary();
 
     /**
      * Overwrite the Catalogue to file
@@ -44,7 +46,7 @@ public interface Catalog {
      * Get a TableSchema by name
      * @return TableSchema of specific name
      */
-    public ArrayList<TableSchema> getTableSchema(string tableSchemaName);
+    public ArrayList<TableSchema> getTableSchema(String tableSchemaName);
 
     /**
      * Add a table schema to the catalog
@@ -56,7 +58,7 @@ public interface Catalog {
      * Remove a table schema from the catalog
      * @param tableSchemaName Name of table to remove from the catalog
      */
-    public void removeTableSchema(string tableSchemaName);
+    public void removeTableSchema(String tableSchemaName);
 
     /**
      * Get the page size of the database

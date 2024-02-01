@@ -8,7 +8,7 @@ class AttributeType {
 
     public AttributeType(TYPE type) {
         this.type = type;
-        this.length = null;
+        this.length = -1;
     }
 
     public AttributeType(TYPE type, int length) {

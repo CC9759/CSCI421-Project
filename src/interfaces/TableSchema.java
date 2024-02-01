@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public interface TableSchema {
 
     /*
@@ -22,7 +24,7 @@ public interface TableSchema {
      * Get an AttributeSchema by name
      * @return AttributeSchema of specific name
      */
-    public ArrayList<AttributeSchema> getAttributeSchema(string attributeName);
+    public ArrayList<AttributeSchema> getAttributeSchema(String attributeName);
 
     /**
      * Add a attribute schema to the catalog
@@ -34,5 +36,5 @@ public interface TableSchema {
      * Remove a table schema from the catalog
      * @param attributeName Name of the attribute to remove
      */
-    public void removeAttributeSchema(string attributeName);
+    public void removeAttributeSchema(String attributeName);
 }
