@@ -43,10 +43,10 @@ public interface Catalog {
     public ArrayList<TableSchema> getTableSchemas();
 
     /**
-     * Get a TableSchema by name
-     * @return TableSchema of specific name
+     * Get a TableSchema by id
+     * @return TableSchema of specific id
      */
-    public ArrayList<TableSchema> getTableSchema(String tableSchemaName);
+    public ArrayList<TableSchema> getTableSchema(int Id);
 
     /**
      * Add a table schema to the catalog
@@ -56,9 +56,9 @@ public interface Catalog {
 
     /**
      * Remove a table schema from the catalog
-     * @param tableSchemaName Name of table to remove from the catalog
+     * @param tableSchemaName Id of table to remove from the catalog
      */
-    public void removeTableSchema(String tableSchemaName);
+    public void removeTableSchema(String tableSchemaId);
 
     /**
      * Get the page size of the database
