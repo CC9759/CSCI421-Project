@@ -6,7 +6,15 @@ public interface TableSchema {
         Instance Variables:
         private ArrayList<AttributeSchema>;
         private String tableName;
+        private int tableId;
      */
+
+
+    /**
+     * Get the tables id
+     * @return The tables name
+     */
+    public String getTableId();
 
     /**
      * Get the tables name
