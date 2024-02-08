@@ -1,3 +1,5 @@
+package interfaces;
+
 import java.util.ArrayList;
 
 public interface TableSchema {
@@ -14,7 +16,7 @@ public interface TableSchema {
      * Get the tables id
      * @return The tables name
      */
-    public String getTableId();
+    public int getTableId();
 
     /**
      * Get the tables name

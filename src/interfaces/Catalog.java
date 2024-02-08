@@ -1,3 +1,5 @@
+package interfaces;
+
 import java.util.ArrayList;
 
 public interface Catalog {
@@ -62,7 +64,7 @@ public interface Catalog {
 
     /**
      * Get the page size of the database
-     * @return Page size of the database
+     * @return storageManager.Page size of the database
      */
     public int getPageSize();
 }

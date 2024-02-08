@@ -1,3 +1,5 @@
+package interfaces;
+
 public interface Attribute {
     
     public AttributeType getAttributeType();

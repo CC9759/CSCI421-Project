@@ -1,3 +1,5 @@
+package interfaces;
+
 class AttributeType {
     private enum TYPE {
         INT, DOUBLE, BOOLEAN, CHAR, VARCHAR
