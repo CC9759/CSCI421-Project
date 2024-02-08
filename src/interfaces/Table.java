@@ -22,12 +22,17 @@ public class Table implements TableSchema {
         }
 
         @Override
-        public ArrayList<AttributeSchema> getAttributeSchemas() {
+        public ArrayList<AttributeSchema> getAttributeSchema() {
                 return tableAttributes;
         }
 
         @Override
         public AttributeSchema getAttributeSchema(String attributeName) {
+                for (int i = 0; i < this.tableAttributes.size(); i++) {
+                        if (tableAttributes.get(i).getAttributeName() == attributeName)
+                                return tableAttributes.get(i);
+
+                }
                 return null;
         }
 

@@ -10,25 +10,25 @@ public interface TableSchema {
      */
 
     /**
-     * Get the tables id
+     * Get the table id
      * 
-     * @return The tables name
+     * @return The table id
      */
     public int getTableId();
 
     /**
-     * Get the tables name
+     * Get the table name
      * 
-     * @return The tables name
+     * @return The table name
      */
     public String getTableName();
 
     /**
-     * Get a list of the current AttributeSchemas
+     * Get a list of the current AttributeSchema
      * 
-     * @return list of all current AttributeSchemas
+     * @return list of all current AttributeSchema
      */
-    public ArrayList<AttributeSchema> getAttributeSchemas();
+    public ArrayList<AttributeSchema> getAttributeSchema();
 
     /**
      * Get an AttributeSchema by name
