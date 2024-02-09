@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import interfaces.TableSchema;
 
-
 public class Catalog {
 
     /*
@@ -14,9 +13,12 @@ public class Catalog {
      * On Database creation, it will be created, the rest of the time it will be
      * read from file
      */
-    private Catalog catalogue;
+    private static Catalog catalogue = null;
     private ArrayList<TableSchema> tables;
     private int pageSize;
+
+    private Catalog(String location, int size) {
+    }
 
     /**
      * Create a new Catalog instance
@@ -25,8 +27,8 @@ public class Catalog {
      * @param pageSize   size
      * @return
      */
-    public Catalog(String dbLocation, int pageSize) {
-
+    public static synchronized Catalog createCatalog(String dbLocation, int pageSize) {
+        return new Catalog(dbLocation, pageSize);
     }
 
     /**
@@ -35,14 +37,13 @@ public class Catalog {
      * @return Catalog instance
      */
     public Catalog getCatalog() {
-        return null;
+        return catalogue;
     }
 
     /**
      * Read the Catalogue from file
      */
     public void readBinary() {
-
     }
 
     /**
@@ -58,7 +59,7 @@ public class Catalog {
      * @return list of all current TableSchemas
      */
     public ArrayList<TableSchema> getTableSchema() {
-        return null;
+        return this.tables;
     }
 
     /**
@@ -66,7 +67,12 @@ public class Catalog {
      * 
      * @return TableSchema of specific id
      */
-    public ArrayList<TableSchema> getTableSchema(int Id) {
+    public TableSchema getTableSchema(int Id) {
+        for (TableSchema tableSchema : this.tables) {
+            if (tableSchema.getTableId() == Id) {
+                return tableSchema;
+            }
+        }
         return null;
     }
 
@@ -76,7 +82,7 @@ public class Catalog {
      * @param tableSchema TableSchema to add to the catalog
      */
     public void addTableSchema(TableSchema tableSchema) {
-
+        this.tables.add(tableSchema);
     }
 
     /**
@@ -84,8 +90,12 @@ public class Catalog {
      * 
      * @param tableSchemaName Id of table to remove from the catalog
      */
-    public void removeTableSchema(String tableSchemaId) {
-
+    public void removeTableSchema(int tableSchemaId) {
+        for (int i = 0; i < this.tables.size(); i++) {
+            if (this.tables.get(i).getTableId() == tableSchemaId) {
+                this.tables.remove(i);
+            }
+        }
     }
 
     /**
@@ -94,6 +104,6 @@ public class Catalog {
      * @return storageManager.Page size of the database
      */
     public int getPageSize() {
-        return 0;
+        return this.pageSize;
     }
 }
