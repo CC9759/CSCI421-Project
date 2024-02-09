@@ -1,6 +1,8 @@
 package storageManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import interfaces.Record;
 
 public class Page {
@@ -19,7 +21,7 @@ public class Page {
         this.records = new ArrayList<Record>();
     }
 
-    public int getPageId(){
+    public int getPageId() {
         return this.pageId;
     }
 
@@ -57,4 +59,32 @@ public class Page {
         records.add(record);
         this.touch();
     }
+
+    /* 
+     * not sure if this is where it goes
+     * func to read in page
+     * assumes record header is 
+     * 1 byte for # of entires
+     * 2 byte for location and size -> 2 * N size
+     * k byte for each i location
+     */ 
+    public ArrayList<Record> readPage(byte[] bytes) {
+        int num_of_entries = bytes[0];
+        ArrayList<Record> recs = new ArrayList<Record>();
+
+        for(int i = 1; i < num_of_entries*2; i+=2) {
+            int size = bytes[i];
+            int location = bytes[i+1];
+
+            // now has bytes of record
+            byte[] record_bytes = Arrays.copyOfRange(bytes, location, size);
+            
+            // call function to read record
+
+            // add record to list
+        }
+        return recs;
+    }
+
+
 }

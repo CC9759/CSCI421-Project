@@ -37,6 +37,19 @@ public class Record {
       * @return a list of all attribute schemas in the record
       */
      public ArrayList<AttributeSchema> getAttributes(){
-        return new ArrayList<>(attributes.values());
+         return new ArrayList<>(attributes.values());
      }
+
+
+     /* 
+     * will need to look a schema for record attributes
+     * to understand how many to read in and what order
+     * !! read in location/size of N attrbiutes listed in the schema !!
+     * NOTE: when hit a 00000000 byte, assume null bitmap
+     */ 
+     public void readRecord(byte[] bytes) {
+   
+        
+         return;      
+      }
 }
