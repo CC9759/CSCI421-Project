@@ -25,7 +25,7 @@ public class Record {
      public int getSize(){
         int totalSize = 0;
         for(AttributeSchema attribute : attributes.values()){
-            totalSize += Attribute.getSize();
+            totalSize += attribute.getSize();
         }
         return totalSize;
      }
