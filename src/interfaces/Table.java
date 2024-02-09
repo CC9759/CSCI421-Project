@@ -6,10 +6,13 @@ public class Table implements TableSchema {
         private String tableName;
         private int tableId;
 
+        private int numPages;
+
         public Table(int id, String name, ArrayList<AttributeSchema> attributes) {
                 this.tableId = id;
                 this.tableName = name;
                 this.tableAttributes = attributes;
+                this.numPages = 0;
         }
 
         @Override
@@ -56,5 +59,12 @@ public class Table implements TableSchema {
                         return;
                 }
                 this.tableAttributes.remove(removeIndex);
+        }
+
+        public int getNumPages() {
+                return this.numPages;
+        }
+        public void incrementNumPages() {
+                this.numPages++;
         }
 }
