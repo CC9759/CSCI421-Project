@@ -2,54 +2,69 @@ package interfaces;
 
 import java.util.ArrayList;
 
-public interface TableSchema {
+public class TableSchema {
 
     /*
      * Instance Variables:
-     * private ArrayList<AttributeSchema>;
-     * private String tableName;
-     * private int tableId;
      */
+    private ArrayList<AttributeSchema> tableAttributes;
+    private String tableName;
+    private int tableId;
 
-    /**
-     * Get the table id
-     * 
-     * @return The table id
-     */
-    public int getTableId();
+    private int numPages;
 
-    /**
-     * Get the table name
-     * 
-     * @return The table name
-     */
-    public String getTableName();
+    public TableSchema(int id, String name, ArrayList<AttributeSchema> attributes) {
+        this.tableId = id;
+        this.tableName = name;
+        this.tableAttributes = attributes;
+        this.numPages = 0;
+    }
 
-    /**
-     * Get a list of the current AttributeSchema
-     * 
-     * @return list of all current AttributeSchema
-     */
-    public ArrayList<AttributeSchema> getAttributeSchema();
+    public int getTableId() {
+        return tableId;
+    }
 
-    /**
-     * Get an AttributeSchema by name
-     * 
-     * @return AttributeSchema of specific name
-     */
-    public AttributeSchema getAttributeSchema(String attributeName);
+    public String getTableName() {
+        return tableName;
+    }
 
-    /**
-     * Add a attribute schema to the catalog
-     * 
-     * @param attributeSchema AttributeSchema to add to the table
-     */
-    public void addAttributeSchema(AttributeSchema attributeSchema);
+    public ArrayList<AttributeSchema> getAttributeSchema() {
+        return tableAttributes;
+    }
 
-    /**
-     * Remove a table schema from the catalog
-     * 
-     * @param attributeName Name of the attribute to remove
-     */
-    public void removeAttributeSchema(String attributeName);
+    public AttributeSchema getAttributeSchema(String attributeName) {
+        for (int i = 0; i < this.tableAttributes.size(); i++) {
+            if (tableAttributes.get(i).getAttributeName() == attributeName)
+                return tableAttributes.get(i);
+
+        }
+        return null;
+    }
+
+    public void addAttributeSchema(AttributeSchema attributeSchema) {
+        this.tableAttributes.add(attributeSchema);
+    }
+
+    public void removeAttributeSchema(String attributeName) {
+        // removes a attribute if it belongs to the table. Otherwise, does nothing.
+        int removeIndex = -1;
+        for (int i = 0; i < this.tableAttributes.size(); i++) {
+            if (tableAttributes.get(i).getAttributeName() == attributeName) {
+                removeIndex = i;
+                break;
+            }
+        }
+        if (removeIndex == -1) {
+            return;
+        }
+        this.tableAttributes.remove(removeIndex);
+    }
+
+    public int getNumPages() {
+        return this.numPages;
+    }
+
+    public void incrementNumPages() {
+        this.numPages++;
+    }
 }
