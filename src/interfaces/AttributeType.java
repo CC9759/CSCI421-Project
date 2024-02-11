@@ -1,7 +1,7 @@
 package interfaces;
 
-class AttributeType {
-    private enum TYPE {
+public class AttributeType {
+    public enum TYPE {
         INT, DOUBLE, BOOLEAN, CHAR, VARCHAR
     }
 

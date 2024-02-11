@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Map;
 import interfaces.AttributeSchema;
 
-
 /**
  * Record Class, represents a single tuple/entry
  */
-public class Record {
+public class Record implements Comparable<Record> {
      private Map<String, AttributeSchema> attributes;
 
      /**
@@ -19,6 +18,15 @@ public class Record {
      public AttributeSchema getAttribute(String attributeName){
         return attributes.get(attributeName);
      }
+
+    public AttributeSchema getPrimaryKey(){
+         for (AttributeSchema attributeSchema: attributes.values()) {
+             if (attributeSchema.isKey()) {
+                 return attributeSchema;
+             }
+         }
+        return null;
+    }
 
      /**
       * grabs the total size of the attribute
@@ -52,4 +60,14 @@ public class Record {
         
          return;      
       }
+
+      // This does not check for whether the records belong to the same table or not
+    @Override
+    public int compareTo(Record o) {
+         interfaces.AttributeType.TYPE type = this.getPrimaryKey().getAttributeType().type; // java
+         if (type == interfaces.AttributeType.TYPE.INT) {
+             //return Integer.compare(this.getPrimaryKey()) im going to bed
+         }
+        return 0;
+    }
 }

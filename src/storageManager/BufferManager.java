@@ -1,7 +1,6 @@
 package storageManager;
 
 import java.util.ArrayList;
-import interfaces.Record;
 public class BufferManager {
     
     private ArrayList<Page> buffer;
@@ -13,40 +12,26 @@ public class BufferManager {
         this.buffer = new ArrayList<Page>(bufferSize);
     }
 
-    public Page getPage(int tableNumber, int pageNumber) {
-        for (Page page: this.buffer) {
-            if (page.getPageTableId() == tableNumber && page.getPageId() == pageNumber) {
+    public Page getPage(Table table, int pageNumber) {
+        for (Page page: buffer) {
+            if (page.getPageTableId() == table.schema.getTableId() && page.getPageId() == pageNumber) {
                 return page;
             }
         }
-        return null;
+        // If not in the buffer
+        Page page = table.readPage(pageNumber);
+        addToBuffer(page);
+        return page;
     }
 
-    public void insertRecord(int tableId, Record record){
-        Page insertPage = this.getPageToInsert(tableId, record);
-        if (insertPage == null) {
-            // int newPageId = Catalog.getTableByid(tableId).getNumPages() + 1
-            // Catalog.getTableByid(tableId).incrementNumPages()
-            int newPageId = 0; // Get 1 + number of current pages (to be implemented from table)
-            insertPage = new Page(tableId, 0, newPageId);
-            this.addToBuffer(insertPage);
-        }
+    public void insertRecord(Page insertPage, Record record, int index){
         try {
-            insertPage.insertRecord(record);
+            insertPage.insertRecord(record, index);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
-
-    public Page getPageToInsert(int tableId, Record record) {
-        for (Page page : this.buffer) {
-            if (page.getPageTableId() == tableId && page.canInsertRecord(record)) {
-                return page;
-            }
-        }
-        return null;
-    }
 
     public void addToBuffer(Page page) {
         if (buffer.size() == this.bufferSize) {
@@ -54,8 +39,8 @@ public class BufferManager {
             Page removedPage = buffer.remove(leastUsedPageIndex);
             removedPage.writeToMemory();
         }
-        this.buffer.add(page);
         page.touch();
+        this.buffer.add(page);
     }
 
     public int getLRUPageIndex() {
@@ -73,7 +58,9 @@ public class BufferManager {
 
     public void flush(){
         for (Page page: this.buffer) {
-            page.writeToMemory();
+            if (page.hasBeenUpdated()) {
+                page.writeToMemory();
+            }
         }
         this.buffer = new ArrayList<Page>();
     }

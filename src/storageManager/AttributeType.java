@@ -1,6 +1,6 @@
 package storageManager;
 class AttributeType {
-    private enum TYPE {
+    public enum TYPE {
         INT, DOUBLE, BOOLEAN, CHAR, VARCHAR
     }
 

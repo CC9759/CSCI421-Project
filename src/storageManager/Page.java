@@ -1,9 +1,10 @@
 package storageManager;
 
+import Exceptions.PageOverfullException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import interfaces.Record;
 
 public class Page {
     private int tableId;
@@ -11,7 +12,10 @@ public class Page {
     private ArrayList<Record> records;
     private int freeSpaceAmount;
     private int pageSize;
-    private long updatedAt; // Used by BufferManager
+    private long updatedAt; // Used by BufferManager to sort LRU
+
+    // indicate to the buffer manager whether this page was modified and needs to be written to memory
+    private boolean wasUpdated;
 
     public Page(int tableId, int pageId, int pageSize) {
         this.tableId = tableId;
@@ -52,12 +56,50 @@ public class Page {
         return this.freeSpaceAmount > record.getSize() + 4;
     }
 
-    public void insertRecord(Record record) throws Exception {
+    public void insertRecord(Record record, int index) throws PageOverfullException {
         if (!canInsertRecord(record)) {
-            throw new Exception("no");
+            throw new PageOverfullException(pageId);
         }
-        records.add(record);
+        records.add(index, record);
+        this.updateFreeSpace();
+    }
+
+    public Page splitPage() throws PageOverfullException {
+        int middle = records.size() / 2;
+        // Slice the second half of the records in the page
+        ArrayList<Record> newPageRecords = new ArrayList<>(records.subList(middle, records.size()));
+        records.subList(middle, records.size()).clear();
+        this.updateFreeSpace();
+
+        // Insert the second half of the records into the new page
+        Page newPage = new Page(this.tableId, this.pageId + 1, this.pageSize);
+        for (Record record : newPageRecords) {
+            newPage.insertRecord(record, newPage.records.size());
+        }
+        newPage.updateFreeSpace();
+
+        return newPage;
+    }
+
+    private void updateFreeSpace() {
+        int usedSpace = 0;
+        for (Record record : records) {
+            usedSpace += record.getSize();
+        }
+        usedSpace += records.size() * 4; // 4 byte pointer for each record
+        this.wasUpdated = true;
         this.touch();
+        this.freeSpaceAmount = this.pageSize - usedSpace;
+    }
+
+    public void incrementPageNumber() {
+        this.pageId++;
+        this.wasUpdated = true;
+        this.touch();
+    }
+
+    public boolean hasBeenUpdated() {
+        return this.wasUpdated;
     }
 
     /* 

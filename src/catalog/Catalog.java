@@ -2,7 +2,6 @@ package catalog;
 
 import java.util.ArrayList;
 
-import interfaces.TableSchema;
 
 public class Catalog {
 
@@ -36,7 +35,7 @@ public class Catalog {
      * 
      * @return Catalog instance
      */
-    public Catalog getCatalog() {
+    public static Catalog getCatalog() {
         return catalogue;
     }
 
@@ -88,7 +87,7 @@ public class Catalog {
     /**
      * Remove a table schema from the catalog
      * 
-     * @param tableSchemaName Id of table to remove from the catalog
+     * @param tableSchemaId Id of table to remove from the catalog
      */
     public void removeTableSchema(int tableSchemaId) {
         for (int i = 0; i < this.tables.size(); i++) {
