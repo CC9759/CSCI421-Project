@@ -37,7 +37,7 @@ public class StorageManager {
             Page page = getPage(tableId, i);
             ArrayList<Record> pageRecords = page.getRecords();
             for (int j = 0; j < pageRecords.size(); j++) {
-                if (pageRecords.get(i).compareTo(record) > 0) {
+                if (pageRecords.get(j).compareTo(record) > 0) {
                     if (page.canInsertRecord(record)) {
                         bufferManager.insertRecord(page, record, j);
                     } else {
@@ -52,7 +52,8 @@ public class StorageManager {
         }
     }
 
-    public Record getRecordByPrimaryKey(Object primaryKey){
+    public Record getRecordByPrimaryKey(int tableId, Object primaryKey){
+
         return null;
     }
     public ArrayList<Record> getAllRecords(int tableNumber){
