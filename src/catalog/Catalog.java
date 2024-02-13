@@ -133,4 +133,11 @@ public class Catalog {
     public int getPageSize() {
         return this.pageSize;
     }
+
+    /**
+     * 
+     */
+    public int getTableSchemaLength() {
+        return tables.size();
+    }
 }

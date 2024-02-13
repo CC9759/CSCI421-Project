@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import Exceptions.InvalidTypeException;
 import catalog.Catalog;
 import catalog.TableSchema;
 import interfaces.AttributeSchema;
@@ -17,15 +18,18 @@ public class DDLParser {
          * 
          * @param tableName the name of the Table to be added
          * @param arguments the list of Table attributes to add
+         * @throws InvalidTypeException
          */
-        public void createTable(Catalog catalog, String tableName, ArrayList<String> arguments) {
+        public void createTable(Catalog catalog, String tableName, ArrayList<String> arguments)
+                        throws InvalidTypeException {
                 if (arguments == null) {
-                        catalog.addTableSchema(new TableSchema(0, tableName, null));
+                        catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, null));
                         return;
                 }
                 ArrayList<AttributeSchema> attributesSchemas = new ArrayList<AttributeSchema>();
+                arguments.replaceAll(e -> e.toUpperCase()); // make all uppercase for simplicity
                 for (String arg : arguments) {
-                        // split argument {name} {type} {keyType} {Key/!Key} {Unique}
+                        // split argument {name} {type} {keyType} {Key/!Key} {Unique} {NOT NULL}
                         String[] attributes = arg.split(" ");
                         String name = attributes[0];
                         AttributeType type = new AttributeType(attributes[1]);
@@ -37,8 +41,7 @@ public class DDLParser {
                         var schema = new AttributeSchema(name, type, key, unique, nullable);
                         attributesSchemas.add(schema);
                 }
-                catalog.addTableSchema(new TableSchema(0, tableName, attributesSchemas));
-                // TODO: shorten after testing functionality
+                catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributesSchemas));
         }
 
         /**

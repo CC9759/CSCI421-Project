@@ -1,5 +1,7 @@
 package interfaces;
 
+import Exceptions.InvalidTypeException;
+
 public class AttributeType {
     public enum TYPE {
         INT, DOUBLE, BOOLEAN, CHAR, VARCHAR
@@ -20,20 +22,26 @@ public class AttributeType {
 
     /**
      * Creates a AttributeType class based on a string.
+     * 
      * @param typeString the string can be in the format TYPE or TYPE(length).
+     * @throws InvalidTypeException if the case is not in enum TYPE.
      */
-    public AttributeType(String typeString) {
+    public AttributeType(String typeString) throws InvalidTypeException {
+        // make all uppercase for simplicity
+        typeString = typeString.toUpperCase();
+        // check if specified length
         String strLength = "";
         if (typeString.contains("(")) {
             strLength = typeString.substring(typeString.indexOf("(") + 1, typeString.indexOf(")"));
             typeString = typeString.substring(0, typeString.indexOf("("));
         }
+        // create and assign TYPE to this.type
         if (strLength == "") {
             this.length = -1;
         } else {
             this.length = Integer.parseInt(strLength);
         }
-        switch (strLength) {
+        switch (typeString) {
             case "INT":
                 this.type = TYPE.INT;
                 break;
@@ -50,8 +58,8 @@ public class AttributeType {
                 this.type = TYPE.VARCHAR;
                 break;
             default:
-                // throw exception?
-                break;
+                // throw exception
+                throw new InvalidTypeException(typeString);
         }
     }
 }
