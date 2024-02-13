@@ -1,7 +1,11 @@
 package catalog;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-
 
 public class Catalog {
 
@@ -17,6 +21,8 @@ public class Catalog {
     private int pageSize;
 
     private Catalog(String location, int size) {
+        this.pageSize = size;
+        // dbLocation is the file location?
     }
 
     /**
@@ -27,7 +33,9 @@ public class Catalog {
      * @return
      */
     public static synchronized Catalog createCatalog(String dbLocation, int pageSize) {
-        return new Catalog(dbLocation, pageSize);
+        if (catalogue == null)
+            catalogue = new Catalog(dbLocation, pageSize);
+        return catalogue;
     }
 
     /**
@@ -41,15 +49,35 @@ public class Catalog {
 
     /**
      * Read the Catalogue from file
+     * 
+     * @param fileLocation the file from where the binary Catalog will be read
      */
-    public void readBinary() {
+    public void readBinary(String fileLocation) {
+        // fileLocation Ex. "catalog.txt"
+        try (FileInputStream fis = new FileInputStream(fileLocation)) {
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Catalog catalog = (Catalog) ois.readObject();
+        } catch (ClassNotFoundException | IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
      * Overwrite the Catalogue to file
+     *
+     * @param fileLocation the file where the binary Catalog will be saved
      */
-    public void writeBinary() {
-
+    public void writeBinary(String fileLocation) {
+        // fileLocation Ex. "catalog.txt"
+        try (FileOutputStream fos = new FileOutputStream(fileLocation)) {
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(catalogue);
+            oos.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
