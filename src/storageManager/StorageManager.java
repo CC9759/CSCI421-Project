@@ -52,7 +52,7 @@ public class StorageManager {
         }
     }
 
-    public Record getRecordByPrimaryKey(int tableId, Object primaryKey){
+    public Record getRecordByPrimaryKey(int tableId, Comparable primaryKey){
 
         return null;
     }

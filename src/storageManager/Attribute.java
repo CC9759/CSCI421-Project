@@ -1,37 +1,29 @@
-// Save for later if needed
+package storageManager;
 
-// package storageManager;
+import interfaces.AttributeSchema;
 
-// public class Attribute {
+public class Attribute extends AttributeSchema implements Comparable<Attribute> {
 
-//     private AttributeType type;
-//     private Object data;
-//     private String name;
+    private Object data;
 
-//     public Attribute(AttributeType type, Object data, String name) {
-//         this.type = type;
-//         this.data = data;
-//         this.name = name;
-//     }
+    public Attribute(String attributeName, interfaces.AttributeType type, boolean isKey, boolean isUnique, boolean isNull, Object data) {
+        super(attributeName, type, isKey, isUnique, isNull);
+        this.data = data;
+    }
 
-//     public AttributeType getAttributeType() {
-//         return this.type;
-//     }
 
-//     public String getAttributeName() {
-//         return this.name;
-//     }
+    public Object getData() {
+        return this.data;
+    }
 
-//     public Object getData() {
-//         return this.data;
-//     }
-
-//     public int getSize() {
-//         if (this.type.type == AttributeType.TYPE.BOOLEAN) {
-//             return 1;
-//         } else if (this.type.type == AttributeType.TYPE.CHAR ||
-//                     this.type.type == AttributeType.TYPE.VARCHAR) {
-//             return this.type.type.length;
-//         }
-//     }
-// }
+    @Override
+    public int compareTo(Attribute o) {
+        if (this.data instanceof Integer || this.data instanceof Double) {
+            return Double.compare((Double) this.data, (Double) o.data);
+        } else if (this.data instanceof Character || this.data instanceof String) {
+            return ((String) this.data).compareTo((String) o.data);
+        } else {
+            return ((Boolean) this.data).compareTo((Boolean) o.data);
+        }
+    }
+}

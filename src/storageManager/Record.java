@@ -8,7 +8,7 @@ import interfaces.AttributeSchema;
  * Record Class, represents a single tuple/entry
  */
 public class Record implements Comparable<Record> {
-     private Map<String, AttributeSchema> attributes;
+     private Map<String, Attribute> attributes;
 
      /**
       * gets a specific attribute object based on the given name
@@ -19,10 +19,10 @@ public class Record implements Comparable<Record> {
         return attributes.get(attributeName);
      }
 
-    public AttributeSchema getPrimaryKey(){
-         for (AttributeSchema attributeSchema: attributes.values()) {
-             if (attributeSchema.isKey()) {
-                 return attributeSchema;
+    public Attribute getPrimaryKey(){
+         for (Attribute attribute: attributes.values()) {
+             if (attribute.isKey()) {
+                 return attribute;
              }
          }
         return null;
@@ -34,7 +34,7 @@ public class Record implements Comparable<Record> {
       */
      public int getSize(){
         int totalSize = 0;
-        for(AttributeSchema attribute : attributes.values()){
+        for(Attribute attribute : attributes.values()){
             totalSize += attribute.getSize();
         }
         return totalSize;
@@ -44,7 +44,7 @@ public class Record implements Comparable<Record> {
       * gets and returns a list of all attribute schemas
       * @return a list of all attribute schemas in the record
       */
-     public ArrayList<AttributeSchema> getAttributes(){
+     public ArrayList<Attribute> getAttributes(){
          return new ArrayList<>(attributes.values());
      }
 
@@ -64,10 +64,6 @@ public class Record implements Comparable<Record> {
       // This does not check for whether the records belong to the same table or not
     @Override
     public int compareTo(Record o) {
-         interfaces.AttributeType.TYPE type = this.getPrimaryKey().getAttributeType().type; // java
-         if (type == interfaces.AttributeType.TYPE.INT) {
-             //return Integer.compare(this.getPrimaryKey()) im going to bed
-         }
-        return 0;
+         return this.getPrimaryKey().compareTo(o.getPrimaryKey());
     }
 }
