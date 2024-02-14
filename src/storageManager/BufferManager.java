@@ -68,7 +68,7 @@ public class BufferManager {
     public Record deleteRecord(Table table, Attribute primaryKey) {
         for (int i = 0; i < table.getNumPages(); i++) {
             Page page = this.getPage(table, i);
-            int recordIndex = searchRecord(page, primaryKey);
+            int recordIndex = page.getRecordByKey(primaryKey);
             if (recordIndex != -1) {
                 page.deleteRecord(recordIndex);
             }
@@ -79,7 +79,7 @@ public class BufferManager {
     public Record updateRecord(Table table, Record record) {
         for (int i = 0; i < table.getNumPages(); i++) {
             Page page = this.getPage(table, i);
-            int recordIndex = searchRecord(page, record.getPrimaryKey());
+            int recordIndex = page.getRecordByKey(record.getPrimaryKey());
             if (recordIndex != -1) {
                 page.updateRecord(recordIndex, record);
             }
@@ -90,7 +90,7 @@ public class BufferManager {
     public Record getRecordByPrimaryKey(Table table, Attribute primaryKey) {
         for (int i = 0; i < table.getNumPages(); i++) {
             Page page = this.getPage(table, i);
-            int recordIndex = searchRecord(page, primaryKey);
+            int recordIndex = page.getRecordByKey(primaryKey);
             if (recordIndex != -1) {
                 return page.getRecords().get(recordIndex);
             }
@@ -108,29 +108,4 @@ public class BufferManager {
     // public storageManager.Page splitPage(storageManager.Page page);
     // public storageManager.Page createPage(int tableId, Record[] records);
 
-    public int searchRecord(Page page, Attribute primaryKey) {
-        ArrayList<Record> records = page.getRecords();
-        int numRecordsInPage = records.size();
-
-        if (numRecordsInPage == 0) {
-            return -1;
-        }
-        // Check if the primary key is on this page
-        if (primaryKey.compareTo(records.get(numRecordsInPage - 1).getPrimaryKey()) <= 0) {
-            int left = 0;
-            int right = numRecordsInPage - 1;
-            while (left <= right) {
-                int middle = left + (right - left) / 2;
-                Attribute middleRecordKey = records.get(middle).getPrimaryKey();
-                if (primaryKey.compareTo(middleRecordKey) == 0) {
-                    return middle; // Record found
-                } else if (primaryKey.compareTo(middleRecordKey) < 0) {
-                    right = middle - 1;
-                } else {
-                    left = middle + 1;
-                }
-            }
-        }
-        return -1;
-    }
 }
