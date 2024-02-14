@@ -52,8 +52,31 @@ public class StorageManager {
         }
     }
 
-    public Record getRecordByPrimaryKey(int tableId, Comparable primaryKey){
-
+    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
+        Table table = ensureTable(tableId);
+        for (int i = 0; i < table.getNumPages(); i++) {
+            Page page = getPage(tableId, i);
+            ArrayList<Record> records = page.getRecords();
+            int numRecordsInPage = records.size();
+            for (int j = 0; j < numRecordsInPage; j++) {
+                // if record is less than the last record on this page, it's on this page
+                if (primaryKey.compareTo(records.get(numRecordsInPage - 1).getPrimaryKey()) <= 0) {
+                    int left = 0;
+                    int right = numRecordsInPage - 1;
+                    while (left <= right) {
+                        int middle = (left + (right - 1)) / 2;
+                        Attribute middleRecordKey = records.get(middle).getPrimaryKey();
+                        if (primaryKey.compareTo(middleRecordKey) == 0) {
+                            return records.get(middle);
+                        } else if (primaryKey.compareTo(middleRecordKey) < 0) {
+                            left = middle + 1;
+                        } else {
+                            right = middle - 1;
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
     public ArrayList<Record> getAllRecords(int tableNumber){
@@ -61,7 +84,9 @@ public class StorageManager {
     }
 
     public void deleteRecord(Object PrimaryKey){}
-    public void updateRecord(Object primaryKey, Record record){}
+    public void updateRecord(Record record){
+        
+    }
 
     /**
      * Get table schema data
