@@ -31,7 +31,7 @@ public class Table {
 
     // will return the given page at the given file
     public Page readPage(int pageNumber) {
-        Page newPage = new Page(this.schema.getTableId(), pageNumber, 123); //defined by user
+        Page newPage = new Page(this.schema.getTableId(), pageNumber, Catalog.getCatalog().getPageSize());
         newPage.readPage();
         return null;
     }
