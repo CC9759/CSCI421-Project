@@ -14,8 +14,8 @@ public class StorageManager {
     private final BufferManager bufferManager;
     private HashMap<Integer, Table> idToTable;
 
-    public StorageManager() {
-        this.bufferManager = new BufferManager(128); // this will be defined by user later
+    public StorageManager(int bufferSize) {
+        this.bufferManager = new BufferManager(bufferSize);
         this.readTableData();
     }
 
