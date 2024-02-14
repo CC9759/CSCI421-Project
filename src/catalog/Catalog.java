@@ -126,6 +126,19 @@ public class Catalog {
     }
 
     /**
+     * Remove a table schema from the catalog
+     * 
+     * @param tableSchemaId Name of table to remove from the catalog
+     */
+    public void removeTableSchema(String tableSchemaName) {
+        for (int i = 0; i < this.tables.size(); i++) {
+            if (this.tables.get(i).getTableName() == tableSchemaName) {
+                this.tables.remove(i);
+            }
+        }
+    }
+
+    /**
      * Get the page size of the database
      * 
      * @return storageManager.Page size of the database

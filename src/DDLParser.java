@@ -1,6 +1,9 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.naming.InsufficientResourcesException;
+
+import Exceptions.InsufficientArgumentException;
 import Exceptions.InvalidTypeException;
 import catalog.Catalog;
 import catalog.TableSchema;
@@ -51,6 +54,8 @@ public class DDLParser {
          * @param tableName the name of the Table to drop
          */
         public void dropTable(Catalog catalog, String tableName) {
+                catalog.removeTableSchema(tableName);
+                // NOTE: should update Catalog file for changes to save
         }
 
         /**
@@ -60,7 +65,23 @@ public class DDLParser {
          * @param tableName the name of the Table to alter
          * @param arguments the list of Table attributes to add/remove
          */
-        public void alterTable(Catalog catalog, String tableName, ArrayList<String> arguments) {
-
+        public void alterTable(Catalog catalog, String tableName, ArrayList<String> arguments)
+                        throws InsufficientArgumentException {
+                String keyWord = arguments.get(0).toUpperCase();
+                switch (keyWord) {
+                        case "ADD":
+                                if (arguments.size() != 3)
+                                        throw new InsufficientArgumentException(keyWord);
+                                // TODO
+                                break;
+                        case "DROP":
+                                // TODO
+                                break;
+                        case "RENAME":
+                                // TODO
+                                break;
+                        default:
+                                break;
+                }
         }
 }
