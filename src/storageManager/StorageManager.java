@@ -54,38 +54,26 @@ public class StorageManager {
 
     public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
         Table table = ensureTable(tableId);
-        for (int i = 0; i < table.getNumPages(); i++) {
-            Page page = getPage(tableId, i);
-            ArrayList<Record> records = page.getRecords();
-            int numRecordsInPage = records.size();
-            for (int j = 0; j < numRecordsInPage; j++) {
-                // if record is less than the last record on this page, it's on this page
-                if (primaryKey.compareTo(records.get(numRecordsInPage - 1).getPrimaryKey()) <= 0) {
-                    int left = 0;
-                    int right = numRecordsInPage - 1;
-                    while (left <= right) {
-                        int middle = (left + (right - 1)) / 2;
-                        Attribute middleRecordKey = records.get(middle).getPrimaryKey();
-                        if (primaryKey.compareTo(middleRecordKey) == 0) {
-                            return records.get(middle);
-                        } else if (primaryKey.compareTo(middleRecordKey) < 0) {
-                            left = middle + 1;
-                        } else {
-                            right = middle - 1;
-                        }
-                    }
-                }
-            }
-        }
-        return null;
+        return this.bufferManager.getRecordByPrimaryKey(table, primaryKey);
+
     }
-    public ArrayList<Record> getAllRecords(int tableNumber){
-        return null;
+    public ArrayList<Record> getAllRecords(int tableNumber) throws NoTableException {
+        Table table = ensureTable(tableNumber);
+        ArrayList<Record> result = new ArrayList<>();
+        for (int i = 0; i < table.getNumPages(); i++) {
+            result.addAll(bufferManager.getPage(table, i).getRecords());
+        }
+
+        return result;
     }
 
-    public void deleteRecord(Object PrimaryKey){}
-    public void updateRecord(Record record){
-        
+    public Record deleteRecord(int tableId, Attribute primaryKey) throws NoTableException {
+        Table table = ensureTable(tableId);
+        return this.bufferManager.deleteRecord(table, primaryKey);
+    }
+    public Record updateRecord(int tableId, Record record) throws NoTableException {
+        Table table = ensureTable(tableId);
+        return this.bufferManager.updateRecord(table, record);
     }
 
     /**

@@ -1,5 +1,7 @@
 package interfaces;
 
+import Exceptions.NoTableException;
+
 import java.util.ArrayList;
 
 public interface StorageManager {
@@ -8,6 +10,6 @@ public interface StorageManager {
     public Page getPage(int tableNumber, int pageNumber);
     public ArrayList<Record> getAllRecords(int tableNumber);
     public void insertRecord(int tableId, Record record);
-    public void deleteRecord(Object PrimaryKey);
-    public void updateRecord(Record record);
+    public Record deleteRecord(int tableId, Attribute primaryKey);
+    public Record updateRecord(int tableId, Record record);
 }

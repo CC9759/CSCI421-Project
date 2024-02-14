@@ -102,6 +102,19 @@ public class Page {
         return this.wasUpdated;
     }
 
+    public Record deleteRecord(int index) {
+        Record result = this.records.remove(index);
+        this.updateFreeSpace();
+        return result;
+    }
+
+    public Record updateRecord(int index, Record record) {
+        Record result = this.records.set(index, record);
+        this.updateFreeSpace();
+        return result;
+    }
+
+
     /* 
      * not sure if this is where it goes
      * func to read in page
