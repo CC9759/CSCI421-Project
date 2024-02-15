@@ -26,6 +26,7 @@ public class Catalog {
         this.location = location;
         this.pageSize = size;
         this.bufferSize = bufferSize;
+        this.tables = new ArrayList<TableSchema>();
         // dbLocation is the file location?
     }
 

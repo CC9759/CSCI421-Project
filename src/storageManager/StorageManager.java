@@ -24,7 +24,7 @@ public class StorageManager {
     }
 
     public static void InitStorageManager(int bufferSize) {
-        if (storageManager != null) {
+        if (storageManager == null) {
             storageManager = new StorageManager(bufferSize);
         }
     }
