@@ -104,6 +104,20 @@ public class Catalog {
     }
 
     /**
+     * Get a TableSchema by id
+     * 
+     * @return TableSchema of specific id
+     */
+    public TableSchema getTableSchema(String tableName) {
+        for (TableSchema tableSchema : this.tables) {
+            if (tableSchema.getTableName() == tableName) {
+                return tableSchema;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Add a table schema to the catalog
      * 
      * @param tableSchema TableSchema to add to the catalog
