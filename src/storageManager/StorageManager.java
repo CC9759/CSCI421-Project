@@ -14,8 +14,8 @@ public class StorageManager {
     private final BufferManager bufferManager;
     private HashMap<Integer, Table> idToTable;
 
-    public StorageManager() {
-        this.bufferManager = new BufferManager(128); // this will be defined by user later
+    public StorageManager(int bufferSize) {
+        this.bufferManager = new BufferManager(bufferSize);
         this.readTableData();
     }
 
@@ -52,16 +52,29 @@ public class StorageManager {
         }
     }
 
-    public Record getRecordByPrimaryKey(int tableId, Object primaryKey){
+    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
+        Table table = ensureTable(tableId);
+        return this.bufferManager.getRecordByPrimaryKey(table, primaryKey);
 
-        return null;
     }
-    public ArrayList<Record> getAllRecords(int tableNumber){
-        return null;
+    public ArrayList<Record> getAllRecords(int tableNumber) throws NoTableException {
+        Table table = ensureTable(tableNumber);
+        ArrayList<Record> result = new ArrayList<>();
+        for (int i = 0; i < table.getNumPages(); i++) {
+            result.addAll(bufferManager.getPage(table, i).getRecords());
+        }
+
+        return result;
     }
 
-    public void deleteRecord(Object PrimaryKey){}
-    public void updateRecord(Object primaryKey, Record record){}
+    public Record deleteRecord(int tableId, Attribute primaryKey) throws NoTableException {
+        Table table = ensureTable(tableId);
+        return this.bufferManager.deleteRecord(table, primaryKey);
+    }
+    public Record updateRecord(int tableId, Record record) throws NoTableException {
+        Table table = ensureTable(tableId);
+        return this.bufferManager.updateRecord(table, record);
+    }
 
     /**
      * Get table schema data

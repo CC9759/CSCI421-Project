@@ -65,6 +65,39 @@ public class BufferManager {
         this.buffer = new ArrayList<Page>();
     }
 
+    public Record deleteRecord(Table table, Attribute primaryKey) {
+        for (int i = 0; i < table.getNumPages(); i++) {
+            Page page = this.getPage(table, i);
+            int recordIndex = page.getRecordByKey(primaryKey);
+            if (recordIndex != -1) {
+                page.deleteRecord(recordIndex);
+            }
+        }
+        return null;
+    }
+
+    public Record updateRecord(Table table, Record record) {
+        for (int i = 0; i < table.getNumPages(); i++) {
+            Page page = this.getPage(table, i);
+            int recordIndex = page.getRecordByKey(record.getPrimaryKey());
+            if (recordIndex != -1) {
+                page.updateRecord(recordIndex, record);
+            }
+        }
+        return null;
+    }
+
+    public Record getRecordByPrimaryKey(Table table, Attribute primaryKey) {
+        for (int i = 0; i < table.getNumPages(); i++) {
+            Page page = this.getPage(table, i);
+            int recordIndex = page.getRecordByKey(primaryKey);
+            if (recordIndex != -1) {
+                return page.getRecords().get(recordIndex);
+            }
+        }
+        return null;
+    }
+
 
     // public Record getRecordByPrimaryKey(Object primaryKey);
 

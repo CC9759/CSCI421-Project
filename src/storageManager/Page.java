@@ -3,7 +3,6 @@ package storageManager;
 import Exceptions.PageOverfullException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class Page {
@@ -44,9 +43,32 @@ public class Page {
     public ArrayList<Record> getRecords(){
         return this.records;
     }
-    public Record getRecordById(int id) {
-        return null;
+
+    public int getRecordByKey(Attribute primaryKey) {
+        int numRecordsInPage = records.size();
+
+        if (numRecordsInPage == 0) {
+            return -1;
+        }
+        // Check if the primary key is on this page
+        if (primaryKey.compareTo(records.get(numRecordsInPage - 1).getPrimaryKey()) <= 0) {
+            int left = 0;
+            int right = numRecordsInPage - 1;
+            while (left <= right) {
+                int middle = left + (right - left) / 2;
+                Attribute middleRecordKey = records.get(middle).getPrimaryKey();
+                if (primaryKey.compareTo(middleRecordKey) == 0) {
+                    return middle; // Record found
+                } else if (primaryKey.compareTo(middleRecordKey) < 0) {
+                    right = middle - 1;
+                } else {
+                    left = middle + 1;
+                }
+            }
+        }
+        return -1;
     }
+
     public void writeToMemory(){
         
     }
@@ -101,6 +123,19 @@ public class Page {
     public boolean hasBeenUpdated() {
         return this.wasUpdated;
     }
+
+    public Record deleteRecord(int index) {
+        Record result = this.records.remove(index);
+        this.updateFreeSpace();
+        return result;
+    }
+
+    public Record updateRecord(int index, Record record) {
+        Record result = this.records.set(index, record);
+        this.updateFreeSpace();
+        return result;
+    }
+
 
     /* 
      * not sure if this is where it goes
