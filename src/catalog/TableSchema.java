@@ -2,8 +2,6 @@ package catalog;
 
 import java.util.ArrayList;
 
-import interfaces.AttributeSchema;
-
 public class TableSchema {
 
     /*

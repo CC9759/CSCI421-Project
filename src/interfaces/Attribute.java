@@ -1,5 +1,7 @@
 package interfaces;
 
+import catalog.AttributeType;
+
 public interface Attribute {
     
     public AttributeType getAttributeType();
