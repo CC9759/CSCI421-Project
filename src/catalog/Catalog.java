@@ -19,9 +19,13 @@ public class Catalog {
     private static Catalog catalogue = null;
     private ArrayList<TableSchema> tables;
     private int pageSize;
+    private String location;
+    private int bufferSize;
 
-    private Catalog(String location, int size) {
+    private Catalog(String location, int size, int bufferSize) {
+        this.location = location;
         this.pageSize = size;
+        this.bufferSize = bufferSize;
         // dbLocation is the file location?
     }
 
@@ -32,9 +36,9 @@ public class Catalog {
      * @param pageSize   size
      * @return
      */
-    public static synchronized Catalog createCatalog(String dbLocation, int pageSize) {
+    public static synchronized Catalog createCatalog(String dbLocation, int pageSize, int bufferSize) {
         if (catalogue == null)
-            catalogue = new Catalog(dbLocation, pageSize);
+            catalogue = new Catalog(dbLocation, pageSize, bufferSize);
         return catalogue;
     }
 
@@ -143,8 +147,26 @@ public class Catalog {
      * 
      * @return storageManager.Page size of the database
      */
+    public String getLocation() {
+        return this.location;
+    }
+
+    /**
+     * Get the page size of the database
+     * 
+     * @return storageManager.Page size of the database
+     */
     public int getPageSize() {
         return this.pageSize;
+    }
+
+    /**
+     * Get the page size of the database
+     * 
+     * @return storageManager.Page size of the database
+     */
+    public int getBufferSize() {
+        return this.bufferSize;
     }
 
     /**
@@ -152,5 +174,11 @@ public class Catalog {
      */
     public int getTableSchemaLength() {
         return tables.size();
+    }
+
+    public String toString(){
+        return "Database Location: " + getCatalog().getBufferSize() + 
+        "\nPage Size: " +  getCatalog().getPageSize() + 
+        "\nBuffer Size: " +  getCatalog().getBufferSize();
     }
 }
