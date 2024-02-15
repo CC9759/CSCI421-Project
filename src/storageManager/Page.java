@@ -137,34 +137,4 @@ public class Page {
     }
 
 
-    /* 
-     * not sure if this is where it goes
-     * func to read in page
-     * assumes record header is 
-     * 1 byte for # of entires
-     * 2 byte for location and size -> 2 * N size
-     * k byte for each i location
-     */ 
-    public ArrayList<Record> readPage() {
-        // use this.tableId, pagesize, page id
-        //String location = this.schema.getLocation; this method needs to exist
-//        int num_of_entries = bytes[0];
-//        ArrayList<Record> recs = new ArrayList<Record>();
-//
-//        for(int i = 1; i < num_of_entries*2; i+=2) {
-//            int size = bytes[i];
-//            int location = bytes[i+1];
-
-            // now has bytes of record
-            //byte[] record_bytes = Arrays.copyOfRange(bytes, location, size);
-
-            // call function to read record
-
-            // add record to list
-        //}
-        //return recs;
-        return null;
-    }
-
-
 }

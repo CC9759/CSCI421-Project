@@ -68,7 +68,7 @@ public class AttributeSchema {
      * Get the size of this attribute in bytes
      * @return size of this attribute in bytes
      */
-    public int getSize(){
-        return 0;
+    public int getSize() {
+        return this.type.length;
     }
 }
