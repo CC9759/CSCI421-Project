@@ -1,4 +1,5 @@
-package interfaces;
+package catalog;
+
 public class AttributeSchema {
 
     private String attributeName;
