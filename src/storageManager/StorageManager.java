@@ -11,12 +11,25 @@ import catalog.Catalog;
 
 public class StorageManager {
 
-    private final BufferManager bufferManager;
+    private BufferManager bufferManager;
+    private static StorageManager storageManager;
     private HashMap<Integer, Table> idToTable;
 
     public StorageManager(int bufferSize) {
-        this.bufferManager = new BufferManager(bufferSize);
-        this.readTableData();
+        if (storageManager == null) {
+            this.bufferManager = new BufferManager(bufferSize);
+            this.idToTable = new HashMap<>();
+            this.readTableData();
+        }
+    }
+
+    public void InitStorageManager(int bufferSize) {
+        if (storageManager != null) {
+            storageManager = new StorageManager(bufferSize);
+        }
+    }
+    public static StorageManager GetStorageManager() {
+        return storageManager;
     }
 
     private Page getPage(int tableNumber, int pageNumber) throws NoTableException {
@@ -82,7 +95,7 @@ public class StorageManager {
     private void readTableData() {
         ArrayList<TableSchema> tableSchemas = Catalog.getCatalog().getTableSchema();
         for (TableSchema schema: tableSchemas) {
-            idToTable.put(schema.getTableId(), new Table(schema));
+            this.idToTable.put(schema.getTableId(), new Table(schema));
         }
     }
 
@@ -93,7 +106,7 @@ public class StorageManager {
      * @throws NoTableException no table of tableId
      */
     private Table ensureTable(int tableId) throws NoTableException {
-        Table table = idToTable.get(tableId);
+        Table table = this.idToTable.get(tableId);
         if (table == null) {
             throw new NoTableException(tableId);
         }
