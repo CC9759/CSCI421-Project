@@ -28,7 +28,7 @@ public class StorageManager {
         Table table = ensureTable(tableId);
         if (table.getNumPages() == 0) {
             Page newPage = table.createPage();
-            bufferManager.addToBuffer(newPage);
+            bufferManager.addToBuffer(table, newPage);
             bufferManager.insertRecord(newPage, record, 0);
             return;
         }
@@ -44,8 +44,8 @@ public class StorageManager {
                         // split page
                         Page newPage = page.splitPage();
                         // new page number will now have shifted all those to the right of it over by 1
-                        updatePageNumbers(tableId, newPage.getPageId());
-                        bufferManager.addToBuffer(newPage);
+                        bufferManager.updatePageNumbers(table, newPage.getPageId(), 1);
+                        bufferManager.addToBuffer(table, newPage);
                     }
                 }
             }
@@ -100,19 +100,7 @@ public class StorageManager {
         return table;
     }
 
-    /**
-     * Update page number/ids after a page split
-     * @param tableId table id of the page split
-     * @param splitPageId id of the new page
-     * @throws NoTableException No table of tableId
-     */
-    private void updatePageNumbers(int tableId, int splitPageId) throws NoTableException {
-        Table table = ensureTable(tableId);
-        for (int i = splitPageId; i < table.getNumPages(); i++) {
-            Page page = bufferManager.getPage(table, i);
-            page.incrementPageNumber();
-        }
-
-        table.incrementPageCount();
+    public void flushBuffer() {
+        this.bufferManager.flush(this.idToTable);
     }
 }

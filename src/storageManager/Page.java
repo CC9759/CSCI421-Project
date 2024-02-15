@@ -69,10 +69,6 @@ public class Page {
         return -1;
     }
 
-    public void writeToMemory(){
-        
-    }
-
     public boolean canInsertRecord(Record record) {
         // +4 is space needed for its file pointer
         return this.freeSpaceAmount > record.getSize() + 4;
@@ -114,8 +110,8 @@ public class Page {
         this.freeSpaceAmount = this.pageSize - usedSpace;
     }
 
-    public void incrementPageNumber() {
-        this.pageId++;
+    public void updatePageNumber(int change) {
+        this.pageId += change;
         this.wasUpdated = true;
         this.touch();
     }

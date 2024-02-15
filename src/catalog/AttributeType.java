@@ -1,4 +1,4 @@
-package interfaces;
+package catalog;
 
 import Exceptions.InvalidTypeException;
 

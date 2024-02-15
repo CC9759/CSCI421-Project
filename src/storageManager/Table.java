@@ -34,9 +34,11 @@ public class Table {
         Page newPage = new Page(this.schema.getTableId(), pageNumber, Catalog.getCatalog().getPageSize());
         //newPage.readPage();
 
-        
-
         return null;
+    }
+
+    public void writePage(Page page) {
+
     }
 
     /**
@@ -69,7 +71,7 @@ public class Table {
     /**
      * Increment the amount of pages this table has
      */
-    public void incrementPageCount() {
-        this.numPages++;
+    public void updatePageCount(int change) {
+        this.numPages += change;
     }
 }
