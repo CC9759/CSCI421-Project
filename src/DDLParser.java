@@ -19,7 +19,10 @@ public class DDLParser {
          * to add a TableSchema and Table
          * 
          * @param tableName the name of the Table to be added
-         * @param arguments the list of Table attributes to add
+         * @param arguments the list of Table attributes to add in the form:
+         *                  {column1 datatype,
+         *                  column2 datatype,
+         *                  column3 datatype,...}
          * @throws InvalidTypeException
          */
         public void createTable(Catalog catalog, String tableName, ArrayList<String> arguments)
@@ -42,7 +45,7 @@ public class DDLParser {
                                         .asList(Arrays.copyOfRange(attributes, 2, attributes.length));
                         boolean key = specialAttributes.contains("KEY");
                         boolean unique = specialAttributes.contains("UNIQUE");
-                        boolean nullable = !specialAttributes.contains("NOT NULL");
+                        boolean nullable = !specialAttributes.contains("NOT NULL"); // TODO: test this
 
                         var schema = new AttributeSchema(name, type, key, unique, nullable);
                         attributesSchemas.add(schema);
@@ -66,26 +69,41 @@ public class DDLParser {
          * to alter a TableSchema and Table
          * 
          * @param tableName the name of the Table to alter
-         * @param arguments the list of Table attributes to add/remove
+         * @param arguments the Table attributes to add/remove in the form:
+         *                  ADD column_name datatype (DEFAULT value)
+         *                  DROP COLUMN column_name
+         * @throws InvalidTypeException
          */
-        public void alterTable(Catalog catalog, String tableName, ArrayList<String> arguments)
-                        throws InsufficientArgumentException {
-                String keyWord = arguments.get(0).toUpperCase();
+        public void alterTable(Catalog catalog, String tableName, String argument)
+                        throws InsufficientArgumentException, InvalidTypeException {
+                String[] attributes = argument.toUpperCase().split(" ");
+                String keyWord = attributes[0];
                 switch (keyWord) {
                         case "ADD":
-                                if (arguments.size() != 3)
+                                if (attributes.length != 3 || attributes.length != 5)
                                         throw new InsufficientArgumentException(keyWord);
-                                var newAttributes = new AttributeSchema(keyWord, null, false, false, false);
-                                // catalog.getTableSchema(tableName).addAttributeSchema();
-                                // String defaultValue = "null";
-                                // if (specialAttributes.contains("DEFAULT")) {
-                                // defaultValue = specialAttributes.get(specialAttributes.indexOf("DEFAULT") +
-                                // 1);
-                                // }
-                                // TODO
+
+                                // get a list of the instructions
+                                List<String> instruc = Arrays
+                                                .asList(Arrays.copyOfRange(attributes, 1, attributes.length));
+
+                                String defaultValue = "null";
+                                if (instruc.contains("DEFAULT")) {
+                                        defaultValue = instruc.get(instruc.indexOf("DEFAULT") + 1);
+                                }
+                                var newAttributes = new AttributeSchema(instruc.get(0),
+                                                new AttributeType(instruc.get(1)), false, false, false, defaultValue);
+
+                                // look for a attribute that shares the name and replace it
+                                if (catalog.getTableSchema(tableName).getAttributeSchema(instruc.get(0)) != null) {
+                                        catalog.getTableSchema(tableName).removeAttributeSchema(instruc.get(0));
+                                }
+                                catalog.getTableSchema(tableName).addAttributeSchema(newAttributes);
                                 break;
                         case "DROP":
-                                // TODO
+                                if (catalog.getTableSchema(tableName).getAttributeSchema(attributes[2]) != null) {
+                                        catalog.getTableSchema(tableName).removeAttributeSchema(attributes[2]);
+                                }
                                 break;
                         default:
                                 break;
