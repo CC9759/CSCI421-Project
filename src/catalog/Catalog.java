@@ -191,9 +191,9 @@ public class Catalog {
         return tables.size();
     }
 
-    public String toString(){
-        return "Database Location: " + getCatalog().getBufferSize() + 
-        "\nPage Size: " +  getCatalog().getPageSize() + 
-        "\nBuffer Size: " +  getCatalog().getBufferSize();
+    public String toString() {
+        return "Database Location: " + getCatalog().getBufferSize() +
+                "\nPage Size: " + getCatalog().getPageSize() +
+                "\nBuffer Size: " + getCatalog().getBufferSize();
     }
 }

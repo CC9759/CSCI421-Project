@@ -7,6 +7,7 @@ public class AttributeSchema {
     private boolean isKey;
     private boolean isUnique;
     private boolean isNull;
+    private String defaultValue;
 
     public AttributeSchema(String attributeName, AttributeType type, boolean isKey, boolean isUnique, boolean isNull) {
         this.attributeName = attributeName;
@@ -14,6 +15,17 @@ public class AttributeSchema {
         this.isKey = isKey;
         this.isUnique = isUnique;
         this.isNull = isNull;
+        this.defaultValue = "null";
+    }
+
+    public AttributeSchema(String attributeName, AttributeType type, boolean isKey, boolean isUnique, boolean isNull,
+            String defaultStr) {
+        this.attributeName = attributeName;
+        this.type = type;
+        this.isKey = isKey;
+        this.isUnique = isUnique;
+        this.isNull = isNull;
+        this.defaultValue = defaultStr;
     }
 
     /**
@@ -68,6 +80,15 @@ public class AttributeSchema {
      */
     public boolean isNull() {
         return isNull;
+    }
+
+    /**
+     * The default value of the attribute, null if not assigned
+     * 
+     * @return a String that represents the default value
+     */
+    public String defaultValue() {
+        return this.defaultValue;
     }
 
     /**
