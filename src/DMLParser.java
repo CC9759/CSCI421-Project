@@ -24,6 +24,7 @@ public class DMLParser {
         // ask storage/buffer manager for table
     }
 
+    //
     // for whoever is making the recs array
     // possible implementation is to use 3 default schemas, they will get overwritten either way
     // returns flag whether operation is successful
@@ -44,7 +45,7 @@ public class DMLParser {
         if (recs.size() != refs.size()) // different amount of attributes
             return false;
 
-            ArrayList<Attribute> legal_recs = new ArrayList<Attribute>();
+        ArrayList<Attribute> legal_recs = new ArrayList<Attribute>();
         // loop through attribute schema and ensure that inserted records are legal
         for (int i = 0; i < recs.size(); i++) {
             Attribute e = recs.get(i);
@@ -63,29 +64,29 @@ public class DMLParser {
                 if (e.getSize() > k.getSize()) // char is too big
                     return false;
 
-                // expected char of length n but sizes do not match
+                // expected char of length N but got char length M
                 if (k.getAttributeType().type == AttributeType.TYPE.CHAR && k.getSize() != e.getSize())
                     return false;
 
-                // remove instance, replace with correct schema and data input
+                // replace with correct schema and data input
                 legal_recs.add(new Attribute(k, (String) e.getData()));
 
-            } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
+            } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // assume all numbers come in as DOUBLE
                 if (e.getAttributeType().type != AttributeType.TYPE.DOUBLE) // expecting a double
                     return false;
 
-                // remove instance, replace with correct schema and data input
+                // replace with correct schema and data input
                 if (k.getAttributeType().type == AttributeType.TYPE.INT)
                     legal_recs.add(new Attribute(k, (int) e.getData()));
                 else 
                     legal_recs.add(new Attribute(k, (double) e.getData()));
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
-                // check boolean
                 if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) // expecting a bool
                     return false;
 
+                // replace with correct schema and data input
                 legal_recs.add(new Attribute(k, (boolean) e.getData()));
             }
         }
