@@ -2,7 +2,8 @@ package storageManager;
 
 import java.util.ArrayList;
 import java.util.Map;
-import interfaces.AttributeSchema;
+
+import catalog.AttributeSchema;
 
 /**
  * Record Class, represents a single tuple/entry

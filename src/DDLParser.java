@@ -4,10 +4,10 @@ import java.util.List;
 
 import Exceptions.InsufficientArgumentException;
 import Exceptions.InvalidTypeException;
+import catalog.AttributeSchema;
+import catalog.AttributeType;
 import catalog.Catalog;
 import catalog.TableSchema;
-import interfaces.AttributeSchema;
-import interfaces.AttributeType;
 
 /**
  * Class for the DDLParser, will contain/have access

@@ -1,12 +1,12 @@
 package storageManager;
 
-import interfaces.AttributeSchema;
+import catalog.AttributeSchema;
 
 public class Attribute extends AttributeSchema implements Comparable<Attribute> {
 
     private Object data;
 
-    public Attribute(String attributeName, interfaces.AttributeType type, boolean isKey, boolean isUnique, boolean isNull, Object data) {
+    public Attribute(String attributeName, catalog.AttributeType type, boolean isKey, boolean isUnique, boolean isNull, Object data) {
         super(attributeName, type, isKey, isUnique, isNull);
         this.data = data;
     }

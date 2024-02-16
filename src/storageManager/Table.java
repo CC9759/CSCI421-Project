@@ -32,8 +32,13 @@ public class Table {
     // will return the given page at the given file
     public Page readPage(int pageNumber) {
         Page newPage = new Page(this.schema.getTableId(), pageNumber, Catalog.getCatalog().getPageSize());
-        newPage.readPage();
+        //newPage.readPage();
+
         return null;
+    }
+
+    public void writePage(Page page) {
+
     }
 
     /**
@@ -66,7 +71,7 @@ public class Table {
     /**
      * Increment the amount of pages this table has
      */
-    public void incrementPageCount() {
-        this.numPages++;
+    public void updatePageCount(int change) {
+        this.numPages += change;
     }
 }

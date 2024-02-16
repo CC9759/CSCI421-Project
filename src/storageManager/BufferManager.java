@@ -1,6 +1,10 @@
 package storageManager;
 
+import Exceptions.NoTableException;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+
 public class BufferManager {
     
     private ArrayList<Page> buffer;
@@ -20,7 +24,7 @@ public class BufferManager {
         }
         // If not in the buffer
         Page page = table.readPage(pageNumber);
-        addToBuffer(page);
+        addToBuffer(table, page);
         return page;
     }
 
@@ -33,11 +37,11 @@ public class BufferManager {
     }
 
 
-    public void addToBuffer(Page page) {
+    public void addToBuffer(Table table, Page page) {
         if (buffer.size() == this.bufferSize) {
             int leastUsedPageIndex = this.getLRUPageIndex();
             Page removedPage = buffer.remove(leastUsedPageIndex);
-            removedPage.writeToMemory();
+            table.writePage(removedPage);
         }
         page.touch();
         this.buffer.add(page);
@@ -56,21 +60,24 @@ public class BufferManager {
         return oldestIndex;
     }
 
-    public void flush(){
+    public void flush(HashMap<Integer, Table> idToTable){
         for (Page page: this.buffer) {
             if (page.hasBeenUpdated()) {
-                page.writeToMemory();
+                idToTable.get(page.getPageTableId()).writePage(page);
             }
         }
         this.buffer = new ArrayList<Page>();
     }
 
-    public Record deleteRecord(Table table, Attribute primaryKey) {
+    public Record deleteRecord(Table table, Attribute primaryKey) throws NoTableException {
         for (int i = 0; i < table.getNumPages(); i++) {
             Page page = this.getPage(table, i);
             int recordIndex = page.getRecordByKey(primaryKey);
             if (recordIndex != -1) {
                 page.deleteRecord(recordIndex);
+                if (page.getRecords().size() == 0) {
+                    updatePageNumbers(table, page.getPageId(), -1);
+                }
             }
         }
         return null;
@@ -97,6 +104,25 @@ public class BufferManager {
         }
         return null;
     }
+
+    /**
+     * Update page number/ids after a page split
+     * @param table table the page split
+     * @param splitPageId id of the new page
+     * @throws NoTableException No table of tableId
+     */
+    public void updatePageNumbers(Table table, int splitPageId, int change) throws NoTableException {
+        for (int i = splitPageId; i < table.getNumPages(); i++) {
+            Page page = getPage(table, i);
+            page.updatePageNumber(change);
+        }
+
+        table.updatePageCount(change);
+    }
+
+
+
+
 
 
     // public Record getRecordByPrimaryKey(Object primaryKey);
