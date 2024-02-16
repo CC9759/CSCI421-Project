@@ -2,11 +2,22 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "CSCI421-Project_46697151"
+        },
+        {
+            "type": "java",
             "name": "catDB",
             "request": "launch",
             "mainClass": "Main",
             "projectName": "CSCI421-Project_335e8b6d",
-            "args": ["./db", "140", "5"]
-        },
+            "args": [
+                "./db",
+                "140",
+                "5"
+            ]
+        }
     ] 
 }
