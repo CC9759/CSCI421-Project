@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 
+import Exceptions.DuplicateKeyException;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
 import catalog.AttributeSchema;
@@ -95,7 +96,7 @@ public class DMLParser {
         Record record = new Record(legal_recs);
         try {
             this.stor.insertRecord(schema.getTableId(), record);
-        } catch (PageOverfullException | NoTableException error) {
+        } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
             System.out.println(error);
             return false;
         }
