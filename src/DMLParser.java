@@ -44,6 +44,7 @@ public class DMLParser {
         if (recs.size() != refs.size()) // different amount of attributes
             return false;
 
+            ArrayList<Attribute> legal_recs = new ArrayList<Attribute>();
         // loop through attribute schema and ensure that inserted records are legal
         for (int i = 0; i < recs.size(); i++) {
             Attribute e = recs.get(i);
@@ -67,8 +68,7 @@ public class DMLParser {
                     return false;
 
                 // remove instance, replace with correct schema and data input
-                recs.remove(i);
-                recs.add(new Attribute(k, (String) e.getData()));
+                legal_recs.add(new Attribute(k, (String) e.getData()));
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // assume all numbers come in as DOUBLE
@@ -76,26 +76,24 @@ public class DMLParser {
                     return false;
 
                 // remove instance, replace with correct schema and data input
-                recs.remove(i);
                 if (k.getAttributeType().type == AttributeType.TYPE.INT)
-                    recs.add(new Attribute(k, (int) e.getData()));
+                    legal_recs.add(new Attribute(k, (int) e.getData()));
                 else 
-                    recs.add(new Attribute(k, (double) e.getData()));
+                    legal_recs.add(new Attribute(k, (double) e.getData()));
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
                 // check boolean
                 if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) // expecting a bool
                     return false;
 
-                recs.remove(i);
-                recs.add(new Attribute(k, (boolean) e.getData()));
+                legal_recs.add(new Attribute(k, (boolean) e.getData()));
             }
         }
 
         // all the attributes are legal, and have a correct schema
-        Record rec = new Record(recs);
+        Record record = new Record(legal_recs);
         try {
-            this.stor.insertRecord(schema.getTableId(), rec);
+            this.stor.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException error) {
             System.out.println(error);
             return false;
