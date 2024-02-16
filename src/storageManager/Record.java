@@ -1,22 +1,28 @@
 package storageManager;
 
 import java.util.ArrayList;
-import java.util.Map;
-
-import catalog.AttributeSchema;
+import java.util.HashMap;
 
 /**
  * Record Class, represents a single tuple/entry
  */
 public class Record implements Comparable<Record> {
-     private Map<String, Attribute> attributes;
+     private HashMap<String, Attribute> attributes;
+
+
+     public Record(ArrayList<Attribute> attributes) {
+        this.attributes = new HashMap<>();
+        for (Attribute attribute: attributes) {
+            this.attributes.put(attribute.getAttributeName(), attribute);
+        }
+     }
 
      /**
       * gets a specific attribute object based on the given name
       * @param attributeName name of the attribute to grab
       * @return the attribute object
       */
-     public AttributeSchema getAttribute(String attributeName){
+     public Attribute getAttribute(String attributeName){
         return attributes.get(attributeName);
      }
 

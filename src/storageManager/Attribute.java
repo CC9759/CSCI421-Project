@@ -6,8 +6,8 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
 
     private Object data;
 
-    public Attribute(String attributeName, catalog.AttributeType type, boolean isKey, boolean isUnique, boolean isNull, Object data) {
-        super(attributeName, type, isKey, isUnique, isNull);
+    public Attribute(AttributeSchema schema, Object data) {
+        super(schema.getAttributeName(), schema.getAttributeType(), schema.isKey(), schema.isUnique(), schema.isNull());
         this.data = data;
     }
 
@@ -18,7 +18,9 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
 
     @Override
     public int compareTo(Attribute o) {
-        if (this.data instanceof Integer || this.data instanceof Double) {
+        if (this.data instanceof Integer ) {
+            return Integer.compare((Integer) this.data, (Integer) o.data);
+        } else if(this.data instanceof Double) {
             return Double.compare((Double) this.data, (Double) o.data);
         } else if (this.data instanceof Character || this.data instanceof String) {
             return ((String) this.data).compareTo((String) o.data);

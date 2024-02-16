@@ -71,7 +71,7 @@ public class Page {
 
     public boolean canInsertRecord(Record record) {
         // +4 is space needed for its file pointer
-        return this.freeSpaceAmount > record.getSize() + 4;
+        return this.freeSpaceAmount >= record.getSize() + 4;
     }
 
     public void insertRecord(Record record, int index) throws PageOverfullException {
