@@ -1,6 +1,7 @@
 package storageManager;
 
 import catalog.AttributeSchema;
+import catalog.AttributeType;
 
 public class Attribute extends AttributeSchema implements Comparable<Attribute> {
 
@@ -8,6 +9,12 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
 
     public Attribute(AttributeSchema schema, Object data) {
         super(schema.getAttributeName(), schema.getAttributeType(), schema.isKey(), schema.isUnique(), schema.isNull());
+        this.data = data;
+    }
+
+    // only useful for varChar and null entries
+    public Attribute(AttributeSchema schema, Object data, AttributeType varChar, boolean isNull) {
+        super(schema.getAttributeName(), varChar, schema.isKey(), schema.isUnique(), isNull);
         this.data = data;
     }
 

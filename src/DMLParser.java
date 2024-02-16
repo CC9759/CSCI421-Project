@@ -25,7 +25,6 @@ public class DMLParser {
         // ask storage/buffer manager for table
     }
 
-    //
     // for whoever is making the recs array
     // possible implementation is to use 3 default schemas, they will get overwritten either way
     // returns flag whether operation is successful
@@ -53,7 +52,14 @@ public class DMLParser {
             AttributeSchema k = refs.get(i);
 
             // NOT SURE HOW TO HANDLE NULLS YET
+            // if value of data is null
             if (e.isNull()) {
+                if (k.isUnique() || k.isKey()) { // value cannot be null
+                    return false;
+                }
+                // value can be null
+
+
                 continue;
             }
 
@@ -70,7 +76,13 @@ public class DMLParser {
                     return false;
 
                 // replace with correct schema and data input
-                legal_recs.add(new Attribute(k, (String) e.getData()));
+                if (k.getAttributeType().type != AttributeType.TYPE.VARCHAR) {
+                    // if varChar, then create new attribute type with exact attr size
+                    AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)e.getData()).length());
+                    legal_recs.add(new Attribute(k, (String) e.getData(), varchar, false));
+                } else {
+                    legal_recs.add(new Attribute(k, (String) e.getData()));
+                }
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // assume all numbers come in as DOUBLE
