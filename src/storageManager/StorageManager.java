@@ -32,7 +32,7 @@ public class StorageManager {
         return storageManager;
     }
 
-    private Page getPage(int tableNumber, int pageNumber) throws NoTableException {
+    public Page getPage(int tableNumber, int pageNumber) throws NoTableException {
         Table table = ensureTable(tableNumber);
         return bufferManager.getPage(table, pageNumber);
     }
@@ -45,21 +45,34 @@ public class StorageManager {
             bufferManager.insertRecord(newPage, record, 0);
             return;
         }
-
+    
         for (int i = 0; i < table.getNumPages(); i++) {
             Page page = getPage(tableId, i);
-            ArrayList<Record> pageRecords = page.getRecords();
-            for (int j = 0; j < pageRecords.size(); j++) {
-                if (pageRecords.get(j).compareTo(record) > 0) {
-                    if (page.canInsertRecord(record)) {
-                        bufferManager.insertRecord(page, record, j);
+            int insertPos = findInsertPosition(page, record);
+            // Case where this records primary key is larger than all the others
+            if (insertPos == -1 && i == table.getNumPages() - 1) {
+                insertPos = page.getRecords().size();
+            }
+            if (insertPos != -1) {
+                if (page.canInsertRecord(record)) {
+                    bufferManager.insertRecord(page, record, insertPos);
+                    return;
+                } else {
+                    Page newPage = page.splitPage();
+                    bufferManager.updatePageNumbers(table, newPage.getPageId(), 1);
+                    bufferManager.addToBuffer(table, newPage);
+                    insertPos = findInsertPosition(page, record);
+                    if (insertPos == -1) {
+                        insertPos = findInsertPosition(newPage, record);
+                        if (insertPos == -1) {
+                            insertPos = newPage.getRecords().size();
+                        }
+                        bufferManager.insertRecord(newPage, record, insertPos);
                     } else {
-                        // split page
-                        Page newPage = page.splitPage();
-                        // new page number will now have shifted all those to the right of it over by 1
-                        bufferManager.updatePageNumbers(table, newPage.getPageId(), 1);
-                        bufferManager.addToBuffer(table, newPage);
+                        bufferManager.insertRecord(page, record, insertPos);
                     }
+
+                    return;
                 }
             }
         }
@@ -115,5 +128,15 @@ public class StorageManager {
 
     public void flushBuffer() {
         this.bufferManager.flush(this.idToTable);
+    }
+
+    private int findInsertPosition(Page page, Record record) {
+        ArrayList<Record> records = page.getRecords();
+        for (int k = 0; k < records.size(); k++) {
+            if (records.get(k).compareTo(record) > 0) {
+                return k;
+            }
+        }
+        return -1;
     }
 }
