@@ -2,11 +2,22 @@
     "configurations": [
         {
             "type": "java",
+            "name": "StorageManagerTest",
+            "request": "launch",
+            "mainClass": "test.StorageManagerTest",
+            "projectName": "CSCI421-Project_335e8b6d"
+        },
+        {
+            "type": "java",
             "name": "catDB",
             "request": "launch",
             "mainClass": "Main",
             "projectName": "CSCI421-Project_335e8b6d",
-            "args": ["./db", "140", "5"]
-        },
+            "args": [
+                "./db",
+                "140",
+                "5"
+            ]
+        }
     ] 
 }
