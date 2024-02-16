@@ -3,6 +3,7 @@ package storageManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import Exceptions.DuplicateKeyException;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
 import catalog.TableSchema;
@@ -37,7 +38,7 @@ public class StorageManager {
         return bufferManager.getPage(table, pageNumber);
     }
 
-    public void insertRecord(int tableId, Record record) throws PageOverfullException, NoTableException {
+    public void insertRecord(int tableId, Record record) throws PageOverfullException, NoTableException, DuplicateKeyException {
         Table table = ensureTable(tableId);
         if (table.getNumPages() == 0) {
             Page newPage = table.createPage();
@@ -130,11 +131,13 @@ public class StorageManager {
         this.bufferManager.flush(this.idToTable);
     }
 
-    private int findInsertPosition(Page page, Record record) {
+    private int findInsertPosition(Page page, Record record) throws DuplicateKeyException {
         ArrayList<Record> records = page.getRecords();
         for (int i = 0; i < records.size(); i++) {
             if (records.get(i).compareTo(record) > 0) {
                 return i;
+            } else if (records.get(i).compareTo(record) == 0) {
+                throw new DuplicateKeyException(record.getPrimaryKey());
             }
         }
 
