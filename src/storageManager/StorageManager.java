@@ -71,7 +71,7 @@ public class StorageManager {
                     } else {
                         bufferManager.insertRecord(page, record, insertPos);
                     }
-
+                    
                     return;
                 }
             }
@@ -132,11 +132,12 @@ public class StorageManager {
 
     private int findInsertPosition(Page page, Record record) {
         ArrayList<Record> records = page.getRecords();
-        for (int k = 0; k < records.size(); k++) {
-            if (records.get(k).compareTo(record) > 0) {
-                return k;
+        for (int i = 0; i < records.size(); i++) {
+            if (records.get(i).compareTo(record) > 0) {
+                return i;
             }
         }
+
         return -1;
     }
 }

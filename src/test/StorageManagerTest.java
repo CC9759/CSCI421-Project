@@ -52,12 +52,10 @@ class StorageManagerTest {
             storageManager.deleteRecord(0, id);
             Record deletedRecord = storageManager.getRecordByPrimaryKey(0, id);
             pass = deletedRecord == null;
-            storageManager.flushBuffer();
             System.out.println(pass ? "Pass" : "Fail");
 
 
             System.out.println("Pages should split on overflow");
-            System.out.println(testRecord.getSize() + 4);
             for (int i = 0; i < 5; i++) {
                 id = new Attribute(idSchema, Integer.valueOf(i));
                 name = new Attribute(nameSchema, new String("dot" + i));
@@ -70,9 +68,27 @@ class StorageManagerTest {
 
             pass =  firstPage != null &&
                     secondPage != null &&
-                    firstPage.getRecords().size() == 4 / 2 &&
-                    secondPage.getRecords().size() == (4 / 2) + 1;
-            storageManager.flushBuffer();
+                    firstPage.getRecords().size() == 2 &&
+                    secondPage.getRecords().size() == 3;
+            System.out.println(pass ? "Pass" : "Fail");
+
+            System.out.println("StorageManager clears all pages when all records are deleted");
+            for (int i = 5; i < 12; i++) {
+                id = new Attribute(idSchema, Integer.valueOf(i));
+                name = new Attribute(nameSchema, new String("dot" + i));
+                attributes = new ArrayList<>(Arrays.asList(id, name));
+                testRecord = new Record(attributes);
+                storageManager.insertRecord(0, testRecord);
+            }
+            
+            for (int i = 0; i < 12; i++) {
+                id = new Attribute(idSchema, Integer.valueOf(i));
+                name = new Attribute(nameSchema, new String("dot" + i));
+                attributes = new ArrayList<>(Arrays.asList(id, name));
+                testRecord = new Record(attributes);
+                storageManager.deleteRecord(0, id);
+            }
+            pass = storageManager.getPage(0, 0).getRecords().size() == 0;
             System.out.println(pass ? "Pass" : "Fail");
 
         } catch (Exception e) {
