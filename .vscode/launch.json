@@ -9,7 +9,7 @@
         },
         {
             "type": "java",
-            "name": "catDB",
+            "name": "Main",
             "request": "launch",
             "mainClass": "Main",
             "projectName": "CSCI421-Project_335e8b6d",

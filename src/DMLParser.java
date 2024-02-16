@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
 import catalog.AttributeSchema;
+import catalog.AttributeType;
 import catalog.Catalog;
 import catalog.TableSchema;
 
@@ -23,12 +24,20 @@ public class DMLParser {
         // ask storage/buffer manager for table
     }
 
+    //
+    // for whoever is making the recs array
+    // possible implementation is to use 3 default schemas, they will get overwritten either way
     // returns flag whether operation is successful
+    //
+    // NOTE
+    // not sure how varchar type is handled when written
+    // the attribute type needs to handle N length give M max size
+    // NOTE
     public Boolean insert(ArrayList<Attribute> recs, String name) {
         // first check that the recs align with table schema
         TableSchema schema = this.cat.getTableSchema(name);
 
-        if (schema == null)
+        if (schema == null) // no table by that name
             return false;
 
         ArrayList<AttributeSchema> refs = schema.getAttributeSchema();
@@ -36,21 +45,58 @@ public class DMLParser {
         if (recs.size() != refs.size()) // different amount of attributes
             return false;
 
-        // loop through attribute schema and ensure that insert records are legal
+        ArrayList<Attribute> legal_recs = new ArrayList<Attribute>();
+        // loop through attribute schema and ensure that inserted records are legal
         for (int i = 0; i < recs.size(); i++) {
             Attribute e = recs.get(i);
             AttributeSchema k = refs.get(i);
 
-            if (e.getAttributeType() != k.getAttributeType() || e.getSize() != k.getSize()) 
-                return false;
+            // NOT SURE HOW TO HANDLE NULLS YET
+            if (e.isNull()) {
+                continue;
+            }
+
+            // assume all strings come in as CHAR
+            if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
+                if (e.getAttributeType().type != AttributeType.TYPE.CHAR) // expecting a char
+                    return false;
+
+                if (e.getSize() > k.getSize()) // char is too big
+                    return false;
+
+                // expected char of length N but got char length M
+                if (k.getAttributeType().type == AttributeType.TYPE.CHAR && k.getSize() != e.getSize())
+                    return false;
+
+                // replace with correct schema and data input
+                legal_recs.add(new Attribute(k, (String) e.getData()));
+
+            } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
+                // assume all numbers come in as DOUBLE
+                if (e.getAttributeType().type != AttributeType.TYPE.DOUBLE) // expecting a double
+                    return false;
+
+                // replace with correct schema and data input
+                if (k.getAttributeType().type == AttributeType.TYPE.INT)
+                    legal_recs.add(new Attribute(k, (int) e.getData()));
+                else 
+                    legal_recs.add(new Attribute(k, (double) e.getData()));
+
+            } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
+                if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) // expecting a bool
+                    return false;
+
+                // replace with correct schema and data input
+                legal_recs.add(new Attribute(k, (boolean) e.getData()));
+            }
         }
 
-        // the attributes are legal
-        Record rec = new Record(recs);
+        // all the attributes are legal, and have a correct schema
+        Record record = new Record(legal_recs);
         try {
-            this.stor.insertRecord(schema.getTableId(), rec);
-        } catch (PageOverfullException | NoTableException e) {
-            System.out.println(e);
+            this.stor.insertRecord(schema.getTableId(), record);
+        } catch (PageOverfullException | NoTableException error) {
+            System.out.println(error);
             return false;
         }
 

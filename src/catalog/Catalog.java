@@ -109,13 +109,13 @@ public class Catalog {
     }
 
     /**
-     * Get a TableSchema by name
+     * Get a TableSchema by id
      * 
      * @return TableSchema of specific id
      */
-    public TableSchema getTableSchema(String name) {
+    public TableSchema getTableSchema(String tableName) {
         for (TableSchema tableSchema : this.tables) {
-            if (tableSchema.getTableName() == name) {
+            if (tableSchema.getTableName() == tableName) {
                 return tableSchema;
             }
         }

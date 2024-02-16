@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import javax.naming.InsufficientResourcesException;
+import java.util.List;
 
 import Exceptions.InsufficientArgumentException;
 import Exceptions.InvalidTypeException;
@@ -29,14 +28,18 @@ public class DDLParser {
                         catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, null));
                         return;
                 }
+
                 ArrayList<AttributeSchema> attributesSchemas = new ArrayList<AttributeSchema>();
                 arguments.replaceAll(e -> e.toUpperCase()); // make all uppercase for simplicity
+
                 for (String arg : arguments) {
                         // split argument {name} {type} {keyType} {Key/!Key} {Unique} {NOT NULL}
                         String[] attributes = arg.split(" ");
                         String name = attributes[0];
                         AttributeType type = new AttributeType(attributes[1]);
-                        var specialAttributes = Arrays.asList(Arrays.copyOfRange(attributes, 2, attributes.length));
+
+                        List<String> specialAttributes = Arrays
+                                        .asList(Arrays.copyOfRange(attributes, 2, attributes.length));
                         boolean key = specialAttributes.contains("KEY");
                         boolean unique = specialAttributes.contains("UNIQUE");
                         boolean nullable = !specialAttributes.contains("NOT NULL");
@@ -72,12 +75,16 @@ public class DDLParser {
                         case "ADD":
                                 if (arguments.size() != 3)
                                         throw new InsufficientArgumentException(keyWord);
+                                var newAttributes = new AttributeSchema(keyWord, null, false, false, false);
+                                // catalog.getTableSchema(tableName).addAttributeSchema();
+                                // String defaultValue = "null";
+                                // if (specialAttributes.contains("DEFAULT")) {
+                                // defaultValue = specialAttributes.get(specialAttributes.indexOf("DEFAULT") +
+                                // 1);
+                                // }
                                 // TODO
                                 break;
                         case "DROP":
-                                // TODO
-                                break;
-                        case "RENAME":
                                 // TODO
                                 break;
                         default:
