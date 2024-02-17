@@ -21,7 +21,7 @@ public class DMLParser {
         this.cat = cat;
     }
 
-    public void select() {
+    public void select(String tableName) {
         // ask storage/buffer manager for table
     }
 

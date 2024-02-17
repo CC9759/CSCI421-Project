@@ -50,7 +50,7 @@ public class Main {
         while (true) {
             String input = scanner.nextLine();
             
-            String[] commands = input.split(" ");
+            String[] commands = input.strip().split(" ");
 
             switch(commands[0].toLowerCase()){
                 default: System.out.println(help()); break;
@@ -58,19 +58,19 @@ public class Main {
                     createTableParser(ddlParser, catalog, commands);
                     break;
                 case "drop":
-                    ddlParser.dropTable(catalog, commands[2].substring(0, commands[2].length() - 1));
+                    ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
                     break;
                 case "alter":
                     alterTableParser(ddlParser, catalog, commands);
                     break;
                 case "insert":
-
+                    
                     break;
                 case "display":
                     dmlParser.displaySchema();
                     break;
                 case "select":
-
+                    dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
                     break;
                 
             }
