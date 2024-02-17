@@ -25,6 +25,10 @@ public class DMLParser {
         // ask storage/buffer manager for table
     }
 
+    public void displaySchema(){
+        // displays the schema of the catalog, just prints out catalog's toString
+    }
+
     // for whoever is making the recs array
     // possible implementation is to use 3 default schemas, they will get overwritten either way
     // returns flag whether operation is successful

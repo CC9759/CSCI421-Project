@@ -1,6 +1,10 @@
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
+import Exceptions.InsufficientArgumentException;
+import Exceptions.InvalidTypeException;
 import catalog.Catalog;
 import storageManager.StorageManager;
 
@@ -38,10 +42,39 @@ public class Main {
         // Initialize Storage Manager
         StorageManager.InitStorageManager(bufferSize);
         
-        Scanner scanner = new Scanner(System.in);        
+        Scanner scanner = new Scanner(System.in);
+        //allows us to use non-static methods
+        DDLParser ddlParser = new DDLParser();
+        DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
+               
         while (true) {
             String input = scanner.nextLine();
             
+            String[] commands = input.split(" ");
+
+            switch(commands[0].toLowerCase()){
+                default: System.out.println(help()); break;
+                case "create":
+                    createTableParser(ddlParser, catalog, commands);
+                    break;
+                case "drop":
+                    ddlParser.dropTable(catalog, commands[2].substring(0, commands[2].length() - 1));
+                    break;
+                case "alter":
+                    alterTableParser(ddlParser, catalog, commands);
+                    break;
+                case "insert":
+
+                    break;
+                case "display":
+                    dmlParser.displaySchema();
+                    break;
+                case "select":
+
+                    break;
+                
+            }
+
             if (input.equalsIgnoreCase("quit")) {
                 catalog.writeBinary(dbLoc);
                 StorageManager.GetStorageManager().flushBuffer();
@@ -50,8 +83,42 @@ public class Main {
                 System.out.println(help());
             }
         }
-        
         scanner.close();
+    }
+
+    public static void createTableParser(DDLParser ddlParser, Catalog catalog, String[] commands){
+        String tableName = commands[2];
+        String allConstraints = String.join(" ", Arrays.copyOfRange(commands, 3, commands.length - 1));
+        String[] separatedConstraints = allConstraints.split(",");
+        
+        //clean up argument leading whitespaces
+        for(int i = 0; i < separatedConstraints.length; i++){
+            separatedConstraints[i] = separatedConstraints[i].strip();
+        }
+
+        try {
+            ddlParser.createTable(catalog, tableName, new ArrayList<String>(Arrays.asList(separatedConstraints)));
+        } catch (InvalidTypeException e) {
+            // TODO Auto-generated catch block, replace with actual exception handling
+            e.printStackTrace();
+        }
+    }
+
+    public static void alterTableParser(DDLParser ddlParser, Catalog catalog, String[] commands){
+        String tableName = commands[2];
+        String allConstraints = String.join(" ", Arrays.copyOfRange(commands, 3, commands.length));
+        // removes the semicolon
+        allConstraints = allConstraints.substring(0, allConstraints.length() - 1);
+        
+        try {
+            ddlParser.alterTable(catalog, tableName, allConstraints);
+        } catch (InsufficientArgumentException e) {
+            // TODO Auto-generated catch block, replace with actual exception handling
+            e.printStackTrace();
+        } catch (InvalidTypeException e) {
+            // TODO Auto-generated catch block, replace with actual exception handling
+            e.printStackTrace();
+        }
     }
 
     public static String help(){
@@ -101,3 +168,4 @@ public class Main {
         return helpMessage.toString();
     }
 }
+
