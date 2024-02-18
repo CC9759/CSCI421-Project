@@ -22,11 +22,34 @@ public class DMLParser {
     }
 
     public void select(String tableName) {
-        // ask storage/buffer manager for table
+        TableSchema schema = this.cat.getTableSchema(tableName);
+        ArrayList<Record> recs;
+
+        if (schema == null) // no table by that name
+            return;
+        
+        try {
+            recs = this.stor.getAllRecords(schema.getTableId());
+        } catch(NoTableException e) {
+            System.out.println(e);
+            return;
+        }
+        
+
+        // print out attr names
+        for (AttributeSchema attr : schema.getAttributeSchema()) {
+            
+        }
+
+        // print out the tuples
+        for (Record rec : recs) {
+            
+        }
     }
 
-    public void displaySchema(){
+    public void displaySchema() {
         // displays the schema of the catalog, just prints out catalog's toString
+        this.cat.toString();
     }
 
     // for whoever is making the recs array
