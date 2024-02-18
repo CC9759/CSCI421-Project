@@ -15,42 +15,42 @@ import storageManager.Attribute;
 
 public class Main {
     public static void main(String[] args) {
-        // if (args.length != 3) {
-        //     System.out.println("Usage: java Main <dbLoc> <pageSize> <bufferSize>");
-        //     System.exit(1);
-        // }
+        if (args.length != 3) {
+            System.out.println("Usage: java Main <dbLoc> <pageSize> <bufferSize>");
+            System.exit(1);
+        }
         
-        // String dbLoc = args[0];
-        // int pageSize = Integer.parseInt(args[1]);
-        // int bufferSize = Integer.parseInt(args[2]);
+        String dbLoc = args[0];
+        int pageSize = Integer.parseInt(args[1]);
+        int bufferSize = Integer.parseInt(args[2]);
         
-        // System.out.println("Database Location: " + dbLoc);
-        // System.out.println("Page Size: " + pageSize);
-        // System.out.println("Buffer Size: " + bufferSize);
+        System.out.println("Database Location: " + dbLoc);
+        System.out.println("Page Size: " + pageSize);
+        System.out.println("Buffer Size: " + bufferSize);
 
-        // // Initialize Catalog
-        // File dbDirectory = new File(dbLoc);
-        // Catalog catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
-        // if (dbDirectory.isDirectory()) {
-        //     String[] files = dbDirectory.list();
-        //     if (files != null && files.length > 0) {
-        //         catalog.readBinary(dbLoc);
-        //         System.out.println("Initializing Database from existing file.");
-        //     } else {
-        //         System.out.println("No Database found in " + dbLoc + ". Creating new.");
-        //     }
-        // } else {
-        //     System.out.println("Path \'" + dbLoc + "\" provided is not a valid directory. Aborting.");
-        //     System.exit(1);
-        // }
+        // Initialize Catalog
+        File dbDirectory = new File(dbLoc);
+        Catalog catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
+        if (dbDirectory.isDirectory()) {
+            String[] files = dbDirectory.list();
+            if (files != null && files.length > 0) {
+                catalog.readBinary(dbLoc);
+                System.out.println("Initializing Database from existing file.");
+            } else {
+                System.out.println("No Database found in " + dbLoc + ". Creating new.");
+            }
+        } else {
+            System.out.println("Path \'" + dbLoc + "\" provided is not a valid directory. Aborting.");
+            System.exit(1);
+        }
 
-        // // Initialize Storage Manager
-        // StorageManager.InitStorageManager(bufferSize);
+        // Initialize Storage Manager
+        StorageManager.InitStorageManager(bufferSize);
         
         Scanner scanner = new Scanner(System.in);
         //allows us to use non-static methods
         DDLParser ddlParser = new DDLParser();
-        // DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
+        DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
                
         while (true) {
             String input = scanner.nextLine();
@@ -61,31 +61,30 @@ public class Main {
 
             switch(commands[0].toLowerCase()){
                 default: System.out.println(help()); break;
-                // case "create":
-                //     createTableParser(ddlParser, catalog, commands);
-                //     break;
-                // case "drop":
-                //     ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
-                //     break;
-                // case "alter":
-                //     alterTableParser(ddlParser, catalog, commands);
-                //     break;
-                case "insert":
-                    // insertParser(dmlParser, commands);
-                    insertParser(null, commands);
+                case "create":
+                    createTableParser(ddlParser, catalog, commands);
                     break;
-                // case "display":
-                //     dmlParser.displaySchema();
-                //     break;
-                // case "select":
-                //     dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
-                //     break;
+                case "drop":
+                    ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                    break;
+                case "alter":
+                    alterTableParser(ddlParser, catalog, commands);
+                    break;
+                case "insert":
+                    insertParser(dmlParser, commands);
+                    break;
+                case "display":
+                    dmlParser.displaySchema();
+                    break;
+                case "select":
+                    dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                    break;
                 
             }
 
             if (input.equalsIgnoreCase("quit")) {
-                // catalog.writeBinary(dbLoc);
-                // StorageManager.GetStorageManager().flushBuffer();
+                catalog.writeBinary(dbLoc);
+                StorageManager.GetStorageManager().flushBuffer();
                 break;
             } else if (input.equalsIgnoreCase("help")) {
                 System.out.println(help());
