@@ -56,7 +56,7 @@ public class Main {
             String input = scanner.nextLine();
             
             while(!input.endsWith(";")){
-                input += scanner.nextLine();
+                input += "" + scanner.nextLine();
             }
 
             String[] commands = input.strip().split(" ");
