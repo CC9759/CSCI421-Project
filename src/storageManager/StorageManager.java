@@ -143,4 +143,9 @@ public class StorageManager {
 
         return -1;
     }
+
+    // For test class use only
+    public HashMap<Integer, Table> getIdToTable() {
+        return idToTable;
+    }
 }

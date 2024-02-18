@@ -55,7 +55,9 @@ public class Main {
         while (true) {
             String input = scanner.nextLine();
             
-            // TODO: Need to implement multiline input
+            while(!input.endsWith(";")){
+                input += "" + scanner.nextLine();
+            }
 
             String[] commands = input.strip().split(" ");
 
@@ -93,6 +95,14 @@ public class Main {
         scanner.close();
     }
 
+    /**
+     * argument parser for create Table command, takes in the commands and calls DDLParser to handle
+     * processed commands
+     * 
+     * @param ddlParser the DDLParser instance
+     * @param catalog the catalog we are editing to
+     * @param commands the string list of commands to process
+     */
     public static void createTableParser(DDLParser ddlParser, Catalog catalog, String[] commands){
         String tableName = commands[2];
         String allConstraints = String.join(" ", Arrays.copyOfRange(commands, 3, commands.length - 1));
@@ -111,6 +121,14 @@ public class Main {
         }
     }
 
+    /**
+     * argument parser for alter table command, takes in the commands and calls DDLParser to handle
+     * processed commands
+     * 
+     * @param ddlParser the DDLParser instance
+     * @param catalog the catalog we are editing to
+     * @param commands the string list of commands to process
+     */
     public static void alterTableParser(DDLParser ddlParser, Catalog catalog, String[] commands){
         String tableName = commands[2];
         String allConstraints = String.join(" ", Arrays.copyOfRange(commands, 3, commands.length));
@@ -128,6 +146,15 @@ public class Main {
         }
     }
 
+    /**
+     * argument parser for insert into command, takes in each tuple in the commands
+     * and converts values in the tuples to a list of attributes. Individually inserts
+     * and processes each tuple according to the writeup. calls the DMLParser to handle
+     * catalog editing.
+     * 
+     * @param dmlParser the DMLParser instance
+     * @param commands the string list of commands to process
+     */
     public static void insertParser(DMLParser dmlParser, String[] commands){
         ArrayList<ArrayList<Attribute>> allAttributes = new ArrayList<>();
         String tableName = commands[2];
@@ -135,14 +162,17 @@ public class Main {
         String[] separatedTuples = allTuples.split(",");
 
         for(String constraint : separatedTuples){
-            allAttributes.add(parseInsertValues(constraint));
-        }
-        
-        for(ArrayList<Attribute> tuple : allAttributes){
-            dmlParser.insert(tuple, tableName);
+            dmlParser.insert(parseInsertValues(constraint), tableName);
         }
     }
 
+    /**
+     * Takes in a single String representation of a tuple and converts each value
+     * in the tuple to an appropriate Attribute
+     * 
+     * @param tupleString the string representation of a single tuple
+     * @return an ArrayList of attributes derived from the tuple string
+     */
     public static ArrayList<Attribute> parseInsertValues(String tupleString){
         ArrayList<Attribute> attributes = new ArrayList<>();
         // removes special chars outside of numbers, characters, periods, and quotes
@@ -182,6 +212,11 @@ public class Main {
         return attributes;
     }
 
+    /**
+     * function for the help message
+     * 
+     * @return string representation of the help message
+     */
     public static String help(){
         StringBuilder helpMessage =  new StringBuilder();
         helpMessage.append(
