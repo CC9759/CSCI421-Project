@@ -1,6 +1,13 @@
 package storageManager;
 
+import catalog.AttributeSchema;
+import catalog.AttributeType;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
@@ -47,6 +54,50 @@ public class Record implements Comparable<Record> {
         return totalSize;
      }
 
+    public int getSizeFile(){
+        int totalSize = 0;
+        for(Attribute attribute : attributes.values()){
+            if (attribute.isNull() && attribute.getData() == null) {
+                totalSize += 9; // null bitmap plus pointer
+            } else if (attribute.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
+                totalSize += ((String)attribute.getData()).length() + 8;
+            } else {
+                totalSize += attribute.getSize() + 8; // attribute pointer on file is 2 ints
+            }
+        }
+        return totalSize; // doesnt include header side
+    }
+
+    public void serialize(DataOutputStream recordDos) throws IOException {
+        ArrayList<Attribute> attributes = getAttributes();
+        attributes.sort(Comparator.comparing(AttributeSchema::getAttributeName));
+        int numAttributes = attributes.size();
+
+        int[] attributePositions = new int[numAttributes];
+        int[] attributeSizes = new int[numAttributes];
+        int recordHeaderSize = 8 * numAttributes;
+        int cumulativeAttributeSize = 0;
+        ByteArrayOutputStream attributeBaos = new ByteArrayOutputStream();
+        DataOutputStream attributeDos = new DataOutputStream(attributeBaos);
+        for (int i = 0; i < numAttributes; i++) {
+            int startSize = attributeBaos.size();
+            attributes.get(i).serialize(attributeDos);
+            attributeDos.flush();
+            int endSize = attributeBaos.size();
+            attributeSizes[i] = endSize - startSize;
+            attributePositions[i] = recordHeaderSize + cumulativeAttributeSize;
+            cumulativeAttributeSize += attributeSizes[i];
+        }
+
+        byte[] attributeData = attributeBaos.toByteArray();
+
+        for (int i = 0; i < numAttributes; i++) {
+            recordDos.writeInt(attributePositions[i]);
+            recordDos.writeInt(attributeSizes[i]);
+        }
+        recordDos.write(attributeData);
+    }
+
      /**
       * gets and returns a list of all attribute schemas
       * @return a list of all attribute schemas in the record
@@ -55,18 +106,6 @@ public class Record implements Comparable<Record> {
          return new ArrayList<>(attributes.values());
      }
 
-
-     /* 
-     * will need to look a schema for record attributes
-     * to understand how many to read in and what order
-     * !! read in location/size of N attrbiutes listed in the schema !!
-     * NOTE: when hit a 00000000 byte, assume null bitmap
-     */ 
-     public void readRecord(byte[] bytes) {
-   
-        
-         return;      
-      }
 
       // This does not check for whether the records belong to the same table or not
     @Override

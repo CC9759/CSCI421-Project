@@ -8,7 +8,7 @@ import java.util.HashMap;
 public class BufferManager {
 
     private ArrayList<Page> buffer;
-    private int bufferSize;
+    private final int bufferSize;
 
     public BufferManager(int bufferSize) {
         this.bufferSize = bufferSize;
@@ -23,7 +23,9 @@ public class BufferManager {
         }
         // If not in the buffer
         Page page = table.readPage(pageNumber);
-        addToBuffer(table, page);
+        if (page != null) {
+            addToBuffer(table, page);
+        }
         return page;
     }
 
@@ -39,7 +41,9 @@ public class BufferManager {
         if (buffer.size() == this.bufferSize) {
             int leastUsedPageIndex = this.getLRUPageIndex();
             Page removedPage = buffer.remove(leastUsedPageIndex);
-            table.writePage(removedPage);
+            if (removedPage.hasBeenUpdated()) {
+                table.writePage(removedPage);
+            }
         }
         page.touch();
         this.buffer.add(page);
@@ -107,14 +111,23 @@ public class BufferManager {
     /**
      * Update page number/ids after a page split
      * @param table       table the page split
-     * @param splitPageId id of the new page
+     * @param removedPageId id of the new page
      * @throws NoTableException No table of tableId
      */
-    public void updatePageNumbers(Table table, int removedPageId, int change) throws NoTableException {
-        for (int i = removedPageId + 1; i < table.getNumPages(); i++) {
-            Page page = getPage(table, i);
-            page.updatePageNumber(change);
+    public void updatePageNumbers(Table table, int removedPageId, int change) {
+
+        if (change > 0) {
+            // start from the end to avoid duplicate IDs in buffer at one time
+            for (int i = table.getNumPages() - 1; i >= removedPageId + 1; i--) {
+                getPage(table, i).updatePageNumber(change);
+            }
+        } else {
+            // start from the beginning to avoid duplicate IDs in buffer at one time
+            for (int i = removedPageId + 1; i < table.getNumPages(); i++) {
+                getPage(table, i).updatePageNumber(change);
+            }
         }
+
         table.updatePageCount(change);
     }
 
@@ -128,14 +141,10 @@ public class BufferManager {
     }
 
     private void handleEmptyPageRemoval(Table table, Page page) throws NoTableException {
-        // Check if the empty page not the last one
-        if (page.getPageId() != table.getNumPages() - 1) {
-            int toRemove = this.getIndexInBuffer(page.getPageId());
-            if (toRemove != -1) {
-                this.buffer.remove(toRemove);
-            }
-            // Update page numbers for subsequent pages
-            updatePageNumbers(table, page.getPageId(), -1);
+        int toRemove = this.getIndexInBuffer(page.getPageId());
+        if (toRemove != -1) {
+            this.buffer.remove(toRemove);
         }
+        updatePageNumbers(table, page.getPageId(), -1);
     }
 }

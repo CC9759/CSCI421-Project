@@ -2,6 +2,8 @@ package storageManager;
 
 import catalog.AttributeSchema;
 import catalog.AttributeType;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class Attribute extends AttributeSchema implements Comparable<Attribute> {
 
@@ -21,6 +23,29 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
 
     public Object getData() {
         return this.data;
+    }
+
+    public void serialize(DataOutputStream dos) throws IOException {
+        if (data == null) {
+            dos.writeByte(0);
+            return;
+        }
+        switch (getAttributeType().type) {
+            case INT:
+                dos.writeInt((Integer) data);
+                break;
+            case DOUBLE:
+                dos.writeDouble((Double) data);
+                break;
+            case BOOLEAN:
+                dos.writeBoolean((Boolean) data);
+                break;
+            case CHAR:
+            case VARCHAR:
+                byte[] stringBytes = ((String) data).getBytes();
+                dos.write(stringBytes);
+                break;
+        }
     }
 
     @Override
