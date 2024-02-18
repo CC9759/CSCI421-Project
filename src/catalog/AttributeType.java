@@ -12,7 +12,7 @@ public class AttributeType {
 
     public AttributeType(TYPE type) {
         this.type = type;
-        this.length = 32;
+        this.length = 0;
     }
 
     public AttributeType(TYPE type, int length) {

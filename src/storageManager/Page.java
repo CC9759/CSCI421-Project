@@ -2,26 +2,29 @@ package storageManager;
 
 import Exceptions.PageOverfullException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
 public class Page {
-    private int tableId;
+    private final int tableId;
     private int pageId;
-    private ArrayList<Record> records;
+    private final ArrayList<Record> records;
     private int freeSpaceAmount;
-    private int pageSize;
+    private final int pageSize;
     private long updatedAt; // Used by BufferManager to sort LRU
 
     // indicate to the buffer manager whether this page was modified and needs to be written to memory
     private boolean wasUpdated;
 
-    public Page(int tableId, int pageId, int pageSize) {
+    public Page(int tableId, int pageId, int pageSize, ArrayList<Record> records) {
         this.tableId = tableId;
         this.pageSize = pageSize;
         this.pageId = pageId;
-        this.freeSpaceAmount = pageSize;
-        this.records = new ArrayList<Record>();
+        this.records = records;
+        calculateFreeSpace();
     }
 
     public int getPageId() {
@@ -70,8 +73,7 @@ public class Page {
     }
 
     public boolean canInsertRecord(Record record) {
-        // +4 is space needed for its file pointer
-        return this.freeSpaceAmount >= record.getSize() + 4;
+        return this.freeSpaceAmount >= record.getSizeFile();
     }
 
     public void insertRecord(Record record, int index) throws PageOverfullException {
@@ -79,7 +81,7 @@ public class Page {
             throw new PageOverfullException(pageId);
         }
         records.add(index, record);
-        this.updateFreeSpace();
+        this.update();
     }
 
     public Page splitPage() throws PageOverfullException {
@@ -87,27 +89,28 @@ public class Page {
         // Slice the second half of the records in the page
         ArrayList<Record> newPageRecords = new ArrayList<>(records.subList(middle, records.size()));
         records.subList(middle, records.size()).clear();
-        this.updateFreeSpace();
+        this.update();
 
         // Insert the second half of the records into the new page
-        Page newPage = new Page(this.tableId, this.pageId + 1, this.pageSize);
-        for (Record record : newPageRecords) {
-            newPage.insertRecord(record, newPage.records.size());
-        }
-        newPage.updateFreeSpace();
+        Page newPage = new Page(this.tableId, this.pageId + 1, this.pageSize, newPageRecords);
+        newPage.update();
 
         return newPage;
     }
 
-    private void updateFreeSpace() {
+    private void calculateFreeSpace() {
         int usedSpace = 0;
+        usedSpace += getHeaderSize();
         for (Record record : records) {
-            usedSpace += record.getSize();
+            usedSpace += record.getSizeFile();
         }
-        usedSpace += records.size() * 4; // 4 byte pointer for each record
+        this.freeSpaceAmount = this.pageSize - usedSpace;
+    }
+
+    private void update() {
         this.wasUpdated = true;
         this.touch();
-        this.freeSpaceAmount = this.pageSize - usedSpace;
+        calculateFreeSpace();
     }
 
     public void updatePageNumber(int change) {
@@ -122,15 +125,64 @@ public class Page {
 
     public Record deleteRecord(int index) {
         Record result = this.records.remove(index);
-        this.updateFreeSpace();
+        this.update();
         return result;
     }
 
     public Record updateRecord(int index, Record record) {
         Record result = this.records.set(index, record);
-        this.updateFreeSpace();
+        this.update();
         return result;
     }
 
+    public int getFreeSpaceAmount() {
+        return this.freeSpaceAmount;
+    }
 
+    public int getHeaderSize() {
+        // Page ID | numberofslots | end of free space | slots (position | length)[]
+        return 4 + 4 + 4 + (8 * records.size());
+    }
+
+    public byte[] serializePage() throws IOException {
+        ArrayList<Record> records = getRecords();
+        int freeSpace = getFreeSpaceAmount();
+        int numberOfSlots = records.size();
+        int headerSize = getHeaderSize();
+        int endOfFreeSpace = headerSize + freeSpace;
+        int[] recordPositions = new int[numberOfSlots];
+        int[] recordSizes = new int[numberOfSlots];
+
+        int cumulativeRecordSize = 0;
+        ByteArrayOutputStream baosRecords = new ByteArrayOutputStream();
+        DataOutputStream dosRecords = new DataOutputStream(baosRecords);
+        for (int i = 0; i < records.size(); i++) {
+            int startSize = baosRecords.size();
+            records.get(i).serialize(dosRecords);
+            dosRecords.flush();
+            int endSize = baosRecords.size();
+            recordSizes[i] = endSize - startSize;
+            recordPositions[i] = endOfFreeSpace + cumulativeRecordSize;
+            cumulativeRecordSize += recordSizes[i];
+        }
+        dosRecords.flush();
+        byte[] recordData = baosRecords.toByteArray();
+
+        ByteArrayOutputStream pageBaos = new ByteArrayOutputStream();
+        DataOutputStream pageDos = new DataOutputStream(pageBaos);
+
+        pageDos.writeInt(getPageId());
+        pageDos.writeInt(numberOfSlots);
+        pageDos.writeInt(endOfFreeSpace);
+        for (int i = 0; i < numberOfSlots; i++) {
+            pageDos.writeInt(recordPositions[i]);
+            pageDos.writeInt(recordSizes[i]);
+        }
+        for (int i = 0; i < freeSpace; i++) {
+            pageDos.writeByte(0);
+        }
+        pageDos.write(recordData);
+        pageDos.flush();
+        return pageBaos.toByteArray();
+    }
 }
