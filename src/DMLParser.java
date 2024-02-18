@@ -90,14 +90,16 @@ public class DMLParser {
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // assume all numbers come in as DOUBLE
-                if (e.getAttributeType().type != AttributeType.TYPE.DOUBLE) // expecting a double
+                if (e.getAttributeType().type != AttributeType.TYPE.DOUBLE || e.getAttributeType().type != AttributeType.TYPE.INT) // expecting a double
                     return false;
 
                 // replace with correct schema and data input
-                if (k.getAttributeType().type == AttributeType.TYPE.INT)
+                if (k.getAttributeType().type == AttributeType.TYPE.INT && e.getAttributeType().type != AttributeType.TYPE.INT)
                     legal_recs.add(new Attribute(k, (int) e.getData()));
-                else 
+                else if (k.getAttributeType().type == AttributeType.TYPE.DOUBLE && e.getAttributeType().type != AttributeType.TYPE.DOUBLE) 
                     legal_recs.add(new Attribute(k, (double) e.getData()));
+                else
+                    return false;
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
                 if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) // expecting a bool
