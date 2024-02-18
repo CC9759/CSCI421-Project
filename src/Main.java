@@ -55,7 +55,9 @@ public class Main {
         while (true) {
             String input = scanner.nextLine();
             
-            // TODO: Need to implement multiline input
+            while(!input.endsWith(";")){
+                input += scanner.nextLine();
+            }
 
             String[] commands = input.strip().split(" ");
 
