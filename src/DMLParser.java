@@ -34,22 +34,52 @@ public class DMLParser {
             System.out.println(e);
             return;
         }
-        
 
         // print out attr names
         for (AttributeSchema attr : schema.getAttributeSchema()) {
-            
+            System.out.print(attr.getAttributeName() + ", ");
         }
 
         // print out the tuples
         for (Record rec : recs) {
-            
+            System.out.println("");
+            ArrayList<Attribute> attrs = rec.getAttributes();
+            for (Attribute attr : attrs) {
+                System.out.print(attr.getData() + ", ");
+            }
         }
     }
 
     public void displaySchema() {
         // displays the schema of the catalog, just prints out catalog's toString
         this.cat.toString();
+    }
+
+    public void displayInfo (String tableName) {
+        TableSchema schema = this.cat.getTableSchema(tableName);
+
+        if (schema == null) // no table by that name
+            return;
+        
+        System.out.println("Table: " + schema.getTableName());
+
+        System.out.print("Attributes: ");
+        for (AttributeSchema attr : schema.getAttributeSchema()) {
+            System.out.print(attr.getAttributeName() + ", ");
+        }
+
+        System.out.println("Number of pages: "+ schema.getNumPages());
+
+        ArrayList<Record> recs;
+        try {
+            recs = this.stor.getAllRecords(schema.getTableId());
+        } catch(NoTableException e) {
+            System.out.println(e);
+            return;
+        }
+
+        System.out.println("Number of Records: " + recs.size());
+
     }
 
     // for whoever is making the recs array
@@ -78,15 +108,13 @@ public class DMLParser {
             Attribute e = recs.get(i);
             AttributeSchema k = refs.get(i);
 
-            // NOT SURE HOW TO HANDLE NULLS YET
             // if value of data is null
             if (e.isNull()) {
                 if (k.isUnique() || k.isKey()) { // value cannot be null
                     return false;
                 }
                 // value can be null
-
-
+                legal_recs.add(new Attribute(k, e.getData(), k.getAttributeType(), true));
                 continue;
             }
 
