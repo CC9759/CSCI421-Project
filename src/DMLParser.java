@@ -110,7 +110,7 @@ public class DMLParser {
 
             // if value of data is null
             if (e.isNull()) {
-                if (k.isUnique() || k.isKey()) { // value cannot be null
+                if (k.isUnique() || k.isKey() || k.isNull()) { // value cannot be null
                     return false;
                 }
                 // value can be null
