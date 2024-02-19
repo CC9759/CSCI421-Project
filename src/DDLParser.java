@@ -41,11 +41,11 @@ public class DDLParser {
                         String name = attributes[0];
                         AttributeType type = new AttributeType(attributes[1]);
 
-                        List<String> specialAttributes = Arrays
-                                        .asList(Arrays.copyOfRange(attributes, 2, attributes.length));
+                        String specialAttributes = Arrays.copyOfRange(attributes, 2, attributes.length).toString();
                         boolean key = specialAttributes.contains("KEY");
+                        // TODO: ^ change "KEY" to designated key type if needed
                         boolean unique = specialAttributes.contains("UNIQUE");
-                        boolean nullable = !specialAttributes.contains("NOT NULL"); // TODO: test this
+                        boolean nullable = !specialAttributes.contains("NOT NULL");
 
                         var schema = new AttributeSchema(name, type, key, unique, nullable);
                         attributesSchemas.add(schema);
