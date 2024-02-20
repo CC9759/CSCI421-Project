@@ -57,7 +57,6 @@ public class StorageManager {
             if (insertPos != -1) {
                 if (page.canInsertRecord(record)) {
                     bufferManager.insertRecord(page, record, insertPos);
-                    return;
                 } else {
                     Page newPage = page.splitPage();
                     bufferManager.updatePageNumbers(table, newPage.getPageId(), 1);
@@ -72,11 +71,12 @@ public class StorageManager {
                     } else {
                         bufferManager.insertRecord(page, record, insertPos);
                     }
-                    
-                    return;
+
                 }
+                return;
             }
         }
+
     }
 
     public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
@@ -98,9 +98,9 @@ public class StorageManager {
         Table table = ensureTable(tableId);
         return this.bufferManager.deleteRecord(table, primaryKey);
     }
-    public Record updateRecord(int tableId, Record record) throws NoTableException {
-        Table table = ensureTable(tableId);
-        return this.bufferManager.updateRecord(table, record);
+    public void updateRecord(int tableId, Record record) throws NoTableException, PageOverfullException, DuplicateKeyException {
+        deleteRecord(tableId, record.getPrimaryKey());
+        insertRecord(tableId, record);
     }
 
     /**

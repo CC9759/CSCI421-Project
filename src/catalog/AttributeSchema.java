@@ -8,9 +8,11 @@ public class AttributeSchema {
     private boolean isUnique;
     private boolean isNull;
     private String defaultValue;
+    private int attributeId;
 
-    public AttributeSchema(String attributeName, AttributeType type, boolean isKey, boolean isUnique, boolean isNull) {
+    public AttributeSchema(String attributeName, AttributeType type, int attributeId, boolean isKey, boolean isUnique, boolean isNull) {
         this.attributeName = attributeName;
+        this.attributeId = attributeId;
         this.type = type;
         this.isKey = isKey;
         this.isUnique = isUnique;
@@ -35,6 +37,14 @@ public class AttributeSchema {
      */
     public String getAttributeName() {
         return attributeName;
+    }
+
+    public int getAttributeId() {
+        return attributeId;
+    }
+
+    public int setAttributeId(int id) {
+        return this.attributeId = id;
     }
 
     /**

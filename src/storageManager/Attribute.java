@@ -10,13 +10,13 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
     private Object data;
 
     public Attribute(AttributeSchema schema, Object data) {
-        super(schema.getAttributeName(), schema.getAttributeType(), schema.isKey(), schema.isUnique(), schema.isNull());
+        super(schema.getAttributeName(), schema.getAttributeType(), schema.getAttributeId(), schema.isKey(), schema.isUnique(), schema.isNull());
         this.data = data;
     }
 
     // only useful for varChar and null entries
     public Attribute(AttributeSchema schema, Object data, AttributeType varChar, boolean isNull) {
-        super(schema.getAttributeName(), varChar, schema.isKey(), schema.isUnique(), isNull);
+        super(schema.getAttributeName(), varChar, schema.getAttributeId(), schema.isKey(), schema.isUnique(), isNull);
         this.data = data;
     }
 

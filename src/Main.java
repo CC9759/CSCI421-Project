@@ -5,8 +5,8 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import Exceptions.InsufficientArgumentException;
-import Exceptions.InvalidTypeException;
+import DDLParser.DDLParser;
+import Exceptions.*;
 import catalog.AttributeSchema;
 import catalog.AttributeType;
 import catalog.Catalog;
@@ -96,10 +96,10 @@ public class Main {
     }
 
     /**
-     * argument parser for create Table command, takes in the commands and calls DDLParser to handle
+     * argument parser for create Table command, takes in the commands and calls DDLParser.DDLParser to handle
      * processed commands
      * 
-     * @param ddlParser the DDLParser instance
+     * @param ddlParser the DDLParser.DDLParser instance
      * @param catalog the catalog we are editing to
      * @param commands the string list of commands to process
      */
@@ -122,10 +122,10 @@ public class Main {
     }
 
     /**
-     * argument parser for alter table command, takes in the commands and calls DDLParser to handle
+     * argument parser for alter table command, takes in the commands and calls DDLParser.DDLParser to handle
      * processed commands
      * 
-     * @param ddlParser the DDLParser instance
+     * @param ddlParser the DDLParser.DDLParser instance
      * @param catalog the catalog we are editing to
      * @param commands the string list of commands to process
      */
@@ -143,6 +143,8 @@ public class Main {
         } catch (InvalidTypeException e) {
             // TODO Auto-generated catch block, replace with actual exception handling
             e.printStackTrace();
+        } catch (PageOverfullException | NoTableException | DuplicateKeyException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -162,7 +164,7 @@ public class Main {
         String[] separatedTuples = allTuples.split(",");
 
         for(String constraint : separatedTuples){
-            dmlParser.insert(parseInsertValues(constraint), tableName);
+            dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
         }
     }
 
@@ -173,7 +175,7 @@ public class Main {
      * @param tupleString the string representation of a single tuple
      * @return an ArrayList of attributes derived from the tuple string
      */
-    public static ArrayList<Attribute> parseInsertValues(String tupleString){
+    public static ArrayList<Attribute> parseInsertValues(String tupleString, String tableName){
         ArrayList<Attribute> attributes = new ArrayList<>();
         // removes special chars outside of numbers, characters, periods, and quotes
         tupleString = tupleString.replaceAll("[^0-9a-zA-Z.\\\" ]", "");
@@ -181,30 +183,26 @@ public class Main {
         // need some special regex for this cause quotation marks are a pain
         Pattern pattern = Pattern.compile("\"([^\"]*)\"|(\\S+)");
         Matcher matcher = pattern.matcher(tupleString);
-        
+        var tableSchemas = Catalog.getCatalog().getTableSchema(tableName);
+        var attributeSchemas = tableSchemas.getAttributeSchema();
+        int schemaPointer = 0;
         while (matcher.find()) {
             if (matcher.group(1) != null) {
-                AttributeSchema attributeSchema = new AttributeSchema(matcher.group(1), new AttributeType(AttributeType.TYPE.CHAR), false, false, false);
-                attributes.add(new Attribute(attributeSchema, matcher.group(1)));
+                attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), matcher.group(1)));
             } else {
                 String match = matcher.group(2);
                 if (match.matches("-?\\d+")) {
-                    AttributeSchema attributeSchema = new AttributeSchema(match, new AttributeType(AttributeType.TYPE.INT), false, false, false);
-                    attributes.add(new Attribute(attributeSchema, Integer.parseInt(match)));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), Integer.parseInt(match)));
                 } else if (match.matches("-?\\d+\\.\\d+")) {
-                    AttributeSchema attributeSchema = new AttributeSchema(match, new AttributeType(AttributeType.TYPE.DOUBLE), false, false, false);
-                    attributes.add(new Attribute(attributeSchema, Double.parseDouble(match)));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), Double.parseDouble(match)));
                 } else if (match.equals("true") || match.equals("false")) {
-                    AttributeSchema attributeSchema = new AttributeSchema(match, new AttributeType(AttributeType.TYPE.BOOLEAN), false, false, false);
-                    attributes.add(new Attribute(attributeSchema, Boolean.parseBoolean(match)));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), Boolean.parseBoolean(match)));
                 } else if (match.equals("null")){
-                    AttributeSchema attributeSchema = new AttributeSchema(match, null, false, false, true);
-                    attributes.add(new Attribute(attributeSchema, null));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), null));
                 }
                 // if it doesn't match anything at all then just add the attribute as a string
-                else{
-                    AttributeSchema attributeSchema = new AttributeSchema(match, new AttributeType(AttributeType.TYPE.CHAR), false, false, false);
-                attributes.add(new Attribute(attributeSchema, match));
+                else {
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), match));
                 }
             }
         }

@@ -11,7 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class Table {
     public TableSchema schema;
@@ -59,7 +58,8 @@ public class Table {
      */
     public Page createPage() {
         int pageId = numPages;
-        numPages++;
+        //numPages++;
+        updatePageCount(1);
         return new Page(schema.getTableId(), pageId, Catalog.getCatalog().getPageSize(), new ArrayList<>());
     }
 
@@ -67,11 +67,13 @@ public class Table {
      * Increment the amount of pages this table has
      */
     public void updatePageCount(int change) {
+
         this.numPages += change;
         String location = getLocation();
         try (RandomAccessFile file = new RandomAccessFile(location, "rw");
              FileChannel fileChannel = file.getChannel()) {
                 fileChannel.truncate((long) this.numPages * Catalog.getCatalog().getPageSize());
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -83,11 +85,16 @@ public class Table {
             RandomAccessFile file = new RandomAccessFile(location, "rw");
             long offset = page.getPageId() * Catalog.getCatalog().getPageSize();
             byte[] pageData = page.serializePage();
+            if (pageData.length != 200) {
+                System.out.println("Fatal: Tried to write page of size " + pageData.length + " bytes which is not the defined page size");
+                System.exit(1);
+            }
             file.seek(offset);
             file.write(pageData);
             file.close();
         } catch (IOException error) {
             System.out.println(error.getMessage());
+            System.exit(1);
         }
     }
 
@@ -98,6 +105,7 @@ public class Table {
             RandomAccessFile file = new RandomAccessFile(location, "r");
 
             long pageOffset = pageNumber * Catalog.getCatalog().getPageSize();
+
             file.seek(pageOffset);
 
             // read page header
@@ -110,6 +118,7 @@ public class Table {
             // read slot positions
             int[] recordPositions = new int[numberOfSlots];
             int[] recordSizes = new int[numberOfSlots];
+
             for (int i = 0; i < numberOfSlots; i++) {
                 recordPositions[i] = file.readInt();
                 recordSizes[i] = file.readInt();
@@ -135,19 +144,17 @@ public class Table {
         ByteArrayInputStream bais = new ByteArrayInputStream(recordBytes);
         DataInputStream dis = new DataInputStream(bais);
 
-        // Read attributes the same way they were written
-        ArrayList<AttributeSchema> attributeSchemas = this.schema.getAttributeSchema();
-        attributeSchemas.sort(Comparator.comparing(AttributeSchema::getAttributeName));
-
-        int numAttributes = attributeSchemas.size();
+        int numAttributes = dis.readInt();
 
         ArrayList<Attribute> attributes = new ArrayList<>();
         int[] attributePositions = new int[numAttributes];
         int[] attributeSizes = new int[numAttributes];
+        int[] attributeIds = new int[numAttributes];
 
         for (int i = 0; i < numAttributes; i++) {
             attributePositions[i] = dis.readInt();
             attributeSizes[i] = dis.readInt();
+            attributeIds[i] = dis.readInt();
         }
 
         for (int i = 0; i < numAttributes; i++) {
@@ -157,7 +164,7 @@ public class Table {
 
             byte[] attributeData = new byte[attributeSizes[i]];
             dis.readFully(attributeData);
-            Attribute attribute = readAttribute(attributeData, attributeSchemas.get(i));
+            Attribute attribute = readAttribute(attributeData, this.schema.getAttributeSchema(attributeIds[i]));
             if (attribute != null) {
                 attributes.add(attribute);
             }

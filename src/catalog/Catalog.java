@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Catalog {
 
@@ -115,7 +116,7 @@ public class Catalog {
      */
     public TableSchema getTableSchema(String tableName) {
         for (TableSchema tableSchema : this.tables) {
-            if (tableSchema.getTableName() == tableName) {
+            if (Objects.equals(tableSchema.getTableName(), tableName)) {
                 return tableSchema;
             }
         }
@@ -147,11 +148,11 @@ public class Catalog {
     /**
      * Remove a table schema from the catalog
      * 
-     * @param tableSchemaId Name of table to remove from the catalog
+     * @param tableSchemaName Name of table to remove from the catalog
      */
     public void removeTableSchema(String tableSchemaName) {
         for (int i = 0; i < this.tables.size(); i++) {
-            if (this.tables.get(i).getTableName() == tableSchemaName) {
+            if (Objects.equals(this.tables.get(i).getTableName(), tableSchemaName)) {
                 this.tables.remove(i);
             }
         }

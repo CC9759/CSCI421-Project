@@ -73,7 +73,7 @@ public class Page {
     }
 
     public boolean canInsertRecord(Record record) {
-        return this.freeSpaceAmount >= record.getSizeFile();
+        return this.freeSpaceAmount >= (record.getSizeFile() + 8); // include record slot
     }
 
     public void insertRecord(Record record, int index) throws PageOverfullException {
@@ -94,7 +94,6 @@ public class Page {
         // Insert the second half of the records into the new page
         Page newPage = new Page(this.tableId, this.pageId + 1, this.pageSize, newPageRecords);
         newPage.update();
-
         return newPage;
     }
 
@@ -129,11 +128,6 @@ public class Page {
         return result;
     }
 
-    public Record updateRecord(int index, Record record) {
-        Record result = this.records.set(index, record);
-        this.update();
-        return result;
-    }
 
     public int getFreeSpaceAmount() {
         return this.freeSpaceAmount;
@@ -146,6 +140,10 @@ public class Page {
 
     public byte[] serializePage() throws IOException {
         ArrayList<Record> records = getRecords();
+        if (records.size() == 0) {
+            System.out.println("Fatal: trying to write a page of size 0 to memory " + pageId);
+            System.exit(1);
+        }
         int freeSpace = getFreeSpaceAmount();
         int numberOfSlots = records.size();
         int headerSize = getHeaderSize();
@@ -157,11 +155,16 @@ public class Page {
         ByteArrayOutputStream baosRecords = new ByteArrayOutputStream();
         DataOutputStream dosRecords = new DataOutputStream(baosRecords);
         for (int i = 0; i < records.size(); i++) {
+            var record = records.get(i);
             int startSize = baosRecords.size();
-            records.get(i).serialize(dosRecords);
+            record.serialize(dosRecords);
             dosRecords.flush();
             int endSize = baosRecords.size();
             recordSizes[i] = endSize - startSize;
+            if (recordSizes[i] != record.getSizeFile()) {
+                System.out.println("Fatal: Calculated record size is different than actual");
+                System.exit(1);
+            }
             recordPositions[i] = endOfFreeSpace + cumulativeRecordSize;
             cumulativeRecordSize += recordSizes[i];
         }

@@ -86,16 +86,6 @@ public class BufferManager {
         return null; 
     }
 
-    public Record updateRecord(Table table, Record record) {
-        for (int i = 0; i < table.getNumPages(); i++) {
-            Page page = this.getPage(table, i);
-            int recordIndex = page.getRecordByKey(record.getPrimaryKey());
-            if (recordIndex != -1) {
-                page.updateRecord(recordIndex, record);
-            }
-        }
-        return null;
-    }
 
     public Record getRecordByPrimaryKey(Table table, Attribute primaryKey) {
         for (int i = 0; i < table.getNumPages(); i++) {
@@ -115,10 +105,9 @@ public class BufferManager {
      * @throws NoTableException No table of tableId
      */
     public void updatePageNumbers(Table table, int removedPageId, int change) {
-
         if (change > 0) {
             // start from the end to avoid duplicate IDs in buffer at one time
-            for (int i = table.getNumPages() - 1; i >= removedPageId + 1; i--) {
+            for (int i = table.getNumPages() - 1; i >= removedPageId; i--) {
                 getPage(table, i).updatePageNumber(change);
             }
         } else {
