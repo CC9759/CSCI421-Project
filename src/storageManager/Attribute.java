@@ -15,8 +15,8 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
     }
 
     // only useful for varChar and null entries
-    public Attribute(AttributeSchema schema, Object data, AttributeType varChar, boolean isNull) {
-        super(schema.getAttributeName(), varChar, schema.isKey(), schema.isUnique(), isNull);
+    public Attribute(AttributeSchema schema, Object data, AttributeType varChar) {
+        super(schema.getAttributeName(), varChar, schema.isKey(), schema.isUnique(), schema.isNull());
         this.data = data;
     }
 

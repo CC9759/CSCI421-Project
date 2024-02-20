@@ -58,8 +58,10 @@ public class DMLParser {
     public void displayInfo (String tableName) {
         TableSchema schema = this.cat.getTableSchema(tableName);
 
-        if (schema == null) // no table by that name
+        if (schema == null) { // no table by that name
+            System.out.println(tableName + " DNE");
             return;
+        }
         
         System.out.println("Table: " + schema.getTableName());
 
@@ -114,7 +116,7 @@ public class DMLParser {
                     return false;
                 }
                 // value can be null
-                legal_recs.add(new Attribute(k, e.getData(), k.getAttributeType(), true));
+                legal_recs.add(new Attribute(k, null, k.getAttributeType()));
                 continue;
             }
 
@@ -134,7 +136,7 @@ public class DMLParser {
                 if (k.getAttributeType().type != AttributeType.TYPE.VARCHAR) {
                     // if varChar, then create new attribute type with exact attr size
                     AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)e.getData()).length());
-                    legal_recs.add(new Attribute(k, (String) e.getData(), varchar, false));
+                    legal_recs.add(new Attribute(k, (String) e.getData(), varchar));
                 } else {
                     legal_recs.add(new Attribute(k, (String) e.getData()));
                 }
