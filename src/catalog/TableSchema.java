@@ -34,7 +34,16 @@ public class TableSchema {
 
     public AttributeSchema getAttributeSchema(String attributeName) {
         for (int i = 0; i < this.tableAttributes.size(); i++) {
-            if (tableAttributes.get(i).getAttributeName() == attributeName)
+            if (tableAttributes.get(i).getAttributeName().equals(attributeName))
+                return tableAttributes.get(i);
+
+        }
+        return null;
+    }
+
+    public AttributeSchema getAttributeSchema(int attributeId) {
+        for (int i = 0; i < this.tableAttributes.size(); i++) {
+            if (tableAttributes.get(i).getAttributeId() == attributeId)
                 return tableAttributes.get(i);
 
         }
@@ -42,6 +51,11 @@ public class TableSchema {
     }
 
     public void addAttributeSchema(AttributeSchema attributeSchema) {
+        int maxId = 0;
+        for (AttributeSchema as: this.tableAttributes) {
+            maxId = Math.max(maxId, as.getAttributeId());
+        }
+        attributeSchema.setAttributeId(maxId + 1);
         this.tableAttributes.add(attributeSchema);
     }
 

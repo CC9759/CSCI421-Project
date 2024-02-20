@@ -14,7 +14,7 @@ import java.util.HashMap;
  * Record Class, represents a single tuple/entry
  */
 public class Record implements Comparable<Record> {
-     private HashMap<String, Attribute> attributes;
+     private final HashMap<String, Attribute> attributes;
 
 
      public Record(ArrayList<Attribute> attributes) {
@@ -32,6 +32,14 @@ public class Record implements Comparable<Record> {
      public Attribute getAttribute(String attributeName){
         return attributes.get(attributeName);
      }
+
+    public Attribute setAttribute(String attributeName, Attribute attribute){
+        return attributes.put(attributeName, attribute);
+    }
+
+    public Attribute removeAttribute(String attributeName){
+        return attributes.remove(attributeName);
+    }
 
     public Attribute getPrimaryKey(){
          for (Attribute attribute: attributes.values()) {
@@ -55,14 +63,15 @@ public class Record implements Comparable<Record> {
      }
 
     public int getSizeFile(){
-        int totalSize = 0;
+        int totalSize = 4; // num attributes
+        int pointerSize = 12; // attr pos, size, id
         for(Attribute attribute : attributes.values()){
             if (attribute.isNull() && attribute.getData() == null) {
-                totalSize += 9; // null bitmap plus pointer
+                totalSize += pointerSize + 1; // null bitmap plus pointer
             } else if (attribute.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                totalSize += ((String)attribute.getData()).length() + 8;
+                totalSize += pointerSize + ((String)attribute.getData()).length();
             } else {
-                totalSize += attribute.getSize() + 8; // attribute pointer on file is 2 ints
+                totalSize += pointerSize + attribute.getSize();
             }
         }
         return totalSize; // doesnt include header side
@@ -75,7 +84,8 @@ public class Record implements Comparable<Record> {
 
         int[] attributePositions = new int[numAttributes];
         int[] attributeSizes = new int[numAttributes];
-        int recordHeaderSize = 8 * numAttributes;
+        int[] attributeIds = new int[numAttributes];
+        int recordHeaderSize = 4 + (12 * numAttributes); // num attr then Attr location | size | id for each attr
         int cumulativeAttributeSize = 0;
         ByteArrayOutputStream attributeBaos = new ByteArrayOutputStream();
         DataOutputStream attributeDos = new DataOutputStream(attributeBaos);
@@ -86,14 +96,17 @@ public class Record implements Comparable<Record> {
             int endSize = attributeBaos.size();
             attributeSizes[i] = endSize - startSize;
             attributePositions[i] = recordHeaderSize + cumulativeAttributeSize;
+            attributeIds[i] = attributes.get(i).getAttributeId();
             cumulativeAttributeSize += attributeSizes[i];
         }
 
         byte[] attributeData = attributeBaos.toByteArray();
 
+        recordDos.writeInt(numAttributes);
         for (int i = 0; i < numAttributes; i++) {
             recordDos.writeInt(attributePositions[i]);
             recordDos.writeInt(attributeSizes[i]);
+            recordDos.writeInt(attributeIds[i]);
         }
         recordDos.write(attributeData);
     }
@@ -111,5 +124,14 @@ public class Record implements Comparable<Record> {
     @Override
     public int compareTo(Record o) {
          return this.getPrimaryKey().compareTo(o.getPrimaryKey());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder finalStr = new StringBuilder("Record=");
+        for (Attribute atr: attributes.values()) {
+            finalStr.append("\n\t").append(atr.getAttributeName()).append(": ").append(atr.getData());
+        }
+        return finalStr.toString();
     }
 }

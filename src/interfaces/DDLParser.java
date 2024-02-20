@@ -3,7 +3,7 @@ package interfaces;
 import java.util.ArrayList;
 
 /**
- * Interface for the DDLParser, will contain/have access 
+ * Interface for the DDLParser.DDLParser, will contain/have access
  * to a Catalog and/or Storage Manager instance
  */
 public interface DDLParser {
