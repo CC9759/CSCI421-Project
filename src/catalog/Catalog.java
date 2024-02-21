@@ -1,14 +1,10 @@
 package catalog;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Catalog {
+public class Catalog implements Serializable {
 
     /*
      * Instance variables:
@@ -74,7 +70,7 @@ public class Catalog {
      */
     public void writeBinary() {
         // fileLocation Ex. "catalog.txt"
-        try (FileOutputStream fos = new FileOutputStream(this.location + "catalog.bin")) {
+        try (FileOutputStream fos = new FileOutputStream(this.location + "/catalog.bin")) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(catalogue);
             oos.close();

@@ -1,6 +1,8 @@
 package catalog;
 
-public class AttributeSchema {
+import java.io.Serializable;
+
+public class AttributeSchema implements Serializable {
 
     private String attributeName;
     private AttributeType type;

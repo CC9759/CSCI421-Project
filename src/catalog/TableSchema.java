@@ -1,8 +1,9 @@
 package catalog;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TableSchema {
+public class TableSchema implements Serializable {
 
     /*
      * Instance Variables:

@@ -2,7 +2,9 @@ package catalog;
 
 import Exceptions.InvalidTypeException;
 
-public class AttributeType {
+import java.io.Serializable;
+
+public class AttributeType implements Serializable {
     public enum TYPE {
         INT, DOUBLE, BOOLEAN, CHAR, VARCHAR
     }
