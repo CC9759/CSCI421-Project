@@ -20,9 +20,10 @@ public class AttributeSchema {
         this.defaultValue = "null";
     }
 
-    public AttributeSchema(String attributeName, AttributeType type, boolean isKey, boolean isUnique, boolean isNull,
+    public AttributeSchema(String attributeName, AttributeType type, int attributeId, boolean isKey, boolean isUnique, boolean isNull,
             String defaultStr) {
         this.attributeName = attributeName;
+        this.attributeId = attributeId;
         this.type = type;
         this.isKey = isKey;
         this.isUnique = isUnique;

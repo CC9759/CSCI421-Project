@@ -38,8 +38,9 @@ public class DDLParser {
             boolean key = column.isPrimaryKey();
             boolean unique = column.isUnique();
             boolean nullable = !column.isNotNull();
+            String defaultValue = column.getDefaultValue();
 
-            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable);
+            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable, defaultValue);
             attributeSchemas.add(schema);
         }
         catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributeSchemas));
@@ -70,6 +71,7 @@ public class DDLParser {
             throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException, DuplicateKeyException {
         String[] attributes = argument.toUpperCase().split(" ");
         String keyWord = attributes[0];
+        int numExistingAttributes = catalog.getTableSchema(tableName).getAttributeSchema().size();
         switch (keyWord) {
             case "ADD":
                 if (!(attributes.length == 3 || attributes.length == 5))
@@ -84,7 +86,7 @@ public class DDLParser {
                     defaultValue = instruc.get(instruc.indexOf("DEFAULT") + 1);
                 }
                 var newAttributes = new AttributeSchema(instruc.get(0),
-                        new AttributeType(instruc.get(1)), false, false, false, defaultValue);
+                        new AttributeType(instruc.get(1)), numExistingAttributes, false, false, false, defaultValue);
 
                 // look for a attribute that shares the name and replace it
                 if (catalog.getTableSchema(tableName).getAttributeSchema(instruc.get(0)) != null) {

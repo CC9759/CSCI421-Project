@@ -6,13 +6,16 @@ public class Column {
     private final boolean primaryKey;
     private final boolean unique;
     private final boolean notNull;
+    private final String defaultValue;
 
-    public Column(String name, String type, boolean primaryKey, boolean unique, boolean notNull) {
+
+    public Column(String name, String type, boolean primaryKey, boolean unique, boolean notNull, String defaultValue) {
         this.name = name;
         this.type = type;
         this.primaryKey = primaryKey;
         this.unique = unique;
         this.notNull = notNull;
+        this.defaultValue = defaultValue;
     }
 
 
@@ -21,4 +24,5 @@ public class Column {
     public boolean isPrimaryKey() { return primaryKey; }
     public boolean isUnique() { return unique; }
     public boolean isNotNull() { return notNull; }
+    public String getDefaultValue() { return defaultValue; }
 }

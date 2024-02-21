@@ -23,10 +23,7 @@ public class Main {
         String dbLoc = args[0];
         int pageSize = Integer.parseInt(args[1]);
         int bufferSize = Integer.parseInt(args[2]);
-        
-        System.out.println("Database Location: " + dbLoc);
-        System.out.println("Page Size: " + pageSize);
-        System.out.println("Buffer Size: " + bufferSize);
+
 
         // Initialize Catalog
         File dbDirectory = new File(dbLoc);
@@ -53,6 +50,7 @@ public class Main {
         DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
                
         while (true) {
+            System.out.print("> ");
             String input = scanner.nextLine();
             
             while(!input.endsWith(";")){
@@ -131,7 +129,21 @@ public class Main {
             boolean unique = column.contains("UNIQUE");
             boolean notNull = column.contains("NOT NULL");
 
-            newColumns.add(new Column(name, type, primaryKey, unique, notNull));
+            String defaultValue = "null";
+            if (column.toLowerCase().contains("default")) {
+                String[] colArgs = column.split(" ");
+                for (int i = 0; i < colArgs.length; i++) {
+                    if (colArgs[i].equalsIgnoreCase("default")) {
+                        if (i + 1 < colArgs.length) {
+                            defaultValue = colArgs[i + 1];
+                            defaultValue = defaultValue.replaceAll("^[\"“”']|[\"“”']$", "");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            newColumns.add(new Column(name, type, primaryKey, unique, notNull, defaultValue));
         }
 
         try {
