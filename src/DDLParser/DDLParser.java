@@ -38,9 +38,8 @@ public class DDLParser {
             boolean key = column.isPrimaryKey();
             boolean unique = column.isUnique();
             boolean nullable = !column.isNotNull();
-            String defaultValue = column.getDefaultValue();
 
-            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable, defaultValue);
+            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable);
             attributeSchemas.add(schema);
         }
         catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributeSchemas));

@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 import DDLParser.DDLParser;
 import DDLParser.Column;
 import Exceptions.*;
-import catalog.AttributeSchema;
 import catalog.Catalog;
 import storageManager.StorageManager;
 import storageManager.Attribute;
@@ -113,37 +112,23 @@ public class Main {
         String command = String.join(" ", Arrays.asList(commands));
         int startIndex = command.indexOf("(") + 1;
         int endIndex = command.lastIndexOf(")");
-        String columnsString = command.substring(startIndex, endIndex);
-        String[] columnParams = columnsString.split(",");
+        String allColumnsString = command.substring(startIndex, endIndex);
+        String[] columnParams = allColumnsString.split(",");
 
         ArrayList<Column> newColumns = new ArrayList<>();
 
         for (String column : columnParams) {
             column = column.trim();
 
-            String[] parts = column.split("\\s+", 3);
-            String name = parts[0];
-            String type = parts[1];
+            String[] colArgs = column.split("\\s+", 3);
+            String name = colArgs[0];
+            String type = colArgs[1];
 
-            boolean primaryKey = column.contains("PRIMARY KEY");
-            boolean unique = column.contains("UNIQUE");
-            boolean notNull = column.contains("NOT NULL");
+            boolean primaryKey = column.toLowerCase().contains("primarykey");
+            boolean unique = column.toLowerCase().contains("unique") || primaryKey;
+            boolean notNull = column.toLowerCase().contains("notnull") || primaryKey;
 
-            String defaultValue = "null";
-            if (column.toLowerCase().contains("default")) {
-                String[] colArgs = column.split(" ");
-                for (int i = 0; i < colArgs.length; i++) {
-                    if (colArgs[i].equalsIgnoreCase("default")) {
-                        if (i + 1 < colArgs.length) {
-                            defaultValue = colArgs[i + 1];
-                            defaultValue = defaultValue.replaceAll("^[\"“”']|[\"“”']$", "");
-                            break;
-                        }
-                    }
-                }
-            }
-
-            newColumns.add(new Column(name, type, primaryKey, unique, notNull, defaultValue));
+            newColumns.add(new Column(name, type, primaryKey, unique, notNull));
         }
 
         try {

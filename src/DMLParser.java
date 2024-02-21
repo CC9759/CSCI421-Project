@@ -52,7 +52,7 @@ public class DMLParser {
 
     public void displaySchema() {
         // displays the schema of the catalog, just prints out catalog's toString
-        this.cat.toString();
+        System.out.println(this.cat.toString());
     }
 
     public void displayInfo (String tableName) {
