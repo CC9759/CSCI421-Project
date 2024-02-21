@@ -24,38 +24,25 @@ public class DDLParser {
      * to add a TableSchema and Table
      *
      * @param tableName the name of the Table to be added
-     * @param arguments the list of Table attributes to add in the form:
+     * @param columns the list of Table attributes to add in the form:
      *                  {column1 datatype,
      *                  column2 datatype,
      *                  column3 datatype,...}
      * @throws InvalidTypeException
      */
-    public void createTable(Catalog catalog, String tableName, ArrayList<String> arguments)
+    public void createTable(Catalog catalog, String tableName, ArrayList<Column> columns)
             throws InvalidTypeException {
-        if (arguments == null) {
-            catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, null));
-            return;
+        ArrayList<AttributeSchema> attributeSchemas = new ArrayList<>();
+        for (Column column : columns) {
+            AttributeType type = new AttributeType(column.getType());
+            boolean key = column.isPrimaryKey();
+            boolean unique = column.isUnique();
+            boolean nullable = !column.isNotNull();
+
+            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable);
+            attributeSchemas.add(schema);
         }
-
-        ArrayList<AttributeSchema> attributesSchemas = new ArrayList<AttributeSchema>();
-        arguments.replaceAll(e -> e.toUpperCase()); // make all uppercase for simplicity
-        int id = 0;
-        for (String arg : arguments) {
-            // split argument {name} {type} {keyType} {Key/!Key} {Unique} {NOT NULL}
-            String[] attributes = arg.split(" ");
-            String name = attributes[0];
-            AttributeType type = new AttributeType(attributes[1]);
-
-            String specialAttributes = Arrays.copyOfRange(attributes, 2, attributes.length).toString();
-            boolean key = specialAttributes.contains("KEY");
-            // TODO: ^ change "KEY" to designated key type if needed
-            boolean unique = specialAttributes.contains("UNIQUE");
-            boolean nullable = !specialAttributes.contains("NOT NULL");
-
-            var schema = new AttributeSchema(name, type, id++, key, unique, nullable);
-            attributesSchemas.add(schema);
-        }
-        catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributesSchemas));
+        catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributeSchemas));
     }
 
     /**

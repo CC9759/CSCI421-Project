@@ -6,9 +6,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import DDLParser.DDLParser;
+import DDLParser.Column;
 import Exceptions.*;
 import catalog.AttributeSchema;
-import catalog.AttributeType;
 import catalog.Catalog;
 import storageManager.StorageManager;
 import storageManager.Attribute;
@@ -103,20 +103,40 @@ public class Main {
      * @param catalog the catalog we are editing to
      * @param commands the string list of commands to process
      */
-    public static void createTableParser(DDLParser ddlParser, Catalog catalog, String[] commands){
+    public static void createTableParser(DDLParser ddlParser, Catalog catalog, String[] commands) {
+
         String tableName = commands[2];
-        String allConstraints = String.join(" ", Arrays.copyOfRange(commands, 3, commands.length - 1));
-        String[] separatedConstraints = allConstraints.split(",");
-        
-        //clean up argument leading whitespaces
-        for(int i = 0; i < separatedConstraints.length; i++){
-            separatedConstraints[i] = separatedConstraints[i].strip();
+        // Remove left parenthesis if user attached it to the table name
+        if (tableName.contains("(")) {
+            tableName = tableName.substring(0, tableName.indexOf("("));
+        }
+
+        // get the original command to parse all columns
+        String command = String.join(" ", Arrays.asList(commands));
+        int startIndex = command.indexOf("(") + 1;
+        int endIndex = command.lastIndexOf(")");
+        String columnsString = command.substring(startIndex, endIndex);
+        String[] columnParams = columnsString.split(",");
+
+        ArrayList<Column> newColumns = new ArrayList<>();
+
+        for (String column : columnParams) {
+            column = column.trim();
+
+            String[] parts = column.split("\\s+", 3);
+            String name = parts[0];
+            String type = parts[1];
+
+            boolean primaryKey = column.contains("PRIMARY KEY");
+            boolean unique = column.contains("UNIQUE");
+            boolean notNull = column.contains("NOT NULL");
+
+            newColumns.add(new Column(name, type, primaryKey, unique, notNull));
         }
 
         try {
-            ddlParser.createTable(catalog, tableName, new ArrayList<String>(Arrays.asList(separatedConstraints)));
+            ddlParser.createTable(catalog, tableName, newColumns);
         } catch (InvalidTypeException e) {
-            // TODO Auto-generated catch block, replace with actual exception handling
             e.printStackTrace();
         }
     }

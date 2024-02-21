@@ -26,21 +26,28 @@ public class AttributeType {
      * @param typeString the string can be in the format TYPE or TYPE(length).
      * @throws InvalidTypeException if the case is not in enum TYPE.
      */
+    /**
+     * Creates a AttributeType class based on a string.
+     *
+     * @param typeString the string can be in the format TYPE or TYPE(length).
+     * @throws InvalidTypeException if the case is not in enum TYPE.
+     */
     public AttributeType(String typeString) throws InvalidTypeException {
         // make all uppercase for simplicity
         typeString = typeString.toUpperCase();
-        // check if specified length
-        String strLength = "";
+
+        this.length = -1;
+
         if (typeString.contains("(")) {
-            strLength = typeString.substring(typeString.indexOf("(") + 1, typeString.indexOf(")"));
+            String strLength = typeString.substring(typeString.indexOf("(") + 1, typeString.indexOf(")"));
             typeString = typeString.substring(0, typeString.indexOf("("));
+            try {
+                this.length = Integer.parseInt(strLength);
+            } catch (NumberFormatException e) {
+                throw new InvalidTypeException("Invalid length format for " + typeString + ": " + strLength);
+            }
         }
-        // create and assign TYPE to this.type
-        if (strLength == "") {
-            this.length = -1;
-        } else {
-            this.length = Integer.parseInt(strLength);
-        }
+
         switch (typeString) {
             case "INT":
                 this.type = TYPE.INT;
@@ -58,8 +65,7 @@ public class AttributeType {
                 this.type = TYPE.VARCHAR;
                 break;
             default:
-                // throw exception
-                throw new InvalidTypeException(typeString);
+                throw new InvalidTypeException("Invalid or unsupported type: " + typeString);
         }
     }
 }
