@@ -47,8 +47,8 @@ public class Main {
         //allows us to use non-static methods
         DDLParser ddlParser = new DDLParser();
         DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
-               
-        while (true) {
+        boolean running = true;
+        while (running) {
             System.out.print("> ");
             String input = scanner.nextLine();
             
@@ -57,7 +57,7 @@ public class Main {
             }
 
             String[] commands = input.strip().split(" ");
-
+            System.out.println(Arrays.toString(commands));
             switch(commands[0].toLowerCase()){
                 default: System.out.println(help()); break;
                 case "create":
@@ -78,15 +78,12 @@ public class Main {
                 case "select":
                     dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
                     break;
-                
-            }
-
-            if (input.equalsIgnoreCase("quit")) {
-                catalog.writeBinary(dbLoc);
-                StorageManager.GetStorageManager().flushBuffer();
-                break;
-            } else if (input.equalsIgnoreCase("help")) {
-                System.out.println(help());
+                case "exit;":
+                case "quit;":
+                    running = false;
+                    catalog.writeBinary();
+                    StorageManager.GetStorageManager().flushBuffer();
+                    break;
             }
         }
         scanner.close();

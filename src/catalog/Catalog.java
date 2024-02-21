@@ -71,12 +71,10 @@ public class Catalog {
 
     /**
      * Overwrite the Catalogue to file
-     *
-     * @param fileLocation the file where the binary Catalog will be saved
      */
-    public void writeBinary(String fileLocation) {
+    public void writeBinary() {
         // fileLocation Ex. "catalog.txt"
-        try (FileOutputStream fos = new FileOutputStream(fileLocation)) {
+        try (FileOutputStream fos = new FileOutputStream(this.location + "catalog.bin")) {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(catalogue);
             oos.close();
