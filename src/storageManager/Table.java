@@ -82,10 +82,11 @@ public class Table {
     public void writePage(Page page) {
         try {
             String location = getLocation();
+            Catalog catalog = Catalog.getCatalog();
             RandomAccessFile file = new RandomAccessFile(location, "rw");
             long offset = page.getPageId() * Catalog.getCatalog().getPageSize();
             byte[] pageData = page.serializePage();
-            if (pageData.length != 200) {
+            if (pageData.length != catalog.getPageSize()) {
                 System.out.println("Fatal: Tried to write page of size " + pageData.length + " bytes which is not the defined page size");
                 System.exit(1);
             }
