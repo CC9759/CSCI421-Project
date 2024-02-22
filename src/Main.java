@@ -30,8 +30,7 @@ public class Main {
         if (dbDirectory.isDirectory()) {
             String[] files = dbDirectory.list();
             if (files != null && files.length > 0) {
-                Catalog.readBinary(dbLoc + "/catalog.bin");
-                catalog = Catalog.getCatalog();
+                catalog.readBinary(dbLoc + "/catalog.bin");
                 System.out.println("Initializing Database from existing file.");
             } else {
                 System.out.println("No Database found in " + dbLoc + ". Creating new.");
@@ -178,12 +177,9 @@ public class Main {
         String allTuples = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
         String[] separatedTuples = allTuples.split(",");
 
-        ArrayList<Attribute> attributes = new ArrayList<>();
-
         for(String constraint : separatedTuples){
-            attributes.add(parseInsertValues(constraint, tableName));
+            dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
         }
-        dmlParser.insert(attributes, tableName);
     }
 
     /**
@@ -193,8 +189,8 @@ public class Main {
      * @param tupleString the string representation of a single tuple
      * @return an ArrayList of attributes derived from the tuple string
      */
-    public static Attribute parseInsertValues(String tupleString, String tableName){
-        Attribute attr = null;
+    public static ArrayList<Attribute> parseInsertValues(String tupleString, String tableName){
+        ArrayList<Attribute> attributes = new ArrayList<>();
         // removes special chars outside of numbers, characters, periods, and quotes
         tupleString = tupleString.replaceAll("[^0-9a-zA-Z.\\\" ]", "");
         
@@ -210,25 +206,29 @@ public class Main {
         int schemaPointer = 0;
         while (matcher.find()) {
             if (matcher.group(1) != null) {
-                attr = new Attribute(attributeSchemas.get(schemaPointer++), matcher.group(1));
+                attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), matcher.group(1)));
             } else {
                 String match = matcher.group(2);
                 if (match.matches("-?\\d+")) {
-                    attr = new Attribute(attributeSchemas.get(schemaPointer++), Integer.parseInt(match));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), Integer.parseInt(match)));
                 } else if (match.matches("-?\\d+\\.\\d+")) {
-                    attr = new Attribute(attributeSchemas.get(schemaPointer++), Double.parseDouble(match));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), Double.parseDouble(match)));
                 } else if (match.equals("true") || match.equals("false")) {
-                    attr = new Attribute(attributeSchemas.get(schemaPointer++), Boolean.parseBoolean(match));
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), Boolean.parseBoolean(match)));
                 } else if (match.equals("null")){
-                    attr = new Attribute(attributeSchemas.get(schemaPointer++), null);
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), null));
                 }
                 // if it doesn't match anything at all then just add the attribute as a string
                 else {
-                   attr = new Attribute(attributeSchemas.get(schemaPointer++), match);
+                    attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), match));
                 }
             }
         }
-        return attr;
+
+        for (Attribute attribute : attributes) {
+            System.out.println(attribute.getData());
+        }
+        return attributes;
     }
 
     /**

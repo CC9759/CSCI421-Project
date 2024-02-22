@@ -104,7 +104,7 @@ public class DMLParser {
         ArrayList<AttributeSchema> refs = schema.getAttributeSchema();
 
         if (recs.size() != refs.size()) { // different amount of attributes
-            System.out.println("Unexpected amount of records.");
+            System.out.println("Expected " + refs.size() + " records but got " + recs.size() + ".");
             return false;
         }
 
@@ -129,7 +129,8 @@ public class DMLParser {
             if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                 if (e.getAttributeType().type != AttributeType.TYPE.CHAR) {// expecting a char
                     System.out.println("The #" + i + " should be a char/varchar type." );
-                    System.out.println(e.getAttributeType().equals(AttributeType.TYPE.CHAR));
+                    System.out.println(e.getData());
+                    System.out.println(e.getAttributeType().type);
                     return false;
                 }
 
