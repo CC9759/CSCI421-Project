@@ -1,4 +1,7 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -24,19 +27,21 @@ public class Main {
         int bufferSize = Integer.parseInt(args[2]);
 
         // Initialize Catalog
-        File dbDirectory = new File(dbLoc);
-        Catalog catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
-        if (dbDirectory.isDirectory()) {
+        Catalog catalog = null;
+        try {
+            Files.createDirectories(Paths.get(dbLoc));
+            File dbDirectory = new File(dbLoc);
+            catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
             String[] files = dbDirectory.list();
             if (files != null && files.length > 0) {
-                Catalog.readBinary(dbLoc + "/catalog.bin");
+                Catalog.readBinary(dbLoc + "catalog.bin");
                 catalog = Catalog.getCatalog();
                 System.out.println("Initializing Database from existing file.");
             } else {
                 System.out.println("No Database found in " + dbLoc + ". Creating new.");
             }
-        } else {
-            System.out.println("Path \'" + dbLoc + "\" provided is not a valid directory. Aborting.");
+        } catch (IOException e) {
+            System.out.println();
             System.exit(1);
         }
 
