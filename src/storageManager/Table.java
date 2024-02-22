@@ -1,5 +1,6 @@
 package storageManager;
 
+import Exceptions.IllegalOperationException;
 import catalog.AttributeSchema;
 import catalog.AttributeType;
 import catalog.Catalog;
@@ -87,15 +88,13 @@ public class Table {
             long offset = page.getPageId() * Catalog.getCatalog().getPageSize();
             byte[] pageData = page.serializePage();
             if (pageData.length != catalog.getPageSize()) {
-                System.out.println("Fatal: Tried to write page of size " + pageData.length + " bytes which is not the defined page size");
-                System.exit(1);
+                throw new IllegalOperationException("Tried to write page of size " + pageData.length + " bytes which is not the defined page size");
             }
             file.seek(offset);
             file.write(pageData);
             file.close();
-        } catch (IOException error) {
+        } catch (IOException | IllegalOperationException error) {
             System.out.println(error.getMessage());
-            System.exit(1);
         }
     }
 

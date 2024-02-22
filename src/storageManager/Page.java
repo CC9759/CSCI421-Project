@@ -1,7 +1,7 @@
 package storageManager;
 
+import Exceptions.IllegalOperationException;
 import Exceptions.PageOverfullException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -138,11 +138,10 @@ public class Page {
         return 4 + 4 + 4 + (8 * records.size());
     }
 
-    public byte[] serializePage() throws IOException {
+    public byte[] serializePage() throws IOException, IllegalOperationException {
         ArrayList<Record> records = getRecords();
         if (records.size() == 0) {
-            System.out.println("Fatal: trying to write a page of size 0 to memory " + pageId);
-            System.exit(1);
+            throw new IllegalOperationException("Tried to insert a page with 0 records.");
         }
         int freeSpace = getFreeSpaceAmount();
         int numberOfSlots = records.size();
@@ -162,8 +161,7 @@ public class Page {
             int endSize = baosRecords.size();
             recordSizes[i] = endSize - startSize;
             if (recordSizes[i] != record.getSizeFile()) {
-                System.out.println("Fatal: Calculated record size is different than actual");
-                System.exit(1);
+                throw new IllegalOperationException("Tried to insert a record whose serialized size was different than its calculated size");
             }
             recordPositions[i] = endOfFreeSpace + cumulativeRecordSize;
             cumulativeRecordSize += recordSizes[i];
