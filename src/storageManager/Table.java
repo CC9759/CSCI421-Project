@@ -203,6 +203,6 @@ public class Table {
     }
 
     private String getLocation() {
-        return Catalog.getCatalog().getLocation() + this.schema.getTableId() + ".bin";
+        return Catalog.getCatalog().getLocation() + "/" + this.schema.getTableId() + ".bin";
     }
 }
