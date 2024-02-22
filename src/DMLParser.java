@@ -1,6 +1,6 @@
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 
 import Exceptions.DuplicateKeyException;
 import Exceptions.NoTableException;
@@ -46,7 +46,8 @@ public class DMLParser {
         for (Record rec : recs) {
             System.out.println("");
             ArrayList<Attribute> attrs = rec.getAttributes();
-            // Collections.reverse(attrs);                      possibly needed
+            
+            Collections.sort(attrs, new AttributeComparator());
             for (Attribute attr : attrs) {
                 System.out.print(attr.getData() + ", ");
             }
@@ -120,7 +121,7 @@ public class DMLParser {
 
             // if value of data is null
             if (e.getData() == null) {
-                if (k.isUnique() || k.isKey() || k.isNull()) { // value cannot be null
+                if (k.isUnique() || k.isKey() || !k.isNull()) { // value cannot be null
                     System.out.println("The #" + (i+1) + " cannot be null." );
                     return false;
                 }
@@ -131,7 +132,7 @@ public class DMLParser {
 
             // assume all strings come in as CHAR
             if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                if (e.getAttributeType().type != AttributeType.TYPE.VARCHAR) {// expecting a char
+                if (e.getAttributeType().type != AttributeType.TYPE.VARCHAR && e.getAttributeType().type != AttributeType.TYPE.CHAR) {// expecting a char
                     System.out.println("The #" + i + " should be a char/varchar type." );
                     System.out.println(e.getData());
                     System.out.println(e.getAttributeType().type);
@@ -150,7 +151,7 @@ public class DMLParser {
                 }
 
                 // replace with correct schema and data input
-                if (k.getAttributeType().type != AttributeType.TYPE.VARCHAR) {
+                if (k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                     // if varChar, then create new attribute type with exact attr size
                     AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)e.getData()).length());
                     legal_recs.add(new Attribute(k, (String) e.getData(), varchar));
@@ -182,10 +183,10 @@ public class DMLParser {
 
         // all the attributes are legal, and have a correct schema
         Record record = new Record(legal_recs);
-        for (Attribute attr : legal_recs) {
-            System.out.println(attr.getData());
-            System.out.println(attr.getAttributeType().type);
-        }
+//        for (Attribute attr : legal_recs) {
+//            System.out.println(attr.getData());
+//            System.out.println(attr.getAttributeType().type);
+//       }
         try {
             this.stor.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
@@ -194,5 +195,12 @@ public class DMLParser {
         }
 
         return true;
+    }
+}
+
+class AttributeComparator implements Comparator<Attribute> {
+    @Override
+    public int compare(Attribute a1, Attribute a2) {
+        return Integer.compare(a1.getAttributeId(), a2.getAttributeId());
     }
 }
