@@ -96,13 +96,17 @@ public class DMLParser {
         // first check that the recs align with table schema
         TableSchema schema = this.cat.getTableSchema(name);
 
-        if (schema == null) // no table by that name
+        if (schema == null) { // no table by that name
+            System.out.println("No table with name: " + name);
             return false;
+        }
 
         ArrayList<AttributeSchema> refs = schema.getAttributeSchema();
 
-        if (recs.size() != refs.size()) // different amount of attributes
+        if (recs.size() != refs.size()) { // different amount of attributes
+            System.out.println("Unexpected amount of records.");
             return false;
+        }
 
         ArrayList<Attribute> legal_recs = new ArrayList<Attribute>();
         // loop through attribute schema and ensure that inserted records are legal
@@ -113,6 +117,7 @@ public class DMLParser {
             // if value of data is null
             if (e.isNull()) {
                 if (k.isUnique() || k.isKey() || k.isNull()) { // value cannot be null
+                    System.out.println("The #" + i + " cannot be null." );
                     return false;
                 }
                 // value can be null
@@ -122,15 +127,21 @@ public class DMLParser {
 
             // assume all strings come in as CHAR
             if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                if (e.getAttributeType().type != AttributeType.TYPE.CHAR) // expecting a char
+                if (e.getAttributeType().type != AttributeType.TYPE.CHAR) {// expecting a char
+                    System.out.println("The #" + i + " should be a char/varchar type." );
                     return false;
+                }
 
-                if (e.getSize() > k.getSize()) // char is too big
+                if (e.getSize() > k.getSize()) { // char is too big
+                    System.out.println("The #" + i + " is a char/varchar type but is too large." );
                     return false;
+                }
 
                 // expected char of length N but got char length M
-                if (k.getAttributeType().type == AttributeType.TYPE.CHAR && k.getSize() != e.getSize())
+                if (k.getAttributeType().type == AttributeType.TYPE.CHAR && k.getSize() != ((String) e.getData()).length()) {
+                    System.out.println("The #" + i + " is a char of required length " + k.getSize() + "." );
                     return false;
+                }
 
                 // replace with correct schema and data input
                 if (k.getAttributeType().type != AttributeType.TYPE.VARCHAR) {
@@ -147,12 +158,16 @@ public class DMLParser {
                     legal_recs.add(new Attribute(k, (int) e.getData()));
                 else if (e.getAttributeType().type != AttributeType.TYPE.DOUBLE) 
                     legal_recs.add(new Attribute(k, (double) e.getData()));
-                else
+                else {
+                    System.out.println("The #" + i + " should be a int/double type.");
                     return false;
+                }
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
-                if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) // expecting a bool
+                if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) { // expecting a bool
+                    System.out.println("The #" + i + " should be a bool type.");
                     return false;
+                }
 
                 // replace with correct schema and data input
                 legal_recs.add(new Attribute(k, (boolean) e.getData()));

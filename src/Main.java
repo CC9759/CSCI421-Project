@@ -199,6 +199,10 @@ public class Main {
         Pattern pattern = Pattern.compile("\"([^\"]*)\"|(\\S+)");
         Matcher matcher = pattern.matcher(tupleString);
         var tableSchemas = Catalog.getCatalog().getTableSchema(tableName);
+        if (tableSchemas == null) {
+            System.out.println("Table" + tableSchemas + " DNE.");
+            return null;
+        }
         var attributeSchemas = tableSchemas.getAttributeSchema();
         int schemaPointer = 0;
         while (matcher.find()) {
