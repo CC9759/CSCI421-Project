@@ -225,9 +225,6 @@ public class Main {
             }
         }
 
-        for (Attribute attribute : attributes) {
-            System.out.println(attribute.getData());
-        }
         return attributes;
     }
 

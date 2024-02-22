@@ -22,7 +22,7 @@ public class DMLParser {
     }
 
     public void select(String tableName) {
-        TableSchema schema = this.cat.getTableSchema(tableName);
+        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         ArrayList<Record> recs;
 
         if (schema == null) // no table by that name
@@ -48,6 +48,7 @@ public class DMLParser {
                 System.out.print(attr.getData() + ", ");
             }
         }
+        System.out.println("");
     }
 
     public void displaySchema() {
@@ -56,7 +57,7 @@ public class DMLParser {
     }
 
     public void displayInfo (String tableName) {
-        TableSchema schema = this.cat.getTableSchema(tableName);
+        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
 
         if (schema == null) { // no table by that name
             System.out.println(tableName + " DNE");
@@ -94,7 +95,7 @@ public class DMLParser {
     // NOTE
     public Boolean insert(ArrayList<Attribute> recs, String name) {
         // first check that the recs align with table schema
-        TableSchema schema = this.cat.getTableSchema(name);
+        TableSchema schema = Catalog.getCatalog().getTableSchema(name);
 
         if (schema == null) { // no table by that name
             System.out.println("No table with name: " + name);
@@ -115,9 +116,9 @@ public class DMLParser {
             AttributeSchema k = refs.get(i);
 
             // if value of data is null
-            if (e.isNull()) {
+            if (e.getData() == null) {
                 if (k.isUnique() || k.isKey() || k.isNull()) { // value cannot be null
-                    System.out.println("The #" + i + " cannot be null." );
+                    System.out.println("The #" + (i+1) + " cannot be null." );
                     return false;
                 }
                 // value can be null
@@ -127,7 +128,7 @@ public class DMLParser {
 
             // assume all strings come in as CHAR
             if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                if (e.getAttributeType().type != AttributeType.TYPE.CHAR) {// expecting a char
+                if (e.getAttributeType().type != AttributeType.TYPE.VARCHAR) {// expecting a char
                     System.out.println("The #" + i + " should be a char/varchar type." );
                     System.out.println(e.getData());
                     System.out.println(e.getAttributeType().type);
@@ -178,6 +179,10 @@ public class DMLParser {
 
         // all the attributes are legal, and have a correct schema
         Record record = new Record(legal_recs);
+        for (Attribute attr : legal_recs) {
+            System.out.println(attr.getData());
+            System.out.println(attr.getAttributeType().type);
+        }
         try {
             this.stor.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
