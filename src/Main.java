@@ -178,6 +178,7 @@ public class Main {
         String[] separatedTuples = allTuples.split(",");
 
         for(String constraint : separatedTuples){
+            System.out.println(constraint);
             dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
         }
     }
@@ -225,6 +226,9 @@ public class Main {
             }
         }
 
+        for (Attribute attribute : attributes) {
+            System.out.println(attribute.getData());
+        }
         return attributes;
     }
 
