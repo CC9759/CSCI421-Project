@@ -23,7 +23,6 @@ public class Main {
         int pageSize = Integer.parseInt(args[1]);
         int bufferSize = Integer.parseInt(args[2]);
 
-
         // Initialize Catalog
         File dbDirectory = new File(dbLoc);
         Catalog catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
@@ -73,7 +72,12 @@ public class Main {
                     insertParser(dmlParser, commands);
                     break;
                 case "display":
-                    dmlParser.displaySchema();
+                    if(commands[1].toLowerCase().equals("info")){
+                        dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                    }
+                    else if(commands[1].toLowerCase().equals("schema")){
+                        dmlParser.displaySchema();
+                    }
                     break;
                 case "select":
                     dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
@@ -172,7 +176,6 @@ public class Main {
      * @param commands the string list of commands to process
      */
     public static void insertParser(DMLParser dmlParser, String[] commands){
-        ArrayList<ArrayList<Attribute>> allAttributes = new ArrayList<>();
         String tableName = commands[2];
         String allTuples = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
         String[] separatedTuples = allTuples.split(",");
