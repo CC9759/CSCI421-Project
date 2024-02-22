@@ -23,8 +23,24 @@ public class Main {
         }
         
         String dbLoc = args[0];
-        int pageSize = Integer.parseInt(args[1]);
-        int bufferSize = Integer.parseInt(args[2]);
+        int pageSize = 0;
+        int bufferSize = 0;
+        try {
+            pageSize = Integer.parseInt(args[1]);
+            bufferSize = Integer.parseInt(args[2]);
+            if (pageSize <= 0) {
+                throw new Exception("Fatal: pageSize parameter must be a positive integer. Aborting.");
+            }
+            if (bufferSize <= 0) {
+                throw new Exception("Fatal: bufferSize parameter must be a positive integer. Aborting.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Fatal: pageSize and/or bufferSize parameters contain no parseable integers. Aborting.");
+            System.exit(1);
+        } catch (Exception er) {
+            System.out.println(er.getMessage());
+            System.exit(1);
+        }
 
         // Initialize Catalog
         Catalog catalog = null;
@@ -285,6 +301,11 @@ public class Main {
         helpMessage.append(
             "display info: used to display the information about a table in an easy to read format.\n" +
             "\tUsage: display info <name>;\n\n"
+        );
+
+        helpMessage.append(
+                "exit, quit: exit and save the database.\n" +
+                        "\tUsage: exit; or quit;\n\n"
         );
 
         return helpMessage.toString();
