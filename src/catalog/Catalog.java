@@ -54,11 +54,11 @@ public class Catalog implements Serializable {
      * 
      * @param fileLocation the file from where the binary Catalog will be read
      */
-    public void readBinary(String fileLocation) {
+    public static void readBinary(String fileLocation) {
         // fileLocation Ex. "catalog.txt"
         try (FileInputStream fis = new FileInputStream(fileLocation)) {
             ObjectInputStream ois = new ObjectInputStream(fis);
-            Catalog catalog = (Catalog) ois.readObject();
+            catalogue = (Catalog) ois.readObject();
         } catch (ClassNotFoundException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

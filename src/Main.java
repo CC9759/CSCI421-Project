@@ -30,7 +30,8 @@ public class Main {
         if (dbDirectory.isDirectory()) {
             String[] files = dbDirectory.list();
             if (files != null && files.length > 0) {
-                catalog.readBinary(dbLoc + "/catalog.bin");
+                Catalog.readBinary(dbLoc + "/catalog.bin");
+                catalog = Catalog.getCatalog();
                 System.out.println("Initializing Database from existing file.");
             } else {
                 System.out.println("No Database found in " + dbLoc + ". Creating new.");
