@@ -50,7 +50,7 @@ public class Main {
             catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
             String[] files = dbDirectory.list();
             if (files != null && files.length > 0) {
-                Catalog.readBinary(dbLoc + "catalog.bin");
+                Catalog.readBinary(dbLoc + "/catalog.bin");
                 catalog = Catalog.getCatalog();
                 System.out.println("Initializing Database from existing file.");
             } else {
