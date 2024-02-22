@@ -161,9 +161,9 @@ public class DMLParser {
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // replace with correct schema and data input
-                if (e.getAttributeType().type == AttributeType.TYPE.INT)
+                if (e.getAttributeType().type == AttributeType.TYPE.INT && k.getAttributeType().type == AttributeType.TYPE.INT)
                     legal_recs.add(new Attribute(k, (int) e.getData()));
-                else if (e.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
+                else if (e.getAttributeType().type == AttributeType.TYPE.DOUBLE && k.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
                     legal_recs.add(new Attribute(k, (double) e.getData()));
                 else {
                     System.out.println("The #" + i + " should be a int/double type.");
