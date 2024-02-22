@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import Exceptions.DuplicateKeyException;
 import Exceptions.NoTableException;
@@ -44,6 +46,7 @@ public class DMLParser {
         for (Record rec : recs) {
             System.out.println("");
             ArrayList<Attribute> attrs = rec.getAttributes();
+            // Collections.reverse(attrs);                      possibly needed
             for (Attribute attr : attrs) {
                 System.out.print(attr.getData() + ", ");
             }
