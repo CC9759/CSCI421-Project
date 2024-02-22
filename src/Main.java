@@ -29,7 +29,8 @@ public class Main {
         if (dbDirectory.isDirectory()) {
             String[] files = dbDirectory.list();
             if (files != null && files.length > 0) {
-                catalog.readBinary(dbLoc + "/catalog.bin");
+                Catalog.readBinary(dbLoc + "/catalog.bin");
+                catalog = Catalog.getCatalog();
                 System.out.println("Initializing Database from existing file.");
             } else {
                 System.out.println("No Database found in " + dbLoc + ". Creating new.");
@@ -179,6 +180,7 @@ public class Main {
         String tableName = commands[2];
         String allTuples = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
         String[] separatedTuples = allTuples.split(",");
+        System.out.println(Arrays.toString(separatedTuples));
 
         for(String constraint : separatedTuples){
             dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
