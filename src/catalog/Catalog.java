@@ -179,6 +179,10 @@ public class Catalog implements Serializable {
         return this.bufferSize;
     }
 
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
+
     /**
      * 
      */
