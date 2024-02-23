@@ -52,17 +52,22 @@ public class Main {
             if (files != null && files.length > 0) {
                 Catalog.readBinary(dbLoc + "/catalog.bin");
                 catalog = Catalog.getCatalog();
+                catalog.setBufferSize(bufferSize);
                 System.out.println("Initializing Database from existing file.");
             } else {
                 System.out.println("No Database found in " + dbLoc + ". Creating new.");
             }
         } catch (IOException e) {
-            System.out.println();
+            System.out.println(e.getMessage());
             System.exit(1);
         }
 
         // Initialize Storage Manager
         StorageManager.InitStorageManager(bufferSize);
+
+        System.out.println("DB location: " + catalog.getLocation());
+        System.out.println("Page size: " + catalog.getPageSize());
+        System.out.println("Buffer size: " + catalog.getBufferSize());
         
         Scanner scanner = new Scanner(System.in);
         //allows us to use non-static methods
