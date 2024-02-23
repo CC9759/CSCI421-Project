@@ -67,7 +67,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         //allows us to use non-static methods
         DDLParser ddlParser = new DDLParser();
-        DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
+        DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager());
         boolean running = true;
         while (running) {
             try {

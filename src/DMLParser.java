@@ -16,24 +16,24 @@ import storageManager.Record;
 
 public class DMLParser {
     private StorageManager stor;
-    private Catalog cat;
 
-    public DMLParser(StorageManager stor, Catalog cat) {
+    public DMLParser(StorageManager stor) {
         this.stor = stor;
-        this.cat = cat;
     }
 
     public void select(String tableName) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         ArrayList<Record> recs;
 
-        if (schema == null) // no table by that name
+        if (schema == null) { // no table by that name
+            System.out.println("No table with name: " + tableName);
             return;
+        }
         
         try {
             recs = this.stor.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
             return;
         }
 
@@ -57,14 +57,21 @@ public class DMLParser {
 
     public void displaySchema() {
         // displays the schema of the catalog, just prints out catalog's toString
-        System.out.println(this.cat.toString());
+        System.out.println(Catalog.getCatalog().toString());
+
+        ArrayList<TableSchema> tables = Catalog.getCatalog().getTableSchema();
+
+        System.out.println("");
+        for (TableSchema table : tables) {
+            displayInfo(table.getTableName());
+        }
     }
 
     public void displayInfo (String tableName) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
 
         if (schema == null) { // no table by that name
-            System.out.println(tableName + " DNE");
+            System.out.println("No table with name: " + tableName);
             return;
         }
         
@@ -132,61 +139,75 @@ public class DMLParser {
 
             // assume all strings come in as CHAR
             if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                if (e.getAttributeType().type != AttributeType.TYPE.VARCHAR && e.getAttributeType().type != AttributeType.TYPE.CHAR) {// expecting a char
-                    System.out.println("The #" + i + " should be a char/varchar type." );
-                    System.out.println(e.getData());
-                    System.out.println(e.getAttributeType().type);
+                if (!(e.getData() instanceof String)) {
+                    System.out.println("The #" + (i+1) + " should be a char/varchar type." );
                     return false;
                 }
 
                 if (e.getSize() > k.getSize()) { // char is too big
-                    System.out.println("The #" + i + " is a char/varchar type but is too large." );
+                    System.out.println("The #" + (i+1) + " is a char/varchar type but is too large." );
                     return false;
                 }
 
                 // expected char of length N but got char length M
                 if (k.getAttributeType().type == AttributeType.TYPE.CHAR && k.getSize() != ((String) e.getData()).length()) {
-                    System.out.println("The #" + i + " is a char of required length " + k.getSize() + "." );
+                    System.out.println("The #" + (i+1) + " is a char of required length " + k.getSize() + "." );
                     return false;
                 }
 
                 // replace with correct schema and data input
-                if (k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                    // if varChar, then create new attribute type with exact attr size
-                    AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)e.getData()).length());
-                    legal_recs.add(new Attribute(k, (String) e.getData(), varchar));
-                } else {
-                    legal_recs.add(new Attribute(k, (String) e.getData()));
+                try {
+                    if (k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
+                        // if varChar, then create new attribute type with exact attr size
+                        AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)e.getData()).length());
+                        legal_recs.add(new Attribute(k, (String) e.getData(), varchar));
+                    } else {
+                        legal_recs.add(new Attribute(k, (String) e.getData()));
+                    }
+                } catch (Error err) {
+                    System.out.println("Wrong type.");
+                    return false;
                 }
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // replace with correct schema and data input
-                if (e.getAttributeType().type == AttributeType.TYPE.INT && k.getAttributeType().type == AttributeType.TYPE.INT)
-                    legal_recs.add(new Attribute(k, (int) e.getData()));
-                else if (e.getAttributeType().type == AttributeType.TYPE.DOUBLE && k.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
-                    legal_recs.add(new Attribute(k, (double) e.getData()));
-                else {
-                    System.out.println("The #" + i + " should be a int/double type.");
+                if (!(e.getData() instanceof Integer) && !(e.getData() instanceof Double)) {
+                    System.out.println("The #" + (i+1) + " should be a int/double type.");
+                    return false;
+                }
+
+                try {
+                    if (e.getAttributeType().type == AttributeType.TYPE.INT)
+                        legal_recs.add(new Attribute(k, (int) e.getData()));
+                    else if (e.getAttributeType().type == AttributeType.TYPE.DOUBLE)
+                        legal_recs.add(new Attribute(k, (double) e.getData()));
+                    else {
+                        System.out.println("The #" + (i+1) + " should be a int/double type.");
+                        return false;
+                    }
+                } catch (Error err) {
+                    System.out.println("The #" + (i+1) + " should be a int/double type.");
                     return false;
                 }
 
             } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
-                if (e.getAttributeType().type != AttributeType.TYPE.BOOLEAN) { // expecting a bool
-                    System.out.println("The #" + i + " should be a bool type.");
+                if (!(e.getData() instanceof Boolean)) {
+                    System.out.println("The #" + (i+1) + " should be a bool type.");
                     return false;
                 }
 
                 // replace with correct schema and data input
-                legal_recs.add(new Attribute(k, (boolean) e.getData()));
+                try {
+                    legal_recs.add(new Attribute(k, (boolean) e.getData()));
+                } catch (Error err) {
+                    System.out.println("The #" + (i+1) + " should be a bool type.");
+                    return false;
+                }
             }
         }
 
         // all the attributes are legal, and have a correct schema
         Record record = new Record(legal_recs);
-//        for (Attribute attr : legal_recs) {
-//            System.out.println(attr.getData());
-//            System.out.println(attr.getAttributeType().type);
-//       }
         try {
             this.stor.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
