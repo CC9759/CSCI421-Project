@@ -66,7 +66,7 @@ public class Record implements Comparable<Record> {
         int totalSize = 4; // num attributes
         int pointerSize = 12; // attr pos, size, id
         for(Attribute attribute : attributes.values()){
-            if (attribute.isNull() && attribute.getData() == null) {
+            if (attribute.getData() == null) {
                 totalSize += pointerSize + 1; // null bitmap plus pointer
             } else if (attribute.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                 totalSize += pointerSize + ((String)attribute.getData()).length();

@@ -70,46 +70,50 @@ public class Main {
         DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
         boolean running = true;
         while (running) {
-            System.out.print("> ");
-            String input = scanner.nextLine();
-            
-            while(!input.endsWith(";")){
-                input += "" + scanner.nextLine();
-            }
+            try {
+                System.out.print("> ");
+                String input = scanner.nextLine();
 
-            String[] commands = input.strip().split(" ");
-            System.out.println(Arrays.toString(commands));
-            switch(commands[0].toLowerCase()){
-                default: System.out.println(help()); break;
-                case "create":
-                    createTableParser(ddlParser, catalog, commands);
-                    break;
-                case "drop":
-                    ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
-                    break;
-                case "alter":
-                    alterTableParser(ddlParser, catalog, commands);
-                    break;
-                case "insert":
-                    insertParser(dmlParser, commands);
-                    break;
-                case "display":
-                    if(commands[1].toLowerCase().equals("info")){
-                        dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
-                    }
-                    else if(commands[1].toLowerCase().equals("schema") || commands[1].toLowerCase().equals("schema;")){
-                        dmlParser.displaySchema();
-                    }
-                    break;
-                case "select":
-                    dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
-                    break;
-                case "exit;":
-                case "quit;":
-                    running = false;
-                    catalog.writeBinary();
-                    StorageManager.GetStorageManager().flushBuffer();
-                    break;
+                while(!input.endsWith(";")){
+                    input += "" + scanner.nextLine();
+                }
+
+                String[] commands = input.strip().split(" ");
+                System.out.println(Arrays.toString(commands));
+                switch(commands[0].toLowerCase()){
+                    default: System.out.println(help()); break;
+                    case "create":
+                        createTableParser(ddlParser, catalog, commands);
+                        break;
+                    case "drop":
+                        ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                        break;
+                    case "alter":
+                        alterTableParser(ddlParser, catalog, commands);
+                        break;
+                    case "insert":
+                        insertParser(dmlParser, commands);
+                        break;
+                    case "display":
+                        if(commands[1].toLowerCase().equals("info")){
+                            dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                        }
+                        else if(commands[1].toLowerCase().equals("schema") || commands[1].toLowerCase().equals("schema;")){
+                            dmlParser.displaySchema();
+                        }
+                        break;
+                    case "select":
+                        dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                        break;
+                    case "exit;":
+                    case "quit;":
+                        running = false;
+                        catalog.writeBinary();
+                        StorageManager.GetStorageManager().flushBuffer();
+                        break;
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         }
         scanner.close();
