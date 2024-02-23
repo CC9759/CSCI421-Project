@@ -100,6 +100,9 @@ public class Main {
                     else if(commands[1].toLowerCase().equals("schema") || commands[1].toLowerCase().equals("schema;")){
                         dmlParser.displaySchema();
                     }
+                    else{
+                        System.out.println(help());
+                    }
                     break;
                 case "select":
                     dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
