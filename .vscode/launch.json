@@ -5,7 +5,24 @@
             "name": "Main",
             "request": "launch",
             "mainClass": "Main",
-            "projectName": "CSCI421-Project_454f7c86"
+            "projectName": "CSCI421-Project_46697151",
+            "args": [
+                "./db",
+                "140",
+                "5"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "CSCI421-Project_454f7c86",
+            "args": [
+                "./db",
+                "140",
+                "5"
+            ]
         },
         {
             "type": "java",
