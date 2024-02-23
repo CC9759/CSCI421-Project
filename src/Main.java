@@ -97,7 +97,7 @@ public class Main {
                     if(commands[1].toLowerCase().equals("info")){
                         dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
                     }
-                    else if(commands[1].toLowerCase().equals("schema")){
+                    else if(commands[1].toLowerCase().equals("schema") || commands[1].toLowerCase().equals("schema;")){
                         dmlParser.displaySchema();
                     }
                     break;
