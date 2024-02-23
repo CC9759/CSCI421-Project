@@ -122,7 +122,13 @@ public class StorageManager {
     private Table ensureTable(int tableId) throws NoTableException {
         Table table = this.idToTable.get(tableId);
         if (table == null) {
-            throw new NoTableException(tableId);
+            TableSchema newTableSchema = Catalog.getCatalog().getTableSchema(tableId);
+            if (newTableSchema == null) {
+                throw new NoTableException(tableId);
+            } else {
+                table = new Table(newTableSchema);
+                this.idToTable.put(newTableSchema.getTableId(), table);
+            }
         }
         return table;
     }

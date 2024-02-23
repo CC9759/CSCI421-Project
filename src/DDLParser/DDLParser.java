@@ -85,7 +85,7 @@ public class DDLParser {
                     defaultValue = instruc.get(instruc.indexOf("DEFAULT") + 1);
                 }
                 var newAttributes = new AttributeSchema(instruc.get(0),
-                        new AttributeType(instruc.get(1)), numExistingAttributes, false, false, false, defaultValue);
+                        new AttributeType(instruc.get(1)), numExistingAttributes, false, false, true, defaultValue);
 
                 // look for a attribute that shares the name and replace it
                 if (catalog.getTableSchema(tableName).getAttributeSchema(instruc.get(0)) != null) {
