@@ -72,7 +72,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         //allows us to use non-static methods
         DDLParser ddlParser = new DDLParser();
-        DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager(), catalog);
+        DMLParser dmlParser = new DMLParser(StorageManager.GetStorageManager());
         boolean running = true;
         while (running) {
             try {
@@ -80,7 +80,7 @@ public class Main {
                 String input = scanner.nextLine();
 
                 while(!input.endsWith(";")){
-                    input += "" + scanner.nextLine();
+                    input += " " + scanner.nextLine();
                 }
 
                 String[] commands = input.strip().split(" ");
@@ -169,7 +169,7 @@ public class Main {
         try {
             ddlParser.createTable(catalog, tableName, newColumns);
         } catch (InvalidTypeException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
@@ -190,11 +190,9 @@ public class Main {
         try {
             ddlParser.alterTable(catalog, tableName, allConstraints);
         } catch (InsufficientArgumentException e) {
-            // TODO Auto-generated catch block, replace with actual exception handling
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         } catch (InvalidTypeException e) {
-            // TODO Auto-generated catch block, replace with actual exception handling
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         } catch (PageOverfullException | NoTableException | DuplicateKeyException e) {
             throw new RuntimeException(e);
         }
@@ -216,7 +214,12 @@ public class Main {
         System.out.println(Arrays.toString(separatedTuples));
 
         for(String constraint : separatedTuples){
-            dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
+            try{
+                dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
+            } catch(Exception e){
+                System.out.println(e.getMessage());
+                return;
+            }
         }
     }
 
@@ -226,8 +229,9 @@ public class Main {
      * 
      * @param tupleString the string representation of a single tuple
      * @return an ArrayList of attributes derived from the tuple string
+     * @throws IllegalOperationException 
      */
-    public static ArrayList<Attribute> parseInsertValues(String tupleString, String tableName){
+    public static ArrayList<Attribute> parseInsertValues(String tupleString, String tableName) throws IllegalOperationException{
         ArrayList<Attribute> attributes = new ArrayList<>();
         // removes special chars outside of numbers, characters, periods, and quotes
         tupleString = tupleString.replaceAll("[^0-9a-zA-Z.\\\" ]", "");
@@ -241,8 +245,11 @@ public class Main {
             return null;
         }
         var attributeSchemas = tableSchemas.getAttributeSchema();
-        int schemaPointer = 0;
+        int schemaPointer = 0, index_counter = 0;
         while (matcher.find()) {
+            if(index_counter >= attributeSchemas.size()){
+                throw new IllegalOperationException("Too many attributes");
+            }
             if (matcher.group(1) != null) {
                 attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), matcher.group(1)));
             } else {
@@ -261,6 +268,7 @@ public class Main {
                     attributes.add(new Attribute(attributeSchemas.get(schemaPointer++), match));
                 }
             }
+            index_counter += 1;
         }
 
         return attributes;
