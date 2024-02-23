@@ -15,15 +15,15 @@ import storageManager.StorageManager;
 import storageManager.Record;
 
 public class DMLParser {
-    private StorageManager stor;
+    private StorageManager storageManager;
 
-    public DMLParser(StorageManager stor) {
-        this.stor = stor;
+    public DMLParser(StorageManager storageManager) {
+        this.storageManager = storageManager;
     }
 
     public void select(String tableName) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
-        ArrayList<Record> recs;
+        ArrayList<Record> records;
 
         if (schema == null) { // no table by that name
             System.out.println("No table with name: " + tableName);
@@ -31,21 +31,21 @@ public class DMLParser {
         }
         
         try {
-            recs = this.stor.getAllRecords(schema.getTableId());
+            records = this.storageManager.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
             System.out.println(e.getMessage());
             return;
         }
 
         // print out attr names
-        for (AttributeSchema attr : schema.getAttributeSchema()) {
-            System.out.print(attr.getAttributeName() + ", ");
+        for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+            System.out.print(attributeSchema.getAttributeName() + ", ");
         }
 
         // print out the tuples
-        for (Record rec : recs) {
+        for (Record record : records) {
             System.out.println("");
-            ArrayList<Attribute> attrs = rec.getAttributes();
+            ArrayList<Attribute> attrs = record.getAttributes();
             
             Collections.sort(attrs, new AttributeComparator());
             for (Attribute attr : attrs) {
@@ -85,27 +85,19 @@ public class DMLParser {
 
         System.out.println("Number of pages: " + schema.getNumPages());
 
-        ArrayList<Record> recs;
+        ArrayList<Record> records;
         try {
-            recs = this.stor.getAllRecords(schema.getTableId());
+            records = this.storageManager.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
             System.out.println(e.getMessage());
             return;
         }
 
-        System.out.println("Number of Records: " + recs.size());
+        System.out.println("Number of Records: " + records.size());
 
     }
 
-    // for whoever is making the recs array
-    // possible implementation is to use 3 default schemas, they will get overwritten either way
-    // returns flag whether operation is successful
-    //
-    // NOTE
-    // not sure how varchar type is handled when written
-    // the attribute type needs to handle N length give M max size
-    // NOTE
-    public Boolean insert(ArrayList<Attribute> recs, String name) {
+    public Boolean insert(ArrayList<Attribute> attributes, String name) {
         // first check that the recs align with table schema
         TableSchema schema = Catalog.getCatalog().getTableSchema(name);
 
@@ -114,103 +106,103 @@ public class DMLParser {
             return false;
         }
 
-        ArrayList<AttributeSchema> refs = schema.getAttributeSchema();
+        ArrayList<AttributeSchema> attributeSchemas = schema.getAttributeSchema();
 
-        if (recs.size() != refs.size()) { // different amount of attributes
-            System.out.println("Expected " + refs.size() + " records but got " + recs.size() + ".");
+        if (attributes.size() != attributeSchemas.size()) { // different amount of attributes
+            System.out.println("Expected " + attributeSchemas.size() + " attributes but got " + attributes.size() + ".");
             return false;
         }
 
-        ArrayList<Attribute> legal_recs = new ArrayList<Attribute>();
+        ArrayList<Attribute> legalAttributes = new ArrayList<Attribute>();
         // loop through attribute schema and ensure that inserted records are legal
-        for (int i = 0; i < recs.size(); i++) {
-            Attribute e = recs.get(i);
-            AttributeSchema k = refs.get(i);
+        for (int i = 0; i < attributes.size(); i++) {
+            Attribute attribute = attributes.get(i);
+            AttributeSchema attributeSchema = attributeSchemas.get(i);
 
             // if value of data is null
-            if (e.getData() == null) {
-                if (k.isUnique() || k.isKey() || !k.isNull()) { // value cannot be null
-                    System.out.println("The #" + (i+1) + " cannot be null." );
+            if (attribute.getData() == null) {
+                if (attributeSchema.isUnique() || attributeSchema.isKey() || !attributeSchema.isNull()) { // value cannot be null
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " cannot be null." );
                     return false;
                 }
                 // value can be null
-                legal_recs.add(new Attribute(k, null, k.getAttributeType()));
+                legalAttributes.add(new Attribute(attributeSchema, null, attributeSchema.getAttributeType()));
                 continue;
             }
 
             // assume all strings come in as CHAR
-            if (k.getAttributeType().type == AttributeType.TYPE.CHAR || k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                if (!(e.getData() instanceof String)) {
-                    System.out.println("The #" + (i+1) + " should be a char/varchar type." );
+            if (attributeSchema.getAttributeType().type == AttributeType.TYPE.CHAR || attributeSchema.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
+                if (!(attribute.getData() instanceof String)) {
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a char/varchar type." );
                     return false;
                 }
 
-                if (e.getSize() > k.getSize()) { // char is too big
-                    System.out.println("The #" + (i+1) + " is a char/varchar type but is too large." );
+                if (attribute.getSize() > attributeSchema.getSize()) { // char is too big
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " is a char/varchar type but is too large." );
                     return false;
                 }
 
                 // expected char of length N but got char length M
-                if (k.getAttributeType().type == AttributeType.TYPE.CHAR && k.getSize() != ((String) e.getData()).length()) {
-                    System.out.println("The #" + (i+1) + " is a char of required length " + k.getSize() + "." );
+                if (attributeSchema.getAttributeType().type == AttributeType.TYPE.CHAR && attributeSchema.getSize() != ((String) attribute.getData()).length()) {
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " is a char of required length " + attributeSchema.getSize() + "." );
                     return false;
                 }
 
                 // replace with correct schema and data input
                 try {
-                    if (k.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
+                    if (attributeSchema.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                         // if varChar, then create new attribute type with exact attr size
-                        AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)e.getData()).length());
-                        legal_recs.add(new Attribute(k, (String) e.getData(), varchar));
+                        AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)attribute.getData()).length());
+                        legalAttributes.add(new Attribute(attributeSchema, (String) attribute.getData(), varchar));
                     } else {
-                        legal_recs.add(new Attribute(k, (String) e.getData()));
+                        legalAttributes.add(new Attribute(attributeSchema, (String) attribute.getData()));
                     }
                 } catch (Error err) {
                     System.out.println("Wrong type.");
                     return false;
                 }
 
-            } else if (k.getAttributeType().type == AttributeType.TYPE.INT || k.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
+            } else if (attributeSchema.getAttributeType().type == AttributeType.TYPE.INT || attributeSchema.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // replace with correct schema and data input
-                if (!(e.getData() instanceof Integer) && !(e.getData() instanceof Double)) {
-                    System.out.println("The #" + (i+1) + " should be a int/double type.");
+                if (!(attribute.getData() instanceof Integer) && !(attribute.getData() instanceof Double)) {
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
                     return false;
                 }
 
                 try {
-                    if (e.getAttributeType().type == AttributeType.TYPE.INT)
-                        legal_recs.add(new Attribute(k, (int) e.getData()));
-                    else if (e.getAttributeType().type == AttributeType.TYPE.DOUBLE)
-                        legal_recs.add(new Attribute(k, (double) e.getData()));
+                    if (attribute.getAttributeType().type == AttributeType.TYPE.INT)
+                        legalAttributes.add(new Attribute(attributeSchema, (int) attribute.getData()));
+                    else if (attribute.getAttributeType().type == AttributeType.TYPE.DOUBLE)
+                        legalAttributes.add(new Attribute(attributeSchema, (double) attribute.getData()));
                     else {
-                        System.out.println("The #" + (i+1) + " should be a int/double type.");
+                        System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
                         return false;
                     }
                 } catch (Error err) {
-                    System.out.println("The #" + (i+1) + " should be a int/double type.");
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
                     return false;
                 }
 
-            } else if (k.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
-                if (!(e.getData() instanceof Boolean)) {
-                    System.out.println("The #" + (i+1) + " should be a bool type.");
+            } else if (attributeSchema.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
+                if (!(attribute.getData() instanceof Boolean)) {
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a bool type.");
                     return false;
                 }
 
                 // replace with correct schema and data input
                 try {
-                    legal_recs.add(new Attribute(k, (boolean) e.getData()));
+                    legalAttributes.add(new Attribute(attributeSchema, (boolean) attribute.getData()));
                 } catch (Error err) {
-                    System.out.println("The #" + (i+1) + " should be a bool type.");
+                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a bool type.");
                     return false;
                 }
             }
         }
 
         // all the attributes are legal, and have a correct schema
-        Record record = new Record(legal_recs);
+        Record record = new Record(legalAttributes);
         try {
-            this.stor.insertRecord(schema.getTableId(), record);
+            this.storageManager.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
             System.out.println(error.getMessage());
             return false;
