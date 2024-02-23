@@ -70,6 +70,10 @@ public class DDLParser {
             throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException, DuplicateKeyException {
         String[] attributes = argument.toUpperCase().split(" ");
         String keyWord = attributes[0];
+        TableSchema tableSchema = catalog.getTableSchema(tableName);
+        if (tableSchema == null) {
+            throw new NoTableException(tableName);
+        }
         int numExistingAttributes = catalog.getTableSchema(tableName).getAttributeSchema().size();
         switch (keyWord) {
             case "ADD":
@@ -88,18 +92,17 @@ public class DDLParser {
                         new AttributeType(instruc.get(1)), numExistingAttributes, false, false, true, defaultValue);
 
                 // look for a attribute that shares the name and replace it
-                if (catalog.getTableSchema(tableName).getAttributeSchema(instruc.get(0)) != null) {
-                    catalog.getTableSchema(tableName).removeAttributeSchema(instruc.get(0));
+                if (tableSchema.getAttributeSchema(instruc.get(0)) != null) {
+                    tableSchema.removeAttributeSchema(instruc.get(0));
                 }
-                catalog.getTableSchema(tableName).addAttributeSchema(newAttributes);
+                tableSchema.addAttributeSchema(newAttributes);
                 updateAttributes(tableName, newAttributes, "add");
                 break;
             case "DROP":
-                TableSchema tableSchema = catalog.getTableSchema(tableName);
                 if (tableSchema.getAttributeSchema(attributes[1]) != null) {
+                    updateAttributes(tableName, tableSchema.getAttributeSchema(attributes[1]), "remove");
                     tableSchema.removeAttributeSchema(attributes[1]);
                 }
-                updateAttributes(tableName, tableSchema.getAttributeSchema(attributes[1]), "remove");
                 break;
             default:
                 break;

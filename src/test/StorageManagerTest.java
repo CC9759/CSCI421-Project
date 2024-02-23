@@ -186,7 +186,8 @@ class StorageManagerTest {
                 pass = pass && record.getAttribute("EMAIL") == null;
 
             }
-            pass = updatedRecord.getAttribute("EMAIL") == null;
+            pass = updatedRecord.getAttribute("EMAIL") == null &&
+                    catalog.getTableSchema("users").getAttributeSchema().size() == 2;
             System.out.println(pass ? "Pass" : "Fail");
             if (!pass) {
                 System.exit(1);

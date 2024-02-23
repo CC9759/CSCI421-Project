@@ -15,17 +15,16 @@ import java.util.ArrayList;
 
 public class Table {
     public TableSchema schema;
-    private int numPages;
 
 
     public Table(TableSchema schema) {
         this.schema = schema;
-        this.numPages = readNumPages();
+        this.schema.setNumPages(readNumPages());
     }
 
 
     public int getNumPages() {
-        return this.numPages;
+        return this.schema.getNumPages();
     }
 
     /**
@@ -58,8 +57,7 @@ public class Table {
      * @return new page
      */
     public Page createPage() {
-        int pageId = numPages;
-        //numPages++;
+        int pageId = this.getNumPages();
         updatePageCount(1);
         return new Page(schema.getTableId(), pageId, Catalog.getCatalog().getPageSize(), new ArrayList<>());
     }
@@ -68,12 +66,11 @@ public class Table {
      * Increment the amount of pages this table has
      */
     public void updatePageCount(int change) {
-
-        this.numPages += change;
+        this.schema.incrementNumPages(change);
         String location = getLocation();
         try (RandomAccessFile file = new RandomAccessFile(location, "rw");
              FileChannel fileChannel = file.getChannel()) {
-                fileChannel.truncate((long) this.numPages * Catalog.getCatalog().getPageSize());
+                fileChannel.truncate((long) getNumPages() * Catalog.getCatalog().getPageSize());
 
         } catch (IOException e) {
             throw new RuntimeException(e);

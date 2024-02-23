@@ -1,7 +1,10 @@
 package catalog;
 
+import org.w3c.dom.Attr;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class TableSchema implements Serializable {
 
@@ -60,23 +63,31 @@ public class TableSchema implements Serializable {
         this.tableAttributes.add(attributeSchema);
     }
 
-    public void removeAttributeSchema(String attributeName) {
+    public AttributeSchema removeAttributeSchema(String attributeName) {
         // removes a attribute if it belongs to the table. Otherwise, does nothing.
         int removeIndex = -1;
         for (int i = 0; i < this.tableAttributes.size(); i++) {
-            if (tableAttributes.get(i).getAttributeName() == attributeName) {
+            if (tableAttributes.get(i).getAttributeName().equals(attributeName)) {
                 removeIndex = i;
                 break;
             }
         }
         if (removeIndex == -1) {
-            return;
+            return null;
         }
-        this.tableAttributes.remove(removeIndex);
+        return this.tableAttributes.remove(removeIndex);
     }
 
     public int getNumPages() {
         return this.numPages;
+    }
+
+    public void setNumPages(int numPages) {
+        this.numPages = numPages;
+    }
+
+    public void incrementNumPages(int change) {
+        this.numPages += change;
     }
 
     public void incrementNumPages() {
