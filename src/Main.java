@@ -208,7 +208,6 @@ public class Main {
      * @param commands the string list of commands to process
      */
     public static void insertParser(DMLParser dmlParser, String[] commands){
-        ArrayList<Attribute> results;
         String tableName = commands[2];
         String allTuples = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
         String[] separatedTuples = allTuples.split(",");
