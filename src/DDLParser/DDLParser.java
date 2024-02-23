@@ -1,9 +1,6 @@
 package DDLParser;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import Exceptions.*;
 import catalog.AttributeSchema;
@@ -31,16 +28,37 @@ public class DDLParser {
      * @throws InvalidTypeException
      */
     public void createTable(Catalog catalog, String tableName, ArrayList<Column> columns)
-            throws InvalidTypeException {
+            throws InvalidTypeException, Exception {
         ArrayList<AttributeSchema> attributeSchemas = new ArrayList<>();
+        for (TableSchema tableSchema: catalog.getTableSchema()) {
+            if (tableSchema.getTableName().equalsIgnoreCase(tableName)) {
+                throw new Exception("Can not create two tables of the same name");
+            }
+        }
+        if (columns.size() == 0) {
+            throw new Exception("Cannot create a table with zero attributes");
+        }
+        int numPrimaryKeys = 0;
+        HashSet<String> attributeNames = new HashSet<>();
         for (Column column : columns) {
             AttributeType type = new AttributeType(column.getType());
             boolean key = column.isPrimaryKey();
             boolean unique = column.isUnique();
             boolean nullable = !column.isNotNull();
+            if (key) {
+                numPrimaryKeys++;
+            }
 
             AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable);
+            if (attributeNames.contains(column.getName())) {
+                throw new Exception("Can not have two attributes with the same name");
+            } else {
+                attributeNames.add(column.getName());
+            }
             attributeSchemas.add(schema);
+        }
+        if (numPrimaryKeys != 1) {
+            throw new Exception("Tried to create a table with the incorrect number of primary keys. Required: 1, Given: " + numPrimaryKeys);
         }
         catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributeSchemas));
     }

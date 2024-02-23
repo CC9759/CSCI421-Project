@@ -81,14 +81,15 @@ public class DMLParser {
         for (AttributeSchema attr : schema.getAttributeSchema()) {
             System.out.print(attr.getAttributeName() + ", ");
         }
+        System.out.println();
 
-        System.out.println("Number of pages: "+ schema.getNumPages());
+        System.out.println("Number of pages: " + schema.getNumPages());
 
         ArrayList<Record> recs;
         try {
             recs = this.stor.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
             return;
         }
 
@@ -211,7 +212,7 @@ public class DMLParser {
         try {
             this.stor.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
-            System.out.println(error);
+            System.out.println(error.getMessage());
             return false;
         }
 

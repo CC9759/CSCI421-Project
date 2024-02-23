@@ -136,39 +136,41 @@ public class Main {
      * @param commands the string list of commands to process
      */
     public static void createTableParser(DDLParser ddlParser, Catalog catalog, String[] commands) {
-
-        String tableName = commands[2];
-        // Remove left parenthesis if user attached it to the table name
-        if (tableName.contains("(")) {
-            tableName = tableName.substring(0, tableName.indexOf("("));
-        }
-
-        // get the original command to parse all columns
-        String command = String.join(" ", Arrays.asList(commands));
-        int startIndex = command.indexOf("(") + 1;
-        int endIndex = command.lastIndexOf(")");
-        String allColumnsString = command.substring(startIndex, endIndex);
-        String[] columnParams = allColumnsString.split(",");
-
-        ArrayList<Column> newColumns = new ArrayList<>();
-
-        for (String column : columnParams) {
-            column = column.trim();
-
-            String[] colArgs = column.split("\\s+", 3);
-            String name = colArgs[0];
-            String type = colArgs[1];
-
-            boolean primaryKey = column.toLowerCase().contains("primarykey");
-            boolean unique = column.toLowerCase().contains("unique") || primaryKey;
-            boolean notNull = column.toLowerCase().contains("notnull") || primaryKey;
-
-            newColumns.add(new Column(name, type, primaryKey, unique, notNull));
-        }
-
         try {
+            String tableName = commands[2];
+            // Remove left parenthesis if user attached it to the table name
+            if (tableName.contains("(")) {
+                tableName = tableName.substring(0, tableName.indexOf("("));
+            }
+
+            // get the original command to parse all columns
+            String command = String.join(" ", Arrays.asList(commands));
+            int startIndex = command.indexOf("(") + 1;
+            int endIndex = command.lastIndexOf(")");
+            String allColumnsString = command.substring(startIndex, endIndex);
+            String[] columnParams = allColumnsString.split(",");
+
+            ArrayList<Column> newColumns = new ArrayList<>();
+
+            for (String column : columnParams) {
+                column = column.trim();
+
+                String[] colArgs = column.split("\\s+", 3);
+                if (colArgs.length < 2) {
+                    throw new Exception("Columns must be denoted <name> <type>");
+                }
+                String name = colArgs[0];
+                String type = colArgs[1];
+
+                boolean primaryKey = column.toLowerCase().contains("primarykey");
+                boolean unique = column.toLowerCase().contains("unique") || primaryKey;
+                boolean notNull = column.toLowerCase().contains("notnull") || primaryKey;
+
+                newColumns.add(new Column(name, type, primaryKey, unique, notNull));
+            }
+
             ddlParser.createTable(catalog, tableName, newColumns);
-        } catch (InvalidTypeException e) {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
@@ -241,7 +243,6 @@ public class Main {
         Matcher matcher = pattern.matcher(tupleString);
         var tableSchemas = Catalog.getCatalog().getTableSchema(tableName);
         if (tableSchemas == null) {
-            System.out.println("Table" + tableSchemas + " DNE.");
             return null;
         }
         var attributeSchemas = tableSchemas.getAttributeSchema();
