@@ -9,6 +9,6 @@ Database Project for CSCI 421
 - Tregea, Daniel, dvt2706
 
 ## How to Run
-1. cd /src
+1. cd ./src/
 2. javac *.java
 3. java Main [dbPath (string)]  [pageSize (int)]  [bufferSize (int)]
