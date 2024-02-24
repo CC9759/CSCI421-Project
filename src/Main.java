@@ -84,7 +84,6 @@ public class Main {
                 }
 
                 String[] commands = input.strip().split(" ");
-                System.out.println(Arrays.toString(commands));
                 switch(commands[0].toLowerCase()){
                     default: System.out.println(help()); break;
                     case "create":

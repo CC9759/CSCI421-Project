@@ -177,7 +177,12 @@ public class Table {
         Object data = null;
         dis.mark(1);
         byte isNull = dis.readByte();
-        if (!(isNull == 0 && attributeData.length == 1)) {
+        if (isNull == 0 && attributeData.length == 1) {
+            // null bitmap is the same as a false boolean, if the attribute type is boolean, just read in a false
+            if (type.type == AttributeType.TYPE.BOOLEAN) {
+                data = Boolean.FALSE;
+            }
+        } else {
             dis.reset();
             switch (type.type) {
                 case INT:

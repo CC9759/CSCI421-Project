@@ -69,9 +69,9 @@ public class DDLParser {
      *
      * @param tableName the name of the Table to drop
      */
-    public void dropTable(Catalog catalog, String tableName) {
+    public void dropTable(Catalog catalog, String tableName) throws NoTableException {
+        deleteAllRecords(tableName);
         catalog.removeTableSchema(tableName);
-        // NOTE: should update Catalog file for changes to save
     }
 
     /**
@@ -86,8 +86,8 @@ public class DDLParser {
      */
     public void alterTable(Catalog catalog, String tableName, String argument)
             throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException, DuplicateKeyException {
-        String[] attributes = argument.toUpperCase().split(" ");
-        String keyWord = attributes[0];
+        String[] attributes = argument.split(" ");
+        String keyWord = attributes[0].toUpperCase();
         TableSchema tableSchema = catalog.getTableSchema(tableName);
         if (tableSchema == null) {
             throw new NoTableException(tableName);
@@ -142,6 +142,16 @@ public class DDLParser {
 
             storageManager.updateRecord(tableId, record);
 
+        }
+    }
+
+    private void deleteAllRecords(String tableName) throws NoTableException {
+        var storageManager = StorageManager.GetStorageManager();
+        var tableId = Catalog.getCatalog().getTableSchema(tableName).getTableId();
+        var allRecords = storageManager.getAllRecords(tableId);
+
+        for (Record record : allRecords) {
+            storageManager.deleteRecord(tableId, record.getPrimaryKey());
         }
     }
 
