@@ -191,7 +191,7 @@ public class Catalog implements Serializable {
     }
 
     public String toString() {
-        return "Database Location: " + getCatalog().getBufferSize() +
+        return "Database Location: " + getCatalog().getLocation() +
                 "\nPage Size: " + getCatalog().getPageSize() +
                 "\nBuffer Size: " + getCatalog().getBufferSize();
     }

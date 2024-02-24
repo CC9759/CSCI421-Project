@@ -39,7 +39,7 @@ public class DMLParser {
 
         // print out attr names
         for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
-            System.out.print(attributeSchema.getAttributeName() + ", ");
+            System.out.print(attributeSchema.getAttributeName() + " | ");
         }
 
         // print out the tuples
@@ -49,7 +49,7 @@ public class DMLParser {
             
             Collections.sort(attrs, new AttributeComparator());
             for (Attribute attr : attrs) {
-                System.out.print(attr.getData() + ", ");
+                System.out.print(attr.getData() + "   ");
             }
         }
         System.out.println("");
@@ -83,7 +83,7 @@ public class DMLParser {
         }
         System.out.println();
 
-        System.out.println("Number of pages: " + schema.getNumPages());
+        System.out.println("Number of Pages: " + schema.getNumPages());
 
         ArrayList<Record> records;
         try {

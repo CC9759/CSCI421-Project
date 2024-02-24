@@ -212,11 +212,12 @@ public class Main {
         String tableName = commands[2];
         String allTuples = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
         String[] separatedTuples = allTuples.split(",");
-        System.out.println(Arrays.toString(separatedTuples));
 
         for(String constraint : separatedTuples){
             try{
                 dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
+            }  catch (ClassCastException error) {
+                System.out.println("Insert values do not match schema types.");
             } catch(Exception e){
                 System.out.println(e.getMessage());
                 return;
