@@ -26,14 +26,14 @@ public class DMLParser {
         ArrayList<Record> records;
 
         if (schema == null) { // no table by that name
-            System.out.println("No table with name: " + tableName);
+            System.err.println("No table with name: " + tableName);
             return;
         }
         
         try {
             records = this.storageManager.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             return;
         }
 
@@ -71,7 +71,7 @@ public class DMLParser {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
 
         if (schema == null) { // no table by that name
-            System.out.println("No table with name: " + tableName);
+            System.err.println("No table with name: " + tableName);
             return;
         }
         
@@ -89,7 +89,7 @@ public class DMLParser {
         try {
             records = this.storageManager.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             return;
         }
 
@@ -102,14 +102,14 @@ public class DMLParser {
         TableSchema schema = Catalog.getCatalog().getTableSchema(name);
 
         if (schema == null) { // no table by that name
-            System.out.println("No table with name: " + name);
+            System.err.println("No table with name: " + name);
             return false;
         }
 
         ArrayList<AttributeSchema> attributeSchemas = schema.getAttributeSchema();
 
         if (attributes.size() != attributeSchemas.size()) { // different amount of attributes
-            System.out.println("Expected " + attributeSchemas.size() + " attributes but got " + attributes.size() + ".");
+            System.err.println("Expected " + attributeSchemas.size() + " attributes but got " + attributes.size() + ".");
             return false;
         }
 
@@ -122,7 +122,7 @@ public class DMLParser {
             // if value of data is null
             if (attribute.getData() == null) {
                 if (attributeSchema.isUnique() || attributeSchema.isKey() || !attributeSchema.isNull()) { // value cannot be null
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " cannot be null." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " cannot be null." );
                     return false;
                 }
                 // value can be null
@@ -133,18 +133,18 @@ public class DMLParser {
             // assume all strings come in as CHAR
             if (attributeSchema.getAttributeType().type == AttributeType.TYPE.CHAR || attributeSchema.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                 if (!(attribute.getData() instanceof String)) {
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a char/varchar type." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a char/varchar type." );
                     return false;
                 }
 
                 if (attribute.getSize() > attributeSchema.getSize()) { // char is too big
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " is a char/varchar type but is too large." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char/varchar type but is too large." );
                     return false;
                 }
 
                 // expected char of length N but got char length M
                 if (attributeSchema.getAttributeType().type == AttributeType.TYPE.CHAR && attributeSchema.getSize() != ((String) attribute.getData()).length()) {
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " is a char of required length " + attributeSchema.getSize() + "." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char of required length " + attributeSchema.getSize() + "." );
                     return false;
                 }
 
@@ -158,14 +158,14 @@ public class DMLParser {
                         legalAttributes.add(new Attribute(attributeSchema, (String) attribute.getData()));
                     }
                 } catch (Error err) {
-                    System.out.println("Wrong type.");
+                    System.err.println("Wrong type.");
                     return false;
                 }
 
             } else if (attributeSchema.getAttributeType().type == AttributeType.TYPE.INT || attributeSchema.getAttributeType().type == AttributeType.TYPE.DOUBLE) {
                 // replace with correct schema and data input
                 if (!(attribute.getData() instanceof Integer) && !(attribute.getData() instanceof Double)) {
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
                     return false;
                 }
 
@@ -175,17 +175,17 @@ public class DMLParser {
                     else if (attribute.getAttributeType().type == AttributeType.TYPE.DOUBLE)
                         legalAttributes.add(new Attribute(attributeSchema, (double) attribute.getData()));
                     else {
-                        System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
+                        System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
                         return false;
                     }
                 } catch (Error err) {
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a int/double type.");
                     return false;
                 }
 
             } else if (attributeSchema.getAttributeType().type == AttributeType.TYPE.BOOLEAN) {
                 if (!(attribute.getData() instanceof Boolean)) {
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a bool type.");
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a bool type.");
                     return false;
                 }
 
@@ -193,7 +193,7 @@ public class DMLParser {
                 try {
                     legalAttributes.add(new Attribute(attributeSchema, (boolean) attribute.getData()));
                 } catch (Error err) {
-                    System.out.println("The attribute " + attributeSchema.getAttributeName() + " should be a bool type.");
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a bool type.");
                     return false;
                 }
             }
@@ -204,7 +204,7 @@ public class DMLParser {
         try {
             this.storageManager.insertRecord(schema.getTableId(), record);
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
-            System.out.println(error.getMessage());
+            System.err.println(error.getMessage());
             return false;
         }
 

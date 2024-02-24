@@ -46,7 +46,7 @@ public class Table {
 
             return numPages;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             return -1;
         }
     }
@@ -91,7 +91,7 @@ public class Table {
             file.write(pageData);
             file.close();
         } catch (IOException | IllegalOperationException error) {
-            System.out.println(error.getMessage());
+            System.err.println(error.getMessage());
         }
     }
 
@@ -132,7 +132,7 @@ public class Table {
             file.close();
             return new Page(this.schema.getTableId(), pageNumber, Catalog.getCatalog().getPageSize(), records);
         } catch (IOException error) {
-            System.out.println(error.getMessage());
+            System.err.println(error.getMessage());
             return null;
         }
     }

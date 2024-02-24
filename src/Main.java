@@ -18,7 +18,7 @@ import storageManager.Attribute;
 public class Main {
     public static void main(String[] args) {
         if (args.length != 3) {
-            System.out.println("Usage: java Main <dbLoc> <pageSize> <bufferSize>");
+            System.err.println("Usage: java Main <dbLoc> <pageSize> <bufferSize>");
             System.exit(1);
         }
         
@@ -35,10 +35,10 @@ public class Main {
                 throw new Exception("Fatal: bufferSize parameter must be a positive integer. Aborting.");
             }
         } catch (NumberFormatException e) {
-            System.out.println("Fatal: pageSize and/or bufferSize parameters contain no parseable integers. Aborting.");
+            System.err.println("Fatal: pageSize and/or bufferSize parameters contain no parseable integers. Aborting.");
             System.exit(1);
         } catch (Exception er) {
-            System.out.println(er.getMessage());
+            System.err.println(er.getMessage());
             System.exit(1);
         }
 
@@ -58,7 +58,7 @@ public class Main {
                 System.out.println("No Database found in " + dbLoc + ". Creating new.");
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             System.exit(1);
         }
 
@@ -120,7 +120,7 @@ public class Main {
                         break;
                 }
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
         scanner.close();
@@ -170,7 +170,7 @@ public class Main {
 
             ddlParser.createTable(catalog, tableName, newColumns);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 
@@ -190,10 +190,8 @@ public class Main {
         
         try {
             ddlParser.alterTable(catalog, tableName, allConstraints);
-        } catch (InsufficientArgumentException e) {
-            System.out.println(e.getMessage());
-        } catch (InvalidTypeException e) {
-            System.out.println(e.getMessage());
+        } catch (InsufficientArgumentException | InvalidTypeException e) {
+            System.err.println(e.getMessage());
         } catch (PageOverfullException | NoTableException | DuplicateKeyException e) {
             throw new RuntimeException(e);
         }
@@ -217,9 +215,9 @@ public class Main {
             try{
                 dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
             }  catch (ClassCastException error) {
-                System.out.println("Insert values do not match schema types.");
+                System.err.println("Insert values do not match schema types.");
             } catch(Exception e){
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
                 return;
             }
         }

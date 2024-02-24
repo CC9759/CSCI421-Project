@@ -6,13 +6,6 @@ import java.util.Objects;
 
 public class Catalog implements Serializable {
 
-    /*
-     * Instance variables:
-     * 
-     * Singleton Catalog. Can be created from method or read from file.
-     * On Database creation, it will be created, the rest of the time it will be
-     * read from file
-     */
     private static Catalog catalogue = null;
     private ArrayList<TableSchema> tables;
     private int pageSize;
@@ -60,7 +53,6 @@ public class Catalog implements Serializable {
             ObjectInputStream ois = new ObjectInputStream(fis);
             catalogue = (Catalog) ois.readObject();
         } catch (ClassNotFoundException | IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -75,7 +67,6 @@ public class Catalog implements Serializable {
             oos.writeObject(catalogue);
             oos.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

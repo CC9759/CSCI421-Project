@@ -1,16 +1,10 @@
 package catalog;
 
-import org.w3c.dom.Attr;
-
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class TableSchema implements Serializable {
 
-    /*
-     * Instance Variables:
-     */
     private ArrayList<AttributeSchema> tableAttributes;
     private String tableName;
     private int tableId;
@@ -90,7 +84,4 @@ public class TableSchema implements Serializable {
         this.numPages += change;
     }
 
-    public void incrementNumPages() {
-        this.numPages++;
-    }
 }
