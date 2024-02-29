@@ -213,7 +213,11 @@ public class Main {
 
         for(String constraint : separatedTuples){
             try{
-                dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
+                boolean successfulOperation = dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
+                if(!successfulOperation){
+                    System.out.println("Insert values failed");
+                    return;
+                }
             }  catch (ClassCastException error) {
                 System.err.println("Insert values do not match schema types.");
                 return;
