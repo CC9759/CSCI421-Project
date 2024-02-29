@@ -216,6 +216,7 @@ public class Main {
                 dmlParser.insert(parseInsertValues(constraint, tableName), tableName);
             }  catch (ClassCastException error) {
                 System.err.println("Insert values do not match schema types.");
+                return;
             } catch(Exception e){
                 System.err.println(e.getMessage());
                 return;
