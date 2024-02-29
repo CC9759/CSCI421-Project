@@ -12,25 +12,14 @@ public class AttributeSchema implements Serializable {
     private String defaultValue;
     private int attributeId;
 
-    public AttributeSchema(String attributeName, AttributeType type, int attributeId, boolean isKey, boolean isUnique, boolean isNull) {
+    public AttributeSchema(String attributeName, AttributeType type, int attributeId, boolean isKey, boolean isUnique,
+            boolean isNull) {
         this.attributeName = attributeName;
         this.attributeId = attributeId;
         this.type = type;
         this.isKey = isKey;
         this.isUnique = isUnique;
         this.isNull = isNull;
-        this.defaultValue = "null";
-    }
-
-    public AttributeSchema(String attributeName, AttributeType type, int attributeId, boolean isKey, boolean isUnique, boolean isNull,
-            String defaultStr) {
-        this.attributeName = attributeName;
-        this.attributeId = attributeId;
-        this.type = type;
-        this.isKey = isKey;
-        this.isUnique = isUnique;
-        this.isNull = isNull;
-        this.defaultValue = defaultStr;
     }
 
     /**

@@ -21,7 +21,7 @@ public class DDLParser {
      * to add a TableSchema and Table
      *
      * @param tableName the name of the Table to be added
-     * @param columns the list of Table attributes to add in the form:
+     * @param columns   the list of Table attributes to add in the form:
      *                  {column1 datatype,
      *                  column2 datatype,
      *                  column3 datatype,...}
@@ -30,7 +30,7 @@ public class DDLParser {
     public void createTable(Catalog catalog, String tableName, ArrayList<Column> columns)
             throws InvalidTypeException, Exception {
         ArrayList<AttributeSchema> attributeSchemas = new ArrayList<>();
-        for (TableSchema tableSchema: catalog.getTableSchema()) {
+        for (TableSchema tableSchema : catalog.getTableSchema()) {
             if (tableSchema.getTableName().equalsIgnoreCase(tableName)) {
                 throw new Exception("Can not create two tables of the same name");
             }
@@ -49,7 +49,8 @@ public class DDLParser {
                 numPrimaryKeys++;
             }
 
-            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique, nullable);
+            AttributeSchema schema = new AttributeSchema(column.getName(), type, attributeSchemas.size(), key, unique,
+                    nullable);
             if (attributeNames.contains(column.getName())) {
                 throw new Exception("Can not have two attributes with the same name");
             } else {
@@ -58,7 +59,9 @@ public class DDLParser {
             attributeSchemas.add(schema);
         }
         if (numPrimaryKeys != 1) {
-            throw new Exception("Tried to create a table with the incorrect number of primary keys. Required: 1, Given: " + numPrimaryKeys);
+            throw new Exception(
+                    "Tried to create a table with the incorrect number of primary keys. Required: 1, Given: "
+                            + numPrimaryKeys);
         }
         catalog.addTableSchema(new TableSchema(catalog.getTableSchemaLength(), tableName, attributeSchemas));
     }
@@ -77,15 +80,17 @@ public class DDLParser {
     /**
      * contacts the Catalog and Storage Manager
      * to alter a TableSchema and Table
+     * 
      * @param catalog
      * @param tableName the name of the Table to alter
-     * @param argument the Table attributes to add/remove in the form:
+     * @param argument  the Table attributes to add/remove in the form:
      *                  ADD column_name datatype (DEFAULT value)
      *                  DROP COLUMN column_name
      * @throws InvalidTypeException
      */
     public void alterTable(Catalog catalog, String tableName, String argument)
-            throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException, DuplicateKeyException {
+            throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException,
+            DuplicateKeyException {
         String[] attributes = argument.split(" ");
         String keyWord = attributes[0].toUpperCase();
         TableSchema tableSchema = catalog.getTableSchema(tableName);
@@ -99,15 +104,16 @@ public class DDLParser {
                     throw new InsufficientArgumentException(keyWord);
 
                 // get a list of the instructions
-                List<String> instruc = Arrays
-                        .asList(Arrays.copyOfRange(attributes, 1, attributes.length));
+                List<String> instruc = Arrays.asList(Arrays.copyOfRange(attributes, 1, attributes.length));
 
-                String defaultValue = "null";
                 if (instruc.contains("DEFAULT")) {
-                    defaultValue = instruc.get(instruc.indexOf("DEFAULT") + 1);
+                    String defaultValue = instruc.get(instruc.indexOf("DEFAULT(") + 1);
+                    System.out.printf("\n\nDEBUG output: %s\n\n", defaultValue);
+                    // TODO: iterate through the records and put the default value of the new
+                    // attribute
                 }
                 var newAttributes = new AttributeSchema(instruc.get(0),
-                        new AttributeType(instruc.get(1)), numExistingAttributes, false, false, true, defaultValue);
+                        new AttributeType(instruc.get(1)), numExistingAttributes, false, false, true);
 
                 // look for a attribute that shares the name and replace it
                 if (tableSchema.getAttributeSchema(instruc.get(0)) != null) {
@@ -127,14 +133,16 @@ public class DDLParser {
         }
     }
 
-    private void updateAttributes(String tableName, AttributeSchema attributeSchema, String action) throws NoTableException, PageOverfullException, DuplicateKeyException {
+    private void updateAttributes(String tableName, AttributeSchema attributeSchema, String action)
+            throws NoTableException, PageOverfullException, DuplicateKeyException {
         var storageManager = StorageManager.GetStorageManager();
         var tableId = Catalog.getCatalog().getTableSchema(tableName).getTableId();
         var allRecords = storageManager.getAllRecords(tableId);
 
         for (Record record : allRecords) {
             if (action.equalsIgnoreCase("add")) {
-                var newAttribute = new Attribute(attributeSchema, stringToType(attributeSchema.defaultValue(), attributeSchema.getAttributeType()));
+                var newAttribute = new Attribute(attributeSchema,
+                        stringToType(attributeSchema.defaultValue(), attributeSchema.getAttributeType()));
                 record.setAttribute(newAttribute.getAttributeName(), newAttribute);
             } else if (action.equalsIgnoreCase("remove")) {
                 record.removeAttribute(attributeSchema.getAttributeName());
