@@ -51,7 +51,7 @@ public class AttributeType implements Serializable {
         }
 
         switch (typeString) {
-            case "INT":
+            case "INTEGER":
                 this.type = TYPE.INT;
                 break;
             case "DOUBLE":
