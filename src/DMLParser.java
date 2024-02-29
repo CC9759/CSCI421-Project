@@ -137,7 +137,7 @@ public class DMLParser {
                     return false;
                 }
 
-                if (attribute.getSize() > attributeSchema.getSize()) { // char is too big
+                if (((String) attribute.getData()).length() > attributeSchema.getSize()) { // char is too big
                     System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char/varchar type but is too large." );
                     return false;
                 }
