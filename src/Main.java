@@ -80,7 +80,12 @@ public class Main {
                 String input = scanner.nextLine();
 
                 while(!input.endsWith(";")){
-                    input += " " + scanner.nextLine();
+                    String nextLine = scanner.nextLine();
+                    if(nextLine.strip().equals(";")){
+                        input += nextLine;
+                        break;
+                    }
+                    input += " " + nextLine;
                 }
 
                 String[] commands = input.strip().split(" ");
@@ -148,7 +153,6 @@ public class Main {
             int endIndex = command.lastIndexOf(")");
             String allColumnsString = command.substring(startIndex, endIndex);
             String[] columnParams = allColumnsString.split(",");
-
             ArrayList<Column> newColumns = new ArrayList<>();
 
             for (String column : columnParams) {
