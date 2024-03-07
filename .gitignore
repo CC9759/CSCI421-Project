@@ -26,3 +26,6 @@ replay_pid*
 *.iml
 /db
 /dbtest
+
+# json files for personal configuration
+*.json

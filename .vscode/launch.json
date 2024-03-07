@@ -2,41 +2,10 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Main",
+            "name": "Main ./db 140 5",
             "request": "launch",
             "mainClass": "Main",
-            "projectName": "CSCI421-Project_46697151",
-            "args": [
-                "./db",
-                "140",
-                "5"
-            ]
-        },
-        {
-            "type": "java",
-            "name": "Main",
-            "request": "launch",
-            "mainClass": "Main",
-            "projectName": "CSCI421-Project_454f7c86",
-            "args": [
-                "./db",
-                "140",
-                "5"
-            ]
-        },
-        {
-            "type": "java",
-            "name": "StorageManagerTest",
-            "request": "launch",
-            "mainClass": "test.StorageManagerTest",
-            "projectName": "CSCI421-Project_335e8b6d"
-        },
-        {
-            "type": "java",
-            "name": "Main",
-            "request": "launch",
-            "mainClass": "Main",
-            "projectName": "CSCI421-Project_335e8b6d",
+            "projectName": "CSCI420-Project_6970a3ac",
             "args": [
                 "./db",
                 "140",
