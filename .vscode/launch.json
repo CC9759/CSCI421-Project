@@ -5,12 +5,20 @@
             "name": "Main ./db 140 5",
             "request": "launch",
             "mainClass": "Main",
-            "projectName": "CSCI420-Project_6970a3ac",
+            "projectName": "CSCI420-Project_baa24c4",
             "args": [
                 "./db",
                 "140",
                 "5"
             ]
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "CSCI421-Project_46697151",
+
         }
     ] 
 }
