@@ -21,21 +21,29 @@ public class DMLParser {
         this.storageManager = storageManager;
     }
 
-    public void select(String tableName) {
-        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+    public ArrayList<Record> getAllRecords(TableSchema schema, String tableName) {
         ArrayList<Record> records;
 
         if (schema == null) { // no table by that name
             System.err.println("No table with name: " + tableName);
-            return;
+            return null;
         }
         
         try {
             records = this.storageManager.getAllRecords(schema.getTableId());
         } catch(NoTableException e) {
             System.err.println(e.getMessage());
-            return;
+            return null;
         }
+        return records;
+    }
+
+    public void select(String tableName) {
+        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+        ArrayList<Record> records = getAllRecords(schema, tableName);
+
+        if (records == null) 
+            return;
 
         // print out attr names
         for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
@@ -53,6 +61,41 @@ public class DMLParser {
             }
         }
         System.out.println("");
+    }
+
+    public void delete(String tableName) {
+        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+        ArrayList<Record> records = getAllRecords(schema, tableName);
+
+        if (records == null) 
+            return;
+
+        for (Record record : records) {
+            try {
+                // TODO: need one more check for there where clause
+                this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
+            } catch (NoTableException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        
+    }
+
+    public void update(String tableName, String attr, String value) {
+        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+        ArrayList<Record> records = getAllRecords(schema, tableName);
+
+        if (records == null) 
+            return;
+
+        for (Record record : records) {
+            // TODO: need one more check for there where clause
+            try {
+                // TODO: implement update
+            } catch (Exception e) {
+                // TODO: implement exception handling
+            }
+        }
     }
 
     public void displaySchema() {
