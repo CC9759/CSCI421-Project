@@ -1,3 +1,8 @@
+/**
+ * Table
+ * Manages Table data and utility methods
+ * @author Daniel Tregea
+ */
 package storageManager;
 
 import Exceptions.IllegalOperationException;

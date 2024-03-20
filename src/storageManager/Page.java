@@ -1,3 +1,8 @@
+/**
+ * Page
+ * A collection holding records, stored in a fixed-size block of memory
+ * @author Daniel Tregea
+ */
 package storageManager;
 
 import Exceptions.IllegalOperationException;

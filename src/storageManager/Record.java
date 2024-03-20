@@ -1,8 +1,12 @@
+/**
+ * Record
+ * Holds attribute data for an instance of a table
+ * @author Daniel Tregea
+ */
 package storageManager;
 
 import catalog.AttributeSchema;
 import catalog.AttributeType;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

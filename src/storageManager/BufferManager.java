@@ -1,7 +1,11 @@
+/**
+ * Buffer Manager
+ * Manages pages in memory for the storage manager
+ * @author Daniel Tregea
+ */
 package storageManager;
 
 import Exceptions.NoTableException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 

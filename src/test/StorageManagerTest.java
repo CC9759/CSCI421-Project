@@ -1,15 +1,18 @@
+/**
+ * Storage Manager test
+ * Unit tests for storage manager
+ * @author Daniel Tregea
+ */
 package test;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import DDLParser.DDLParser;
 import catalog.Catalog;
 import catalog.TableSchema;
 import catalog.AttributeSchema;
 import catalog.AttributeType;
-
 import storageManager.*;
 import storageManager.Record;
 

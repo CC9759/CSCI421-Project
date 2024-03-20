@@ -1,3 +1,8 @@
+/**
+ * Attribute
+ * An attribute containing data in a record
+ * @author Daniel Tregea, David Miller
+ */
 package storageManager;
 
 import catalog.AttributeSchema;

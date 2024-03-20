@@ -1,8 +1,12 @@
+/**
+ * Storage Manager
+ * Handles all CRUD operations
+ * @author Daniel Tregea
+ */
 package storageManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import Exceptions.DuplicateKeyException;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
