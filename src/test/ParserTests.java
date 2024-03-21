@@ -5,8 +5,8 @@
  */
 package test;
 
-import DMLParser.Nodes.BoolOpNode;
-import DMLParser.TokenParser.Parser;
+import WhereParser.Nodes.BoolOpNode;
+import WhereParser.TokenParser.Parser;
 import Exceptions.IllegalOperationException;
 import Exceptions.SyntaxErrorException;
 import catalog.AttributeSchema;

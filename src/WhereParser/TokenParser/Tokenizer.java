@@ -5,7 +5,7 @@
  * @author Daniel Tregea
  */
 
-package DMLParser.TokenParser;
+package WhereParser.TokenParser;
 
 import java.util.ArrayList;
 import java.util.Collections;

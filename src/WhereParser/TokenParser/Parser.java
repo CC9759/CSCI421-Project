@@ -3,8 +3,8 @@
  * Contains methods to tokenize and output a Where clause tree
  * @author Daniel Tregea
  */
-package DMLParser.TokenParser;
-import DMLParser.Nodes.BoolOpNode;
+package WhereParser.TokenParser;
+import WhereParser.Nodes.BoolOpNode;
 import Exceptions.SyntaxErrorException;
 
 import java.util.ArrayList;

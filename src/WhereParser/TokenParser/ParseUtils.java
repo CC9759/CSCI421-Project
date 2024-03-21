@@ -3,7 +3,7 @@
  * Contains utility methods for parsing
  * @author Daniel Tregea
  */
-package DMLParser.TokenParser;
+package WhereParser.TokenParser;
 
 import Exceptions.SyntaxErrorException;
 import java.util.ArrayList;
