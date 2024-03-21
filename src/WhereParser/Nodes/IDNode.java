@@ -1,5 +1,5 @@
 /**
- * String Node
+ * IDNode
  * Represents record variables in a where-clause tree
  * @author Daniel Tregea
  */

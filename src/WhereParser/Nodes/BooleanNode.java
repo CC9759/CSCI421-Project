@@ -1,5 +1,5 @@
 /**
- * String Node
+ * Boolean Node
  * Represents a boolean in a where-clause tree
  * @author Daniel Tregea
  */

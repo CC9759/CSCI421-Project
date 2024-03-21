@@ -1,5 +1,5 @@
 /**
- * String Node
+ * Operand Node
  * Represents a base item in a where-clause tree
  * @author Daniel Tregea
  */

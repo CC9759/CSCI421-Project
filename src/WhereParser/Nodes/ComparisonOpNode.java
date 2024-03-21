@@ -1,5 +1,5 @@
 /**
- * String Node
+ * Comparison Node
  * Represents comparison operations in a where-clause tree
  * @author Daniel Tregea
  */
