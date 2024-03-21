@@ -63,7 +63,7 @@ public class DMLParser {
         System.out.println("");
     }
 
-    public void delete(String tableName) {
+    public void delete(String tableName, String where) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
@@ -81,8 +81,32 @@ public class DMLParser {
         
     }
 
-    public void update(String tableName, String attr, String value) {
+    // make sure the attr type aligns with the expected
+    // double check that all doubles have a '.' in them
+    public boolean confirmDataType(AttributeSchema attrSchema, Object val) {
+        var type = attrSchema.getAttributeType().type;
+
+        return true;
+    }
+
+    public void update(String tableName, String column, Object value, String where) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+        AttributeSchema updateAttr = null;
+
+        // get attr name
+        for (AttributeSchema attr : schema.getAttributeSchema()) {
+            if (attr.getAttributeName().toLowerCase() == column) {
+                updateAttr = attr;
+            }
+        }
+
+        // column DNE
+        if (updateAttr == null) {
+            return;
+        }
+
+        
+
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
         if (records == null) 
