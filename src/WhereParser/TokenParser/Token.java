@@ -4,7 +4,7 @@
  * @author Daniel Tregea
  */
 
-package DMLParser.TokenParser;
+package WhereParser.TokenParser;
 
 public class Token {
     public TokenType type;

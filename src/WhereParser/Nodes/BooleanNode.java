@@ -1,12 +1,12 @@
 /**
- * String Node
+ * Boolean Node
  * Represents a boolean in a where-clause tree
  * @author Daniel Tregea
  */
-package DMLParser.Nodes;
+package WhereParser.Nodes;
 
-import DMLParser.TokenParser.ParseUtils;
-import DMLParser.TokenParser.Token;
+import WhereParser.TokenParser.ParseUtils;
+import WhereParser.TokenParser.Token;
 import Exceptions.IllegalOperationException;
 import Exceptions.SyntaxErrorException;
 import storageManager.Record;
