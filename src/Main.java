@@ -88,8 +88,13 @@ public class Main {
                     input += " " + nextLine;
                 }
 
+                //lowers everything outside of quotes
+                input = toLowerCommand(input);
+                // removes semicolon
+                input = input.substring(0, input.length() - 1);
                 String[] commands = input.strip().split(" ");
-                switch(commands[0].toLowerCase()){
+                
+                switch(commands[0]){
                     default: System.out.println(help()); break;
                     case "create":
                         createTableParser(ddlParser, catalog, commands);
@@ -104,10 +109,10 @@ public class Main {
                         insertParser(dmlParser, commands);
                         break;
                     case "display":
-                        if(commands[1].toLowerCase().equals("info")){
+                        if(commands[1].equals("info")){
                             dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
                         }
-                        else if(commands[1].toLowerCase().equals("schema") || commands[1].toLowerCase().equals("schema;")){
+                        else if(commands[1].equals("schema") || commands[1].equals("schema;")){
                             dmlParser.displaySchema();
                         }
                         else{
@@ -115,7 +120,13 @@ public class Main {
                         }
                         break;
                     case "select":
-                        dmlParser.select(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                        selectParser(dmlParser, commands);
+                        break;
+                    case "update":
+                        updateParser(dmlParser, commands);
+                        break;
+                    case "delete":
+                        deleteParser(dmlParser, commands);
                         break;
                     case "exit;":
                     case "quit;":
@@ -165,9 +176,9 @@ public class Main {
                 String name = colArgs[0];
                 String type = colArgs[1];
 
-                boolean primaryKey = column.toLowerCase().contains("primarykey");
-                boolean unique = column.toLowerCase().contains("unique") || primaryKey;
-                boolean notNull = column.toLowerCase().contains("notnull") || primaryKey;
+                boolean primaryKey = column.contains("primarykey");
+                boolean unique = column.contains("unique") || primaryKey;
+                boolean notNull = column.contains("notnull") || primaryKey;
 
                 newColumns.add(new Column(name, type, primaryKey, unique, notNull));
             }
@@ -189,9 +200,7 @@ public class Main {
     public static void alterTableParser(DDLParser ddlParser, Catalog catalog, String[] commands){
         String tableName = commands[2];
         String allConstraints = String.join(" ", Arrays.copyOfRange(commands, 3, commands.length));
-        // removes the semicolon
-        allConstraints = allConstraints.substring(0, allConstraints.length() - 1);
-        
+
         try {
             ddlParser.alterTable(catalog, tableName, allConstraints);
         } catch (InsufficientArgumentException | InvalidTypeException e) {
@@ -280,6 +289,99 @@ public class Main {
         }
 
         return attributes;
+    }
+
+    /**
+     * argument parser for select command, takes in commands and separates the command
+     * into 4 different arrays for select, from, where, and orderby args.
+     * 
+     * @param dmlParser the DMLParser instance
+     * @param commands the string list of commands to process
+     */
+    public static void selectParser(DMLParser dmlParser, String[] commands) {
+        ArrayList<String> commandsList = new ArrayList<String>(Arrays.asList(commands));
+        ArrayList<String> fromArgs = new ArrayList<String>();
+        ArrayList<String> whereArgs = new ArrayList<String>();
+        String orderbyColumn;
+        int fromIndex = commandsList.indexOf("from");
+        int whereIndex = commandsList.indexOf("where");
+        int orderbyIndex = commandsList.indexOf("orderby");
+        
+        ArrayList<String> selectArgs = new ArrayList<String>(commandsList.subList(1, fromIndex));
+
+        if(whereIndex != -1){
+            fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, whereIndex));
+            if(orderbyIndex != -1){
+                whereArgs = new ArrayList<String>(commandsList.subList(whereIndex + 1, commandsList.size()));
+            }
+            else{
+                whereArgs = new ArrayList<String>(commandsList.subList(whereIndex + 1, orderbyIndex));
+                orderbyColumn = commandsList.get(-1);
+            }
+        }
+        else if(orderbyIndex != -1){
+            fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, orderbyIndex));
+            orderbyColumn = commandsList.get(-1);
+        }
+        else{
+            fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, commandsList.size()));
+        }
+
+        //using this for now until select has functionality put in for where, multiple from args, and orderby
+        dmlParser.select(fromArgs.get(0));
+    }
+
+    /**
+     * argument parser for update command, just manually takes in each part of the command
+     * 
+     * @param dmlParser the DMLParser instance
+     * @param commands the string list of commands to process
+     */
+    public static void updateParser(DMLParser dmlParser, String[] commands) {
+        String tableName = commands[2];
+        String columnName = commands[4];
+        String value = commands[6];
+        String whereString = String.join(" ", Arrays.copyOfRange(commands, 8, commands.length));
+    
+        dmlParser.update(tableName, columnName, value, whereString);
+    }
+
+    /**
+     * argument parser for delete command, just manually takes in each part of the command
+     * 
+     * @param dmlParser the DMLParser instance
+     * @param commands the string list of commands to process
+     */
+    public static void deleteParser(DMLParser dmlParser, String[] commands){
+        String tableName = commands[2];
+        String whereString = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
+        
+        dmlParser.delete(tableName, whereString);
+    }
+
+    /**
+     * lowers all chars in a given string except for the substrings wrapped in quotes
+     * 
+     * @param input the given string to lower chars by
+     * @return the resulting toLowered string except for the substrings wrapped in quotes
+     */
+    public static String toLowerCommand(String input){
+        StringBuilder result = new StringBuilder();
+        boolean insideQuotes = false;
+
+        for (int i = 0; i < input.length(); i++) {
+            char currentChar = input.charAt(i);
+            if (currentChar == '"') {
+                insideQuotes = !insideQuotes;
+            }
+            if (!insideQuotes) {
+                result.append(Character.toLowerCase(currentChar));
+            } else {
+                result.append(currentChar);
+            }
+        }
+
+        return result.toString();
     }
 
     /**
