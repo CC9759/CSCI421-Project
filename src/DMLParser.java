@@ -5,6 +5,8 @@ import java.util.Comparator;
 import Exceptions.DuplicateKeyException;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
+import WhereParser.Nodes.BoolOpNode;
+import WhereParser.TokenParser.Parser;
 import catalog.AttributeSchema;
 import catalog.AttributeType;
 import catalog.Catalog;
@@ -72,24 +74,60 @@ public class DMLParser {
 
         for (Record record : records) {
             try {
-                // TODO: need one more check for there where clause
-                this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
-            } catch (NoTableException e) {
+                BoolOpNode head = Parser.parseWhere(where);
+                boolean pass = head.evaluate(record);
+                if (pass) 
+                    this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
+            } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         }
-        
     }
 
     // make sure the attr type aligns with the expected
     // double check that all doubles have a '.' in them
-    public boolean confirmDataType(AttributeSchema attrSchema, Object val) {
+    public boolean confirmDataType(AttributeSchema attrSchema, String val) {
         var type = attrSchema.getAttributeType().type;
+        
+        if (type == AttributeType.TYPE.CHAR || type == AttributeType.TYPE.VARCHAR) {
+            if (type == AttributeType.TYPE.CHAR && val.length() != attrSchema.getSize()) 
+                return false;
+            else if (type == AttributeType.TYPE.VARCHAR && val.length() > attrSchema.getSize())
+                return false;
+            return true;
+        } else if (isInteger(val) && type == AttributeType.TYPE.INT) 
+            return true;
+        else if (isDouble(val) && type == AttributeType.TYPE.DOUBLE) 
+            return true;
+        else if (isBoolean(val) && type == AttributeType.TYPE.BOOLEAN) 
+            return true;
 
-        return true;
+        return false;
     }
 
-    public void update(String tableName, String column, Object value, String where) {
+    public boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public boolean isDouble(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public boolean isBoolean(String str) {
+        return str.equalsIgnoreCase("true") || str.equalsIgnoreCase("false");
+    }
+
+    public void update(String tableName, String column, String value, String where) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         AttributeSchema updateAttr = null;
 
@@ -105,7 +143,12 @@ public class DMLParser {
             return;
         }
 
-        
+        // data typing wrong
+        if (!confirmDataType(updateAttr, value)) {
+            return;
+        }
+
+        // TODO : check null constraints
 
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
@@ -113,11 +156,13 @@ public class DMLParser {
             return;
 
         for (Record record : records) {
-            // TODO: need one more check for there where clause
             try {
-                // TODO: implement update
+                BoolOpNode head = Parser.parseWhere(where);
+                boolean pass = head.evaluate(record);
+                if (pass) 
+                    this.storageManager.updateRecord(schema.getTableId(), record);
             } catch (Exception e) {
-                // TODO: implement exception handling
+                System.out.println(e.getMessage());
             }
         }
     }
