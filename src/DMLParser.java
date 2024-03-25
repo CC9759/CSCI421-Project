@@ -67,10 +67,17 @@ public class DMLParser {
 
     public void delete(String tableName, String where) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+
+        if (schema == null) { // no table by that name
+            System.err.println("No table with name: " + tableName);
+            return;
+        }
+
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
-        if (records == null) 
+        if (records == null) {
             return;
+        }
 
         // TODO : check for foreign key
 
@@ -133,6 +140,11 @@ public class DMLParser {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         AttributeSchema updateAttr = null;
 
+        if (schema == null) { // no table by that name
+            System.err.println("No table with name: " + tableName);
+            return;
+        }
+
         // get attr name
         for (AttributeSchema attr : schema.getAttributeSchema()) {
             if (attr.getAttributeName().toLowerCase() == column) {
@@ -157,8 +169,9 @@ public class DMLParser {
 
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
-        if (records == null) 
+        if (records == null) {
             return;
+        }
 
         for (Record record : records) {
             try {
