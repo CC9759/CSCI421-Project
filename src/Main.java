@@ -128,8 +128,8 @@ public class Main {
                     case "delete":
                         deleteParser(dmlParser, commands);
                         break;
-                    case "exit;":
-                    case "quit;":
+                    case "exit":
+                    case "quit":
                         running = false;
                         catalog.writeBinary();
                         StorageManager.GetStorageManager().flushBuffer();
@@ -338,10 +338,15 @@ public class Main {
      * @param commands the string list of commands to process
      */
     public static void updateParser(DMLParser dmlParser, String[] commands) {
-        String tableName = commands[2];
-        String columnName = commands[4];
-        String value = commands[6];
-        String whereString = String.join(" ", Arrays.copyOfRange(commands, 8, commands.length));
+        String tableName = commands[1];
+        String columnName = commands[3];
+        String value = commands[5];
+
+        if(value.equals("null")){
+            value = null;
+        }
+
+        String whereString = String.join(" ", Arrays.copyOfRange(commands, 7, commands.length));
     
         dmlParser.update(tableName, columnName, value, whereString);
     }
