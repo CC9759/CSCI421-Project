@@ -72,6 +72,8 @@ public class DMLParser {
         if (records == null) 
             return;
 
+        // TODO : check for foreign key
+
         for (Record record : records) {
             try {
                 BoolOpNode head = Parser.parseWhere(where);
@@ -138,6 +140,11 @@ public class DMLParser {
             }
         }
 
+        // making the value null violates constraint
+        if (value == null && (updateAttr.isUnique() || updateAttr.isKey() || !updateAttr.isNull())) {
+            return;
+        }
+
         // column DNE
         if (updateAttr == null) {
             return;
@@ -148,8 +155,6 @@ public class DMLParser {
             return;
         }
 
-        // TODO : check null constraints
-
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
         if (records == null) 
@@ -159,8 +164,17 @@ public class DMLParser {
             try {
                 BoolOpNode head = Parser.parseWhere(where);
                 boolean pass = head.evaluate(record);
-                if (pass) 
+                if (pass) {
+                    if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
+                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
+                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT) 
+                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
+                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
+                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Double.parseDouble(value)));
+                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.BOOLEAN) 
+                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Boolean.parseBoolean(value)));
                     this.storageManager.updateRecord(schema.getTableId(), record);
+                }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
