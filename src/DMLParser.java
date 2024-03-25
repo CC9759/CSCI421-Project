@@ -140,13 +140,13 @@ public class DMLParser {
             }
         }
 
-        // making the value null violates constraint
-        if (value == null && (updateAttr.isUnique() || updateAttr.isKey() || !updateAttr.isNull())) {
+        // column DNE
+        if (updateAttr == null) {
             return;
         }
 
-        // column DNE
-        if (updateAttr == null) {
+        // making the value null violates constraint
+        if (value == null && (updateAttr.isUnique() || updateAttr.isKey() || !updateAttr.isNull())) {
             return;
         }
 
