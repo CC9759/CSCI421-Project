@@ -85,10 +85,13 @@ public class DMLParser {
             try {
                 BoolOpNode head = Parser.parseWhere(where);
                 boolean pass = head.evaluate(record);
-                if (pass) 
+                if (pass) {
                     this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
+                }
             } catch (Exception e) {
+                // TODO : ask prof what errors could happen here to halt exec
                 System.out.println(e.getMessage());
+                break;
             }
         }
     }
@@ -99,10 +102,13 @@ public class DMLParser {
         var type = attrSchema.getAttributeType().type;
         
         if (type == AttributeType.TYPE.CHAR || type == AttributeType.TYPE.VARCHAR) {
-            if (type == AttributeType.TYPE.CHAR && val.length() != attrSchema.getSize()) 
+            if (type == AttributeType.TYPE.CHAR && val.length() != attrSchema.getSize()) {
+                System.out.println("Attribute (" + attrSchema.getAttributeName() + ") should be size " + attrSchema.getSize() + ".");
                 return false;
-            else if (type == AttributeType.TYPE.VARCHAR && val.length() > attrSchema.getSize())
+            } else if (type == AttributeType.TYPE.VARCHAR && val.length() > attrSchema.getSize()) {
+                System.out.println("Attribute (" + attrSchema.getAttributeName() + ") size should be less than or equal to " + attrSchema.getSize() + ".");
                 return false;
+            }
             return true;
         } else if (isInteger(val) && type == AttributeType.TYPE.INT) 
             return true;
@@ -111,6 +117,7 @@ public class DMLParser {
         else if (isBoolean(val) && type == AttributeType.TYPE.BOOLEAN) 
             return true;
 
+        System.out.println("Attribute (" + attrSchema.getAttributeName() + ") should be " + attrSchema.getAttributeType().type.toString() + ".");
         return false;
     }
 
@@ -154,22 +161,24 @@ public class DMLParser {
 
         // column DNE
         if (updateAttr == null) {
+            System.err.println("Attribute (" + column + ") DNE.");
             return;
         }
 
         // making the value null violates constraint
         if (value == null && (updateAttr.isUnique() || updateAttr.isKey() || !updateAttr.isNull())) {
+            System.err.println("Attribute (" + column + ") has a null constraint.");
             return;
         }
 
         // data typing wrong
-        if (!confirmDataType(updateAttr, value)) {
+        if (!confirmDataType(updateAttr, value))
             return;
-        }
 
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
         if (records == null) {
+            System.err.println("The table is empty :( you should try filling it.");
             return;
         }
 
@@ -189,6 +198,7 @@ public class DMLParser {
                     this.storageManager.updateRecord(schema.getTableId(), record);
                 }
             } catch (Exception e) {
+                // TODO : ask prof what errors could happen here to halt exec
                 System.out.println(e.getMessage());
             }
         }
