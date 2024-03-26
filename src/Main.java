@@ -301,7 +301,7 @@ public class Main {
     public static void selectParser(DMLParser dmlParser, String[] commands) {
         ArrayList<String> commandsList = new ArrayList<String>(Arrays.asList(commands));
         ArrayList<String> fromArgs = new ArrayList<String>();
-        ArrayList<String> whereArgs = new ArrayList<String>();
+        String whereArgs;
         String orderbyColumn;
         int fromIndex = commandsList.indexOf("from");
         int whereIndex = commandsList.indexOf("where");
@@ -312,19 +312,25 @@ public class Main {
         if(whereIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, whereIndex));
             if(orderbyIndex != -1){
-                whereArgs = new ArrayList<String>(commandsList.subList(whereIndex + 1, commandsList.size()));
+                whereArgs = String.join(" ", commandsList.subList(whereIndex + 1, commandsList.size()));
             }
             else{
-                whereArgs = new ArrayList<String>(commandsList.subList(whereIndex + 1, orderbyIndex));
+                whereArgs = String.join(" ",commandsList.subList(whereIndex + 1, orderbyIndex));
                 orderbyColumn = commandsList.get(-1);
             }
         }
         else if(orderbyIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, orderbyIndex));
             orderbyColumn = commandsList.get(-1);
+            whereArgs = null;
         }
         else{
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, commandsList.size()));
+            whereArgs = null;
+        }
+
+        for(int i = 0; i < fromArgs.size(); i++){
+            fromArgs.set(i, fromArgs.get(i).replace(",", ""));
         }
 
         //using this for now until select has functionality put in for where, multiple from args, and orderby
@@ -341,12 +347,18 @@ public class Main {
         String tableName = commands[1];
         String columnName = commands[3];
         String value = commands[5];
+        String whereString;
 
         if(value.equals("null")){
             value = null;
         }
 
-        String whereString = String.join(" ", Arrays.copyOfRange(commands, 7, commands.length));
+        if(commands.length > 5){
+            whereString = String.join(" ", Arrays.copyOfRange(commands, 7, commands.length));
+        }
+        else{
+            whereString = null;
+        }
     
         dmlParser.update(tableName, columnName, value, whereString);
     }
@@ -359,8 +371,14 @@ public class Main {
      */
     public static void deleteParser(DMLParser dmlParser, String[] commands){
         String tableName = commands[2];
-        String whereString = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
-        
+        String whereString;
+
+        if(commands.length > 3){
+            whereString = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
+        }
+        else{
+            whereString = null;
+        }
         dmlParser.delete(tableName, whereString);
     }
 
