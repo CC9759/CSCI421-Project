@@ -301,8 +301,8 @@ public class Main {
     public static void selectParser(DMLParser dmlParser, String[] commands) {
         ArrayList<String> commandsList = new ArrayList<String>(Arrays.asList(commands));
         ArrayList<String> fromArgs = new ArrayList<String>();
-        String whereArgs;
-        String orderbyColumn;
+        String whereArgs = null;
+        String orderbyColumn = null;
         int fromIndex = commandsList.indexOf("from");
         int whereIndex = commandsList.indexOf("where");
         int orderbyIndex = commandsList.indexOf("orderby");
@@ -313,20 +313,18 @@ public class Main {
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, whereIndex));
             if(orderbyIndex != -1){
                 whereArgs = String.join(" ", commandsList.subList(whereIndex + 1, commandsList.size()));
+                orderbyColumn = commandsList.get(-1);
             }
             else{
                 whereArgs = String.join(" ",commandsList.subList(whereIndex + 1, orderbyIndex));
-                orderbyColumn = commandsList.get(-1);
             }
         }
         else if(orderbyIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, orderbyIndex));
             orderbyColumn = commandsList.get(-1);
-            whereArgs = null;
         }
         else{
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, commandsList.size()));
-            whereArgs = null;
         }
 
         for(int i = 0; i < fromArgs.size(); i++){
@@ -334,7 +332,7 @@ public class Main {
         }
 
         //using this for now until select has functionality put in for where, multiple from args, and orderby
-        dmlParser.select(fromArgs.get(0));
+        dmlParser.select(selectArgs, fromArgs, whereArgs, orderbyColumn);
     }
 
     /**
