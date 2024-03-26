@@ -84,8 +84,7 @@ public class DMLParser {
         for (Record record : records) {
             try {
                 BoolOpNode head = Parser.parseWhere(where);
-                boolean pass = head.evaluate(record);
-                if (pass) {
+                if (head.evaluate(record)) {
                     this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
                 }
             } catch (Exception e) {
@@ -101,7 +100,7 @@ public class DMLParser {
     public boolean confirmDataType(AttributeSchema attrSchema, String val) {
         var type = attrSchema.getAttributeType().type;
         
-        if (type == AttributeType.TYPE.CHAR || type == AttributeType.TYPE.VARCHAR) {
+        if ((type == AttributeType.TYPE.CHAR || type == AttributeType.TYPE.VARCHAR) && (val.charAt(0) == '\"' && val.charAt(val.length()-1) == '\"')) {
             if (type == AttributeType.TYPE.CHAR && val.length() != attrSchema.getSize()) {
                 System.out.println("Attribute (" + attrSchema.getAttributeName() + ") should be size " + attrSchema.getSize() + ".");
                 return false;
@@ -154,7 +153,7 @@ public class DMLParser {
 
         // get attr name
         for (AttributeSchema attr : schema.getAttributeSchema()) {
-            if (attr.getAttributeName().toLowerCase() == column) {
+            if (attr.getAttributeName().toLowerCase().equals(column)) {
                 updateAttr = attr;
             }
         }
@@ -172,7 +171,7 @@ public class DMLParser {
         }
 
         // data typing wrong
-        if (!confirmDataType(updateAttr, value))
+        if (value != null && !confirmDataType(updateAttr, value))
             return;
 
         ArrayList<Record> records = getAllRecords(schema, tableName);
@@ -185,9 +184,10 @@ public class DMLParser {
         for (Record record : records) {
             try {
                 BoolOpNode head = Parser.parseWhere(where);
-                boolean pass = head.evaluate(record);
-                if (pass) {
-                    if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
+                if (head.evaluate(record)) {
+                    if (value == null)
+                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
+                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
                         record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
                     else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT) 
                         record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
@@ -198,8 +198,8 @@ public class DMLParser {
                     this.storageManager.updateRecord(schema.getTableId(), record);
                 }
             } catch (Exception e) {
-                // TODO : ask prof what errors could happen here to halt exec
                 System.out.println(e.getMessage());
+                break;
             }
         }
     }
