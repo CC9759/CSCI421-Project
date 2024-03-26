@@ -114,10 +114,12 @@ public class DMLParser {
 
         for (Record record : records) {
             try {
-                BoolOpNode head = Parser.parseWhere(where);
-                if (head.evaluate(record)) {
-                    this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
+                if (where != null) {
+                    BoolOpNode head = Parser.parseWhere(where);
+                    if (!head.evaluate(record))
+                        continue;
                 }
+                this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
             } catch (Exception e) {
                 // TODO : ask prof what errors could happen here to halt exec
                 System.out.println(e.getMessage());
@@ -214,20 +216,22 @@ public class DMLParser {
 
         for (Record record : records) {
             try {
-                BoolOpNode head = Parser.parseWhere(where);
-                if (head.evaluate(record)) {
-                    if (value == null)
-                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
-                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
-                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
-                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT) 
-                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
-                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
-                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Double.parseDouble(value)));
-                    else if (updateAttr.getAttributeType().type == AttributeType.TYPE.BOOLEAN) 
-                        record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Boolean.parseBoolean(value)));
-                    this.storageManager.updateRecord(schema.getTableId(), record);
+                if (where != null) {
+                    BoolOpNode head = Parser.parseWhere(where);
+                    if (!head.evaluate(record))
+                        continue;
                 }
+                if (value == null)
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT) 
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Double.parseDouble(value)));
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.BOOLEAN) 
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Boolean.parseBoolean(value)));
+                this.storageManager.updateRecord(schema.getTableId(), record);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 break;
