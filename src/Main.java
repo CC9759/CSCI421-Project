@@ -331,7 +331,6 @@ public class Main {
             fromArgs.set(i, fromArgs.get(i).replace(",", ""));
         }
 
-        //using this for now until select has functionality put in for where, multiple from args, and orderby
         dmlParser.select(selectArgs, fromArgs, whereArgs, orderbyColumn);
     }
 
