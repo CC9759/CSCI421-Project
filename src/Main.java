@@ -331,7 +331,12 @@ public class Main {
             fromArgs.set(i, fromArgs.get(i).replace(",", ""));
         }
 
-        dmlParser.select(selectArgs, fromArgs, whereArgs, orderbyColumn);
+        try{
+            dmlParser.select(selectArgs, fromArgs, whereArgs, orderbyColumn);
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            return;
+        }
     }
 
     /**
@@ -356,8 +361,12 @@ public class Main {
         else{
             whereString = null;
         }
-    
-        dmlParser.update(tableName, columnName, value, whereString);
+        try{
+            dmlParser.update(tableName, columnName, value, whereString);
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            return;
+        }
     }
 
     /**
@@ -376,7 +385,13 @@ public class Main {
         else{
             whereString = null;
         }
-        dmlParser.delete(tableName, whereString);
+        
+        try{
+            dmlParser.delete(tableName, whereString);
+        } catch(Exception e){
+            System.err.println(e.getMessage());
+            return;
+        }
     }
 
     /**
