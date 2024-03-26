@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,29 +41,59 @@ public class DMLParser {
         return records;
     }
 
-    public void select(String tableName) {
-        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
-        ArrayList<Record> records = getAllRecords(schema, tableName);
+    public void select(ArrayList<String> selectArgs, ArrayList<String> fromArgs, String where, String orderByColumn) {
+        ArrayList<TableSchema> schemaList = new ArrayList<>();
+        ArrayList<Record> records = new ArrayList<>();
+
+        for(String tableName: fromArgs){
+            TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+            schemaList.add(schema);
+            records.addAll(getAllRecords(schema, tableName));
+        }
 
         if (records == null) 
             return;
 
         // print out attr names
-        for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
-            System.out.print(attributeSchema.getAttributeName() + " | ");
+        for(TableSchema schema: schemaList){
+            for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+                System.out.print(schema.getTableName() + "." + attributeSchema.getAttributeName() + " | ");
+            }
         }
 
         // print out the tuples
-        for (Record record : records) {
-            System.out.println("");
-            ArrayList<Attribute> attrs = record.getAttributes();
-            
-            Collections.sort(attrs, new AttributeComparator());
-            for (Attribute attr : attrs) {
-                System.out.print(attr.getData() + "   ");
+        if(where.equals(null)){
+            for (Record record : records) {
+                try {
+                    BoolOpNode head = Parser.parseWhere(where);
+                    boolean pass = head.evaluate(record);
+                    if (pass) {
+                        System.out.println("");
+                        ArrayList<Attribute> attrs = record.getAttributes();
+                    
+                        Collections.sort(attrs, new AttributeComparator());
+                        for (Attribute attr : attrs) {
+                            System.out.print(attr.getData() + "   ");
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
             }
+            System.out.println("");
         }
-        System.out.println("");
+        else{
+            for (Record record : records) {
+                System.out.println("");
+                ArrayList<Attribute> attrs = record.getAttributes();
+                    
+                Collections.sort(attrs, new AttributeComparator());
+                for (Attribute attr : attrs) {
+                    System.out.print(attr.getData() + "   ");
+                }
+            }
+            System.out.println("");
+        }
     }
 
     public void delete(String tableName, String where) {
