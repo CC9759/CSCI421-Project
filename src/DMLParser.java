@@ -44,22 +44,21 @@ public class DMLParser {
 
     public void select(ArrayList<String> selectArgs, ArrayList<String> fromArgs, String where, String orderByColumn) throws Exception {
         ArrayList<TableSchema> schemaList = new ArrayList<>();
-        ArrayList<Record> records = new ArrayList<>();
+        ArrayList<ArrayList<Record>> tableRecords = new ArrayList<>();
 
-        for(String tableName: fromArgs){
+        for (String tableName : fromArgs) {
             TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
-            if(schema == null){
+            if (schema == null) {
                 throw new NoTableException(tableName);
             }
             schemaList.add(schema);
-            records.addAll(getAllRecords(schema, tableName));
+            tableRecords.add(getAllRecords(schema, tableName));  
         }
 
-        if (records.size() == 0) 
+        if (tableRecords.isEmpty())
             return;
 
-        if(schemaList.size() == 0)
-            return;
+        ArrayList<Record> records = crossProduct(tableRecords, 0, null);
 
         boolean selectAll = false;
 
@@ -84,7 +83,7 @@ public class DMLParser {
         else{
             for(String selectArg: selectArgs){
                 if(selectArg.contains(".")){  
-                    String[] selectSplit = selectArg.split(".");
+                    String[] selectSplit = selectArg.split("\\.");
                     TableSchema selectTable = Catalog.getCatalog().getTableSchema(selectSplit[0]);
                     if(selectTable == null){
                         throw new NoTableException(selectSplit[0]);
@@ -105,6 +104,9 @@ public class DMLParser {
                         if(selectAttribute != null){
                             selectTable = schema;
                             attCount++;
+                            if(attCount > 1){
+                                throw new Exception(selectArg + " is ambiguous");
+                            }
                         }
                     }
                     if(attCount == 1){
@@ -113,9 +115,6 @@ public class DMLParser {
                     }
                     else if(attCount == 0){
                         throw new Exception("No such attribute: " + selectArg);
-                    }
-                    else{
-                        throw new Exception(selectArg + "is ambiguous");
                     }
                 }
             }
@@ -191,27 +190,24 @@ public class DMLParser {
 
     private ArrayList<Record> crossProduct(ArrayList<ArrayList<Record>> tableRecords, int index, Record current) {
         ArrayList<Record> result = new ArrayList<>();
+        
         if (index == tableRecords.size()) {
-            result.add(current);
+            if (current != null) {
+                result.add(current);
+            }
             return result;
         }
-    
-        for (Record rec : tableRecords.get(index)) {
-            Record newRecord = new Record(null);
-    
-            if (current != null) {
-                for (Attribute attr : current.getAttributes()) {
-                    newRecord.setAttribute(attr.getAttributeName(), attr); 
-                }
-            }
 
-            for (Attribute attr : rec.getAttributes()) {
-                newRecord.setAttribute(attr.getAttributeName(), attr); 
+        for (Record rec : tableRecords.get(index)) {
+            ArrayList<Attribute> combinedAttributes = new ArrayList<>();
+            if (current != null) {
+                combinedAttributes.addAll(current.getAttributes());
             }
-    
+            combinedAttributes.addAll(rec.getAttributes());
+            Record newRecord = new Record(combinedAttributes);
             result.addAll(crossProduct(tableRecords, index + 1, newRecord));
         }
-    
+
         return result;
     }
 
