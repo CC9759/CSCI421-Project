@@ -34,14 +34,14 @@ public class MathOpNode extends OperandNode {
     }
 
     @Override
-    public Object evaluate(Record record) {
+    public Object evaluate(Record record) throws IllegalOperationException {
         Object result1 = num1.evaluate(record);
         Object result2 = num2.evaluate(record);
 
         // Convert integers to double if either of the operands is a double
         boolean isDoubleOperation = result1 instanceof Double || result2 instanceof Double;
-        double double1 = isDoubleOperation ? ((Number) result1).doubleValue() : 0;
-        double double2 = isDoubleOperation ? ((Number) result2).doubleValue() : 0;
+        double double1 = isDoubleOperation ? ((Number) result1).doubleValue() : ((Number)0).doubleValue();
+        double double2 = isDoubleOperation ? ((Number) result2).doubleValue() : ((Number)0).doubleValue();
         int int1 = !isDoubleOperation ? (Integer) result1 : 0;
         int int2 = !isDoubleOperation ? (Integer) result2 : 0;
 
@@ -53,9 +53,12 @@ public class MathOpNode extends OperandNode {
             case MULTIPLY:
                 return isDoubleOperation ? double1 * double2 : int1 * int2;
             case DIVIDE:
+                if ((isDoubleOperation && double2 == 0)|| (!isDoubleOperation && int2 == 0)) {
+                    throw new IllegalOperationException("Cannot divide by 0");
+                }
                 // Convert to Number if its not clean integer division.
                 if (isDoubleOperation || (int1 % int2 != 0)) {
-                    return ((Number) result1).doubleValue() / ((Number) result2).doubleValue();
+                    return double1 / double2;
                 } else {
                     return int1 / int2;
                 }
@@ -75,7 +78,7 @@ public class MathOpNode extends OperandNode {
         return compareNumber(this, o, record);
     }
 
-    public static int compareNumber(OperandNode o1, OperandNode o2, Record record) {
+    public static int compareNumber(OperandNode o1, OperandNode o2, Record record) throws IllegalOperationException {
         Object thisObj = o1.evaluate(record);
         Object otherObj = o2.evaluate(record);
 

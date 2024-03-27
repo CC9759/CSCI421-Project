@@ -31,14 +31,22 @@ public class IDNode extends OperandNode {
         return new IDNode(id);
     }
 
+    private Object getRecordValue(Record record) throws IllegalOperationException {
+        try {
+            return record.getAttribute(id.value).getData();
+        } catch (NullPointerException e) {
+            throw new IllegalOperationException("Property " + id.value + " does not exist");
+        }
+    }
+
     @Override
-    public Object evaluate(Record record) {
-        return record.getAttribute(id.value).getData();
+    public Object evaluate(Record record) throws IllegalOperationException {
+        return getRecordValue(record);
     }
 
     @Override
     public int compare(Record record, OperandNode o) throws IllegalOperationException {
-        Object data = record.getAttribute(id.value).getData();
+        Object data = getRecordValue(record);
         // check for cast exceptions in the future
         if (data instanceof Integer || data instanceof Double) {
             return MathOpNode.compareNumber(this, o, record);

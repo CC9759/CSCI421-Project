@@ -45,7 +45,7 @@ public abstract class OperandNode {
         return node;
     }
 
-    public abstract Object evaluate(Record record);
+    public abstract Object evaluate(Record record) throws IllegalOperationException;
 
     public abstract int compare(Record record, OperandNode o) throws IllegalOperationException;
 }
