@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import Exceptions.DuplicateKeyException;
+import Exceptions.IllegalOperationException;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
 import WhereParser.Nodes.BoolOpNode;
@@ -41,59 +42,177 @@ public class DMLParser {
         return records;
     }
 
-    public void select(ArrayList<String> selectArgs, ArrayList<String> fromArgs, String where, String orderByColumn) {
+    public void select(ArrayList<String> selectArgs, ArrayList<String> fromArgs, String where, String orderByColumn) throws Exception {
         ArrayList<TableSchema> schemaList = new ArrayList<>();
         ArrayList<Record> records = new ArrayList<>();
 
         for(String tableName: fromArgs){
             TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+            if(schema == null){
+                throw new NoTableException(tableName);
+            }
             schemaList.add(schema);
             records.addAll(getAllRecords(schema, tableName));
         }
 
-        if (records == null) 
+        if (records.size() == 0) 
             return;
 
+        if(schemaList.size() == 0)
+            return;
+
+        boolean selectAll = false;
+
+        if(selectArgs.get(0).equals("*") && selectArgs.size() == 1){
+            selectAll = true;
+        }
+        else if(selectArgs.contains("*")){
+            throw new IllegalOperationException("Invalid select");
+        }
+
+        ArrayList<AttributeSchema> selectAttributes = new ArrayList<>();
+
         // print out attr names
-        for(TableSchema schema: schemaList){
-            for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
-                System.out.print(schema.getTableName() + "." + attributeSchema.getAttributeName() + " | ");
+        if(selectAll){
+            for(TableSchema schema: schemaList){
+                for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+                    selectAttributes.add(attributeSchema);
+                    System.out.print(schema.getTableName() + "." + attributeSchema.getAttributeName() + " | ");
+                }
+            }
+        }
+        else{
+            for(String selectArg: selectArgs){
+                if(selectArg.contains(".")){  
+                    String[] selectSplit = selectArg.split(".");
+                    TableSchema selectTable = Catalog.getCatalog().getTableSchema(selectSplit[0]);
+                    if(selectTable == null){
+                        throw new NoTableException(selectSplit[0]);
+                    }
+                    AttributeSchema selectAttribute = selectTable.getAttributeSchema(selectSplit[1]);
+                    if(selectAttribute == null){
+                        throw new Exception("No such attribute: " + selectSplit[1]);
+                    }
+                    selectAttributes.add(selectAttribute);
+                    System.out.print(selectTable.getTableName() + "." + selectAttribute.getAttributeName() + " | ");
+                }
+                else{
+                    int attCount = 0;
+                    AttributeSchema selectAttribute = null;
+                    TableSchema selectTable = null;
+                    for(TableSchema schema: schemaList){
+                        selectAttribute = schema.getAttributeSchema(selectArg);
+                        if(selectAttribute != null){
+                            selectTable = schema;
+                            attCount++;
+                        }
+                    }
+                    if(attCount == 1){
+                        selectAttributes.add(selectAttribute);
+                        System.out.print(selectTable.getTableName() + "." + selectAttribute.getAttributeName() + " | ");
+                    }
+                    else if(attCount == 0){
+                        throw new Exception("No such attribute: " + selectArg);
+                    }
+                    else{
+                        throw new Exception(selectArg + "is ambiguous");
+                    }
+                }
             }
         }
 
         // print out the tuples
-        if(where.equals(null)){
-            for (Record record : records) {
-                try {
-                    BoolOpNode head = Parser.parseWhere(where);
-                    boolean pass = head.evaluate(record);
-                    if (pass) {
-                        System.out.println("");
-                        ArrayList<Attribute> attrs = record.getAttributes();
-                    
-                        Collections.sort(attrs, new AttributeComparator());
-                        for (Attribute attr : attrs) {
-                            System.out.print(attr.getData() + "   ");
+        if(where != null){
+            if(selectAll){
+                for (Record record : records) {
+                    try {
+                        BoolOpNode head = Parser.parseWhere(where);
+                        boolean pass = head.evaluate(record);
+                        if (pass) {
+                            System.out.println("");
+                            ArrayList<Attribute> attrs = record.getAttributes();
+                        
+                            Collections.sort(attrs, new AttributeComparator());
+                            for (Attribute attr : attrs) {
+                                System.out.print(attr.getData() + "   ");
+                            }
                         }
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
                     }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
                 }
+                System.out.println("");
             }
-            System.out.println("");
+            else{
+                for (Record record : records) {
+                    try {
+                        BoolOpNode head = Parser.parseWhere(where);
+                        boolean pass = head.evaluate(record);
+                        if (pass) {
+                            System.out.println("");
+                            for(AttributeSchema attributeSchema: selectAttributes){
+                                Attribute attr = record.getAttribute(attributeSchema.getAttributeName());
+                                System.out.print(attr.getData() + "   ");
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+                System.out.println("");
+            }
+            
         }
         else{
-            for (Record record : records) {
+            if(selectAll){
+                for (Record record : records) {
+                    System.out.println("");
+                    ArrayList<Attribute> attrs = record.getAttributes();
+                        
+                    Collections.sort(attrs, new AttributeComparator());
+                    for (Attribute attr : attrs) {
+                        System.out.print(attr.getData() + "   ");
+                    }
+                }
                 System.out.println("");
-                ArrayList<Attribute> attrs = record.getAttributes();
-                    
-                Collections.sort(attrs, new AttributeComparator());
-                for (Attribute attr : attrs) {
-                    System.out.print(attr.getData() + "   ");
+            }
+            else{
+                for(Record record : records){
+                    System.out.println("");
+                    for(AttributeSchema attributeSchema: selectAttributes){
+                        Attribute attr = record.getAttribute(attributeSchema.getAttributeName());
+                        System.out.print(attr.getData() + "   ");
+                    }
+                }
+                System.out.println("");
+            }
+        }
+    }
+
+    private ArrayList<Record> crossProduct(ArrayList<ArrayList<Record>> tableRecords, int index, Record current) {
+        ArrayList<Record> result = new ArrayList<>();
+        if (index == tableRecords.size()) {
+            result.add(current);
+            return result;
+        }
+    
+        for (Record rec : tableRecords.get(index)) {
+            Record newRecord = new Record(null);
+    
+            if (current != null) {
+                for (Attribute attr : current.getAttributes()) {
+                    newRecord.setAttribute(attr.getAttributeName(), attr); 
                 }
             }
-            System.out.println("");
+
+            for (Attribute attr : rec.getAttributes()) {
+                newRecord.setAttribute(attr.getAttributeName(), attr); 
+            }
+    
+            result.addAll(crossProduct(tableRecords, index + 1, newRecord));
         }
+    
+        return result;
     }
 
     public void delete(String tableName, String where) {

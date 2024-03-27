@@ -29,6 +29,9 @@ public class DDLParser {
      */
     public void createTable(Catalog catalog, String tableName, ArrayList<Column> columns)
             throws InvalidTypeException, Exception {
+        if(tableName.contains(".")){
+            throw new Exception("Invalid table name");
+        }
         ArrayList<AttributeSchema> attributeSchemas = new ArrayList<>();
         for (TableSchema tableSchema : catalog.getTableSchema()) {
             if (tableSchema.getTableName().equalsIgnoreCase(tableName)) {
