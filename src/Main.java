@@ -315,11 +315,11 @@ public class Main {
         if(whereIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, whereIndex));
             if(orderbyIndex != -1){
-                whereArgs = String.join(" ", commandsList.subList(whereIndex + 1, commandsList.size()));
+                whereArgs = String.join(" ", commandsList.subList(whereIndex + 1, orderbyIndex));
                 orderbyColumn = commandsList.get(commandsList.size() - 1);
             }
             else{
-                whereArgs = String.join(" ",commandsList.subList(whereIndex + 1, orderbyIndex));
+                whereArgs = String.join(" ",commandsList.subList(whereIndex + 1, commandsList.size()));
             }
         }
         else if(orderbyIndex != -1){
