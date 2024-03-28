@@ -310,6 +310,7 @@ public class DMLParser {
     }
 
     public void update(String tableName, String column, String value, String where) {
+        System.out.println("Where " + where);
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         AttributeSchema updateAttr = null;
 
