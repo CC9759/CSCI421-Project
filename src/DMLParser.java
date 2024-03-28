@@ -120,23 +120,43 @@ public class DMLParser {
             }
         }
 
-
         if (orderByColumn != null && !orderByColumn.isEmpty()) { 
-            boolean columnExists = selectAttributes.stream()
-                .anyMatch(attr -> attr.getAttributeName().equals(orderByColumn));
-            if (!columnExists) {
-                throw new Exception("OrderBy column " + orderByColumn + " not found");
-            }
-            records.sort((record1, record2) -> {
-                for (AttributeSchema attributeSchema : selectAttributes) {
-                    if (attributeSchema.getAttributeName().equals(orderByColumn)) {
-                        Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
-                        Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
-                        return value1.compareTo(value2); 
-                    }
+            if(orderByColumn.contains(".")){
+                String[] orderbySplit = orderByColumn.split("\\.");
+                String orderby = orderbySplit[1];
+                boolean columnExists = selectAttributes.stream()
+                    .anyMatch(attr -> attr.getAttributeName().equals(orderby));
+                if (!columnExists) {
+                    throw new Exception("OrderBy column " + orderByColumn + " not found");
                 }
-                return 0; 
-            });
+                records.sort((record1, record2) -> {
+                    for (AttributeSchema attributeSchema : selectAttributes) {
+                        if (attributeSchema.getAttributeName().equals(orderByColumn)) {
+                            Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
+                            Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
+                            return value1.compareTo(value2); 
+                        }
+                    }
+                    return 0; 
+                });
+            }
+            else{
+                boolean columnExists = selectAttributes.stream()
+                    .anyMatch(attr -> attr.getAttributeName().equals(orderByColumn));
+                if (!columnExists) {
+                    throw new Exception("OrderBy column " + orderByColumn + " not found");
+                }
+                records.sort((record1, record2) -> {
+                    for (AttributeSchema attributeSchema : selectAttributes) {
+                        if (attributeSchema.getAttributeName().equals(orderByColumn)) {
+                            Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
+                            Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
+                            return value1.compareTo(value2); 
+                        }
+                    }
+                    return 0; 
+                });
+            }
         }
 
         // print out the tuples
