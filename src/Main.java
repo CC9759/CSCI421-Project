@@ -330,8 +330,14 @@ public class Main {
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, commandsList.size()));
         }
 
-        for(int i = 0; i < fromArgs.size(); i++){
-            fromArgs.set(i, fromArgs.get(i).replace(",", ""));
+        String fromList = String.join("", fromArgs);
+        fromList = fromList.replaceAll(",", " ");
+        fromArgs = new ArrayList<String>(Arrays.asList(fromList.split(" ")));
+
+        for(String fromArg : fromArgs){
+            if(fromArg.equals("") || fromArg.equals(" ")){
+                fromArgs.remove(fromArg);
+            }
         }
 
         try{
