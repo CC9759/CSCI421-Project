@@ -264,8 +264,6 @@ public class DMLParser {
             return;
         }
 
-        // TODO : check for foreign key
-
         for (Record record : records) {
             try {
                 if (where != null) {
@@ -275,7 +273,6 @@ public class DMLParser {
                 }
                 this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
             } catch (Exception e) {
-                // TODO : ask prof what errors could happen here to halt exec
                 System.out.println(e.getMessage());
                 break;
             }
@@ -330,7 +327,6 @@ public class DMLParser {
     }
 
     public void update(String tableName, String column, String value, String where) {
-        System.out.println("Where " + where);
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         AttributeSchema updateAttr = null;
 
