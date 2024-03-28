@@ -330,8 +330,14 @@ public class Main {
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, commandsList.size()));
         }
 
-        for(int i = 0; i < fromArgs.size(); i++){
-            fromArgs.set(i, fromArgs.get(i).replace(",", ""));
+        String fromList = String.join("", fromArgs);
+        fromList = fromList.replaceAll(",", " ");
+        fromArgs = new ArrayList<String>(Arrays.asList(fromList.split(" ")));
+
+        for(String fromArg : fromArgs){
+            if(fromArg.equals("") || fromArg.equals(" ")){
+                fromArgs.remove(fromArg);
+            }
         }
 
         try{
@@ -349,21 +355,24 @@ public class Main {
      * @param commands the string list of commands to process
      */
     public static void updateParser(DMLParser dmlParser, String[] commands) {
+        ArrayList<String> commandsList = new ArrayList<String>(Arrays.asList(commands));
+        int whereIndex = commandsList.indexOf("where");
         String tableName = commands[1];
         String columnName = commands[3];
         String value = commands[5];
-        String whereString;
+        String whereString = null;
 
         if(value.equals("null")){
             value = null;
         }
 
-        if(commands.length > 5){
+        if(whereIndex != -1){
             whereString = String.join(" ", Arrays.copyOfRange(commands, 7, commands.length));
         }
         else{
             whereString = null;
         }
+        
         try{
             dmlParser.update(tableName, columnName, value, whereString);
         } catch(Exception e){
@@ -379,11 +388,13 @@ public class Main {
      * @param commands the string list of commands to process
      */
     public static void deleteParser(DMLParser dmlParser, String[] commands){
+        ArrayList<String> commandsList = new ArrayList<String>(Arrays.asList(commands));
+        int whereIndex = commandsList.indexOf("where");
         String tableName = commands[2];
-        String whereString;
+        String whereString = null;
 
-        if(commands.length > 3){
-            whereString = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
+        if(whereIndex != -1){
+            whereString = String.join(" ", Arrays.copyOfRange(commands, whereIndex + 1, commands.length));
         }
         else{
             whereString = null;

@@ -3,7 +3,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import Exceptions.*;
+import Exceptions.DuplicateKeyException;
+import Exceptions.IllegalOperationException;
+import Exceptions.NoTableException;
+import Exceptions.PageOverfullException;
 import WhereParser.Nodes.BoolOpNode;
 import WhereParser.TokenParser.Parser;
 import catalog.AttributeSchema;
@@ -306,7 +309,8 @@ public class DMLParser {
         return str.equalsIgnoreCase("true") || str.equalsIgnoreCase("false");
     }
 
-    public void update(String tableName, String column, String value, String where) throws SyntaxErrorException {
+    public void update(String tableName, String column, String value, String where) {
+        System.out.println("Where " + where);
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
         AttributeSchema updateAttr = null;
 
@@ -345,37 +349,24 @@ public class DMLParser {
             return;
         }
 
-        BoolOpNode head = null;
-        if (where != null) {
-            head = Parser.parseWhere(where);
-        }
         for (Record record : records) {
-            // Dont record saves on original record until actually inserted
-            Record recordClone = record.clone();
             try {
-                if (head != null) {
-                    if (!head.evaluate(recordClone))
+                if (where != null) {
+                    BoolOpNode head = Parser.parseWhere(where);
+                    if (!head.evaluate(record))
                         continue;
                 }
                 if (value == null)
-                    recordClone.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
                 else if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
-                    recordClone.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
                 else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT) 
-                    recordClone.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
                 else if (updateAttr.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
-                    recordClone.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Double.parseDouble(value)));
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Double.parseDouble(value)));
                 else if (updateAttr.getAttributeType().type == AttributeType.TYPE.BOOLEAN) 
-                    recordClone.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Boolean.parseBoolean(value)));
-
-
-                Record toDelete = this.storageManager.getRecordByPrimaryKey(schema.getTableId(), recordClone.getPrimaryKey());
-                // Records primary key was altered to be another records id.
-                if (toDelete != record) {
-                    throw new DuplicateKeyException(toDelete.getPrimaryKey());
-                }
-
-                this.storageManager.updateRecord(schema.getTableId(), recordClone);
+                    record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Boolean.parseBoolean(value)));
+                this.storageManager.updateRecord(schema.getTableId(), record);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 break;
