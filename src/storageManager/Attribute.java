@@ -9,8 +9,10 @@ import catalog.AttributeSchema;
 import catalog.AttributeType;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class Attribute extends AttributeSchema implements Comparable<Attribute> {
+public class Attribute extends AttributeSchema implements Comparable<Attribute>, Cloneable {
 
     private Object data;
 
@@ -63,6 +65,24 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute> 
             return ((String) this.data).compareTo((String) o.data);
         } else {
             return ((Boolean) this.data).compareTo((Boolean) o.data);
+        }
+    }
+
+    @Override
+    public Attribute clone() {
+        try {
+            Attribute cloned = (Attribute) super.clone();
+            // Handle the cloning of mutable objects in `data` if necessary
+//            if (this.data instanceof ArrayList) {
+//                cloned.data = new ArrayList<>((ArrayList<?>) this.data);
+//            } else if (this.data instanceof HashMap) {
+//                cloned.data = new HashMap<>((HashMap<?, ?>) this.data);
+//            }
+//            cloned.data = data.
+            // Add more conditions for other mutable types as needed
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Clone not supported", e); // This shouldn't happen
         }
     }
 }
