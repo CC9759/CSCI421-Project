@@ -58,7 +58,24 @@ public class DMLParser {
         if (tableRecords.isEmpty())
             return;
 
-        ArrayList<Record> records = crossProduct(tableRecords, 0, null);
+        ArrayList<Record> records;
+        if(tableRecords.size() == 1){
+            records = new ArrayList<>();
+            for (Record rec : tableRecords.get(0)) {
+                ArrayList<Attribute> modifiedAttributes = new ArrayList<>();
+                for (Attribute attr : rec.getAttributes()) {
+                    String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
+                    AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
+                    Attribute newAttribute = new Attribute(newSchema, attr.getData());
+                    modifiedAttributes.add(newAttribute);
+                }
+                records.add(new Record(modifiedAttributes));
+            }
+        }
+        else{
+            records = crossProduct(tableRecords, fromArgs, 0, null);
+        }
+
 
         boolean selectAll = false;
 
@@ -69,6 +86,14 @@ public class DMLParser {
             throw new IllegalOperationException("Invalid select");
         }
 
+        for(TableSchema schema: schemaList){
+            for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+                if(!attributeSchema.getAttributeName().contains(".")){
+                    attributeSchema.setAttributeName(schema.getTableName() + "." + attributeSchema.getAttributeName());
+                }
+            }
+        }
+
         ArrayList<AttributeSchema> selectAttributes = new ArrayList<>();
 
         // print out attr names
@@ -76,33 +101,39 @@ public class DMLParser {
             for(TableSchema schema: schemaList){
                 for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
                     selectAttributes.add(attributeSchema);
-                    System.out.print(schema.getTableName() + "." + attributeSchema.getAttributeName() + " | ");
+                    System.out.print(attributeSchema.getAttributeName() + " | ");
                 }
             }
         }
         else{
             for(String selectArg: selectArgs){
-                if(selectArg.contains(".")){  
-                    String[] selectSplit = selectArg.split("\\.");
-                    TableSchema selectTable = Catalog.getCatalog().getTableSchema(selectSplit[0]);
-                    if(selectTable == null){
-                        throw new NoTableException(selectSplit[0]);
-                    }
-                    AttributeSchema selectAttribute = selectTable.getAttributeSchema(selectSplit[1]);
-                    if(selectAttribute == null){
-                        throw new Exception("No such attribute: " + selectSplit[1]);
-                    }
-                    selectAttributes.add(selectAttribute);
-                    System.out.print(selectTable.getTableName() + "." + selectAttribute.getAttributeName() + " | ");
-                }
-                else{
+                // if(selectArg.contains(".")){  
+                //     String[] selectSplit = selectArg.split("\\.");
+                //     TableSchema selectTable = Catalog.getCatalog().getTableSchema(selectSplit[0]);
+                //     if(selectTable == null){
+                //         throw new NoTableException(selectSplit[0]);
+                //     }
+                //     AttributeSchema selectAttribute = selectTable.getAttributeSchema(selectSplit[1]);
+                //     if(selectAttribute == null){
+                //         throw new Exception("No such attribute: " + selectSplit[1]);
+                //     }
+                //     selectAttribute.setAttributeName(selectTable.getTableName() + "." + selectAttribute.getAttributeName());
+                //     selectAttributes.add(selectAttribute);
+                //     System.out.print(selectAttribute.getAttributeName() + " | ");
+                // }
+                // else{
                     int attCount = 0;
                     AttributeSchema selectAttribute = null;
-                    TableSchema selectTable = null;
+                    String selectString;
                     for(TableSchema schema: schemaList){
-                        selectAttribute = schema.getAttributeSchema(selectArg);
+                        if(selectArg.contains(".")){
+                            selectString = selectArg;
+                        }
+                        else{
+                            selectString = schema.getTableName() + "." + selectArg;
+                        }
+                        selectAttribute = schema.getAttributeSchema(selectString);
                         if(selectAttribute != null){
-                            selectTable = schema;
                             attCount++;
                             if(attCount > 1){
                                 throw new Exception(selectArg + " is ambiguous");
@@ -111,32 +142,50 @@ public class DMLParser {
                     }
                     if(attCount == 1){
                         selectAttributes.add(selectAttribute);
-                        System.out.print(selectTable.getTableName() + "." + selectAttribute.getAttributeName() + " | ");
+                        System.out.print(selectAttribute.getAttributeName() + " | ");
                     }
                     else if(attCount == 0){
                         throw new Exception("No such attribute: " + selectArg);
                     }
                 }
             }
-        }
-
+        // }
 
         if (orderByColumn != null && !orderByColumn.isEmpty()) { 
-            boolean columnExists = selectAttributes.stream()
-                .anyMatch(attr -> attr.getAttributeName().equals(orderByColumn));
-            if (!columnExists) {
-                throw new Exception("OrderBy column " + orderByColumn + " not found");
-            }
-            records.sort((record1, record2) -> {
-                for (AttributeSchema attributeSchema : selectAttributes) {
-                    if (attributeSchema.getAttributeName().equals(orderByColumn)) {
-                        Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
-                        Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
-                        return value1.compareTo(value2); 
-                    }
+            if(orderByColumn.contains(".")){
+                boolean columnExists = selectAttributes.stream()
+                    .anyMatch(attr -> attr.getAttributeName().equals(orderByColumn));
+                if (!columnExists) {
+                    throw new Exception("OrderBy column " + orderByColumn + " not found");
                 }
-                return 0; 
-            });
+                records.sort((record1, record2) -> {
+                    for (AttributeSchema attributeSchema : selectAttributes) {
+                        if (attributeSchema.getAttributeName().equals(orderByColumn)) {
+                            Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
+                            Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
+                            return value1.compareTo(value2); 
+                        }
+                    }
+                    return 0; 
+                });
+            }
+            else{
+                boolean columnExists = selectAttributes.stream()
+                    .anyMatch(attr -> attr.getAttributeName().endsWith(orderByColumn));
+                if (!columnExists) {
+                    throw new Exception("OrderBy column " + orderByColumn + " not found");
+                }
+                records.sort((record1, record2) -> {
+                    for (AttributeSchema attributeSchema : selectAttributes) {
+                        if (attributeSchema.getAttributeName().equals(orderByColumn)) {
+                            Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
+                            Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
+                            return value1.compareTo(value2); 
+                        }
+                    }
+                    return 0; 
+                });
+            }
         }
 
         // print out the tuples
@@ -207,26 +256,34 @@ public class DMLParser {
         }
     }
 
-    private ArrayList<Record> crossProduct(ArrayList<ArrayList<Record>> tableRecords, int index, Record current) {
+    private ArrayList<Record> crossProduct(ArrayList<ArrayList<Record>> tableRecords, ArrayList<String> tableNames, int index, Record current) {
         ArrayList<Record> result = new ArrayList<>();
-
+    
         if (index == tableRecords.size()) {
             if (current != null) {
                 result.add(current);
             }
             return result;
         }
-
+    
         for (Record rec : tableRecords.get(index)) {
             ArrayList<Attribute> combinedAttributes = new ArrayList<>();
             if (current != null) {
                 combinedAttributes.addAll(current.getAttributes());
             }
-            combinedAttributes.addAll(rec.getAttributes());
+    
+            String tableName = tableNames.get(index);
+            for (Attribute attr : rec.getAttributes()) {
+                String prefixedName = tableName + "." + attr.getAttributeName();
+                AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
+                Attribute newAttribute = new Attribute(newSchema, attr.getData());
+                combinedAttributes.add(newAttribute);
+            }
+    
             Record newRecord = new Record(combinedAttributes);
-            result.addAll(crossProduct(tableRecords, index + 1, newRecord));
+            result.addAll(crossProduct(tableRecords, tableNames, index + 1, newRecord));
         }
-
+    
         return result;
     }
 
