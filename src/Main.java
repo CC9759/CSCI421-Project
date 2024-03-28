@@ -100,19 +100,19 @@ public class Main {
                         createTableParser(ddlParser, catalog, commands);
                         break;
                     case "drop":
-                        ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                        ddlParser.dropTable(catalog, commands[commands.length - 1].substring(0, commands[commands.length - 1].length()));
                         break;
                     case "alter":
                         alterTableParser(ddlParser, catalog, commands);
                         break;
                     case "insert":
-                        insertParser(dmlParser, commands);
+                        insertParser(dmlParser, input);
                         break;
                     case "display":
-                        if(commands[1].equals("info")){
-                            dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length() - 1));
+                        if(commands[1].equals("info") && commands.length > 2){
+                            dmlParser.displayInfo(commands[commands.length - 1].substring(0, commands[commands.length - 1].length()));
                         }
-                        else if(commands[1].equals("schema") || commands[1].equals("schema;")){
+                        else if(commands[1].equals("schema") && commands.length == 2){
                             dmlParser.displaySchema();
                         }
                         else{
@@ -217,11 +217,14 @@ public class Main {
      * catalog editing.
      * 
      * @param dmlParser the DMLParser instance
-     * @param commands the string list of commands to process
+     * @param commandString the string of the command to process
      */
-    public static void insertParser(DMLParser dmlParser, String[] commands){
-        String tableName = commands[2];
-        String allTuples = String.join(" ", Arrays.copyOfRange(commands, 4, commands.length));
+    public static void insertParser(DMLParser dmlParser, String commandString){
+        commandString = commandString.strip();
+        String[] commands = commandString.split("values");
+        String[] commandFirstHalf = commands[0].split(" ");
+        String tableName = commandFirstHalf[2];
+        String allTuples = String.join(" ", Arrays.copyOfRange(commands, 1, commands.length)).strip();
         String[] separatedTuples = allTuples.split(",");
 
         for(String constraint : separatedTuples){
@@ -312,16 +315,16 @@ public class Main {
         if(whereIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, whereIndex));
             if(orderbyIndex != -1){
-                whereArgs = String.join(" ", commandsList.subList(whereIndex + 1, commandsList.size()));
-                orderbyColumn = commandsList.get(-1);
+                whereArgs = String.join(" ", commandsList.subList(whereIndex + 1, orderbyIndex));
+                orderbyColumn = commandsList.get(commandsList.size() - 1);
             }
             else{
-                whereArgs = String.join(" ",commandsList.subList(whereIndex + 1, orderbyIndex));
+                whereArgs = String.join(" ",commandsList.subList(whereIndex + 1, commandsList.size()));
             }
         }
         else if(orderbyIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, orderbyIndex));
-            orderbyColumn = commandsList.get(-1);
+            orderbyColumn = commandsList.get(commandsList.size() - 1);
         }
         else{
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, commandsList.size()));
