@@ -95,22 +95,22 @@ public class DDLParser {
             throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException,
             DuplicateKeyException {
         String[] attributes = argument.split(" ");
-        String keyWord = attributes[0].toUpperCase();
+        String keyWord = attributes[0];
         TableSchema tableSchema = catalog.getTableSchema(tableName);
         if (tableSchema == null) {
             throw new NoTableException(tableName);
         }
         int numExistingAttributes = catalog.getTableSchema(tableName).getAttributeSchema().size();
         switch (keyWord) {
-            case "ADD":
+            case "add":
                 if (!(attributes.length == 3 || attributes.length == 5))
                     throw new InsufficientArgumentException(keyWord);
 
                 // get a list of the instructions
                 List<String> instruc = Arrays.asList(Arrays.copyOfRange(attributes, 1, attributes.length));
-
-                if (instruc.contains("DEFAULT")) {
-                    String defaultValue = instruc.get(instruc.indexOf("DEFAULT(") + 1);
+                String defaultValue = null;
+                if (instruc.contains("default")) {
+                    defaultValue = instruc.get(instruc.indexOf("default") + 1);
                     System.out.printf("\n\nDEBUG output: %s\n\n", defaultValue);
                     // TODO: iterate through the records and put the default value of the new
                     // attribute
@@ -123,11 +123,11 @@ public class DDLParser {
                     tableSchema.removeAttributeSchema(instruc.get(0));
                 }
                 tableSchema.addAttributeSchema(newAttributes);
-                updateAttributes(tableName, newAttributes, "add");
+                updateAttributes(tableName, newAttributes, defaultValue,"add");
                 break;
-            case "DROP":
+            case "drop":
                 if (tableSchema.getAttributeSchema(attributes[1]) != null) {
-                    updateAttributes(tableName, tableSchema.getAttributeSchema(attributes[1]), "remove");
+                    updateAttributes(tableName, tableSchema.getAttributeSchema(attributes[1]), null,"remove");
                     tableSchema.removeAttributeSchema(attributes[1]);
                 }
                 break;
@@ -136,7 +136,7 @@ public class DDLParser {
         }
     }
 
-    private void updateAttributes(String tableName, AttributeSchema attributeSchema, String action)
+    private void updateAttributes(String tableName, AttributeSchema attributeSchema, String defaultValue, String action)
             throws NoTableException, PageOverfullException, DuplicateKeyException {
         var storageManager = StorageManager.GetStorageManager();
         var tableId = Catalog.getCatalog().getTableSchema(tableName).getTableId();
@@ -144,8 +144,9 @@ public class DDLParser {
 
         for (Record record : allRecords) {
             if (action.equalsIgnoreCase("add")) {
+                System.out.println(defaultValue);
                 var newAttribute = new Attribute(attributeSchema,
-                        stringToType(attributeSchema.defaultValue(), attributeSchema.getAttributeType()));
+                        stringToType(defaultValue, attributeSchema.getAttributeType()));
                 record.setAttribute(newAttribute.getAttributeName(), newAttribute);
             } else if (action.equalsIgnoreCase("remove")) {
                 record.removeAttribute(attributeSchema.getAttributeName());
@@ -174,6 +175,7 @@ public class DDLParser {
             case INT:
                 return Integer.parseInt(str);
             case DOUBLE:
+                System.out.println(str);
                 return Double.parseDouble(str);
             case BOOLEAN:
                 return Boolean.parseBoolean(str);
