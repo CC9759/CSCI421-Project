@@ -32,10 +32,10 @@ public class DMLParser {
             System.err.println("No table with name: " + tableName);
             return null;
         }
-        
+
         try {
             records = this.storageManager.getAllRecords(schema.getTableId());
-        } catch(NoTableException e) {
+        } catch (NoTableException e) {
             System.err.println(e.getMessage());
             return null;
         }
@@ -46,6 +46,7 @@ public class DMLParser {
         ArrayList<TableSchema> schemaList = new ArrayList<>();
         ArrayList<ArrayList<Record>> tableRecords = new ArrayList<>();
 
+        // Retrieve copies of schemas and their records
         for (String tableName : fromArgs) {
             TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
             if (schema == null) {
@@ -53,107 +54,88 @@ public class DMLParser {
             }
             schema = schema.clone();
             schemaList.add(schema);
-            tableRecords.add(getAllRecords(schema, tableName));  
+            tableRecords.add(getAllRecords(schema, tableName));
         }
 
         if (tableRecords.isEmpty())
             return;
 
+        // Get records with attributes of format table.attributeName
         ArrayList<Record> records;
-        if(tableRecords.size() == 1){
+        if (tableRecords.size() == 1) {
             records = new ArrayList<>();
             for (Record record : tableRecords.get(0)) {
                 Record recordClone = record.clone();
-                ArrayList<Attribute> modifiedAttributes = new ArrayList<>();
                 for (Attribute attr : recordClone.getAttributes()) {
-                    if(!attr.getAttributeName().contains(".")){
+                    if (!attr.getAttributeName().contains(".")) {
                         String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
-                        AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
-                        Attribute newAttribute = new Attribute(newSchema, attr.getData());
-                        modifiedAttributes.add(newAttribute);
-                    }
-                    else{
-                        modifiedAttributes.add(attr);
+                        attr.setAttributeName(prefixedName);
                     }
                 }
-
-                // TODO: Fixing the clone issue with record
-                
-                records.add(new Record(modifiedAttributes)); 
+                records.add(recordClone);
             }
-        }
-        else{
+        } else {
             records = crossProduct(tableRecords, fromArgs, 0, null);
         }
 
-
         boolean selectAll = false;
 
-        if(selectArgs.get(0).equals("*") && selectArgs.size() == 1){
+        if (selectArgs.get(0).equals("*") && selectArgs.size() == 1) {
             selectAll = true;
-        }
-        else if(selectArgs.contains("*")){
+        } else if (selectArgs.contains("*")) {
             throw new IllegalOperationException("Invalid select");
         }
 
-        
-        // TODO: make sure everything has tablename.att without messing it up
-        
-        for(TableSchema schema: schemaList){
+        // Set schema names to table.attributeName format. Determine presence of ambiguity in query
+        for (TableSchema schema : schemaList) {
             for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
-                if(!attributeSchema.getAttributeName().contains(".")){
+                if (!attributeSchema.getAttributeName().contains(".")) {
                     attributeSchema.setAttributeName(schema.getTableName() + "." + attributeSchema.getAttributeName());
                 }
             }
         }
-
         ArrayList<AttributeSchema> selectAttributes = new ArrayList<>();
-
-        // print out attr names
-        if(selectAll){
-            for(TableSchema schema: schemaList){
+        if (selectAll) {
+            for (TableSchema schema : schemaList) {
                 for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
                     selectAttributes.add(attributeSchema);
                     System.out.print(attributeSchema.getAttributeName() + " | ");
                 }
             }
-        }
-        else{
-            for(String selectArg: selectArgs){
+        } else {
+            for (String selectArg : selectArgs) {
                 System.out.println(selectArg);
                 int attCount = 0;
-                    AttributeSchema selectAttribute = null;
-                    String selectString;
-                    for(TableSchema schema: schemaList){
-                        if(selectArg.contains(".")){
-                            selectString = selectArg;
+                AttributeSchema selectAttribute = null;
+                String selectString;
+                for (TableSchema schema : schemaList) {
+                    if (selectArg.contains(".")) {
+                        selectString = selectArg;
+                    } else {
+                        selectString = schema.getTableName() + "." + selectArg;
+                    }
+                    selectAttribute = schema.getAttributeSchema(selectString);
+                    if (selectAttribute != null) {
+                        attCount++;
+                        if (attCount > 1) {
+                            throw new Exception(selectArg + " is ambiguous");
                         }
-                        else{
-                            selectString = schema.getTableName() + "." + selectArg;
-                        }
-                        selectAttribute = schema.getAttributeSchema(selectString);
-                        if(selectAttribute != null){
-                            attCount++;
-                            if(attCount > 1){
-                                throw new Exception(selectArg + " is ambiguous");
-                            }
-                            if(attCount == 1){
-                                selectAttributes.add(selectAttribute);
-                                System.out.print(selectAttribute.getAttributeName() + " | ");
-                            }
-                            else if(attCount == 0){
-                                throw new Exception("No such attribute: " + selectArg);
-                            }
+                        if (attCount == 1) {
+                            selectAttributes.add(selectAttribute);
+                            System.out.print(selectAttribute.getAttributeName() + " | ");
+                        } else if (attCount == 0) {
+                            throw new Exception("No such attribute: " + selectArg);
                         }
                     }
-
                 }
-            }
 
-        if (orderByColumn != null && !orderByColumn.isEmpty()) { 
-            if(orderByColumn.contains(".")){
+            }
+        }
+
+        if (orderByColumn != null && !orderByColumn.isEmpty()) {
+            if (orderByColumn.contains(".")) {
                 boolean columnExists = selectAttributes.stream()
-                    .anyMatch(attr -> attr.getAttributeName().equals(orderByColumn));
+                        .anyMatch(attr -> attr.getAttributeName().equals(orderByColumn));
                 if (!columnExists) {
                     throw new Exception("OrderBy column " + orderByColumn + " not found");
                 }
@@ -162,15 +144,14 @@ public class DMLParser {
                         if (attributeSchema.getAttributeName().equals(orderByColumn)) {
                             Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
                             Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
-                            return value1.compareTo(value2); 
+                            return value1.compareTo(value2);
                         }
                     }
-                    return 0; 
+                    return 0;
                 });
-            }
-            else{
+            } else {
                 boolean columnExists = selectAttributes.stream()
-                    .anyMatch(attr -> attr.getAttributeName().endsWith(orderByColumn));
+                        .anyMatch(attr -> attr.getAttributeName().endsWith(orderByColumn));
                 if (!columnExists) {
                     throw new Exception("OrderBy column " + orderByColumn + " not found");
                 }
@@ -179,25 +160,26 @@ public class DMLParser {
                         if (attributeSchema.getAttributeName().equals(orderByColumn)) {
                             Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
                             Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
-                            return value1.compareTo(value2); 
+                            return value1.compareTo(value2);
                         }
                     }
-                    return 0; 
+                    return 0;
                 });
             }
         }
 
         // print out the tuples
-        if(where != null){
-            if(selectAll){
+        if (where != null) {
+            BoolOpNode head = Parser.parseWhere(where);
+            if (selectAll) {
                 for (Record record : records) {
                     try {
-                        BoolOpNode head = Parser.parseWhere(where);
+
                         boolean pass = head.evaluate(record);
                         if (pass) {
                             System.out.println("");
                             ArrayList<Attribute> attrs = record.getAttributes();
-                        
+
                             Collections.sort(attrs, new AttributeComparator());
                             for (Attribute attr : attrs) {
                                 System.out.print(attr.getData() + "   ");
@@ -208,15 +190,13 @@ public class DMLParser {
                     }
                 }
                 System.out.println("");
-            }
-            else{
+            } else {
                 for (Record record : records) {
                     try {
-                        BoolOpNode head = Parser.parseWhere(where);
                         boolean pass = head.evaluate(record);
                         if (pass) {
                             System.out.println("");
-                            for(AttributeSchema attributeSchema: selectAttributes){
+                            for (AttributeSchema attributeSchema : selectAttributes) {
                                 Attribute attr = record.getAttribute(attributeSchema.getAttributeName());
                                 System.out.print(attr.getData() + "   ");
                             }
@@ -227,25 +207,23 @@ public class DMLParser {
                 }
                 System.out.println("");
             }
-            
-        }
-        else{
-            if(selectAll){
+
+        } else {
+            if (selectAll) {
                 for (Record record : records) {
                     System.out.println("");
                     ArrayList<Attribute> attrs = record.getAttributes();
-                        
+
                     Collections.sort(attrs, new AttributeComparator());
                     for (Attribute attr : attrs) {
                         System.out.print(attr.getData() + "   ");
                     }
                 }
                 System.out.println("");
-            }
-            else{
-                for(Record record : records){
+            } else {
+                for (Record record : records) {
                     System.out.println("");
-                    for(AttributeSchema attributeSchema: selectAttributes){
+                    for (AttributeSchema attributeSchema : selectAttributes) {
                         Attribute attr = record.getAttribute(attributeSchema.getAttributeName());
                         System.out.print(attr.getData() + "   ");
                     }
@@ -257,41 +235,40 @@ public class DMLParser {
 
     private ArrayList<Record> crossProduct(ArrayList<ArrayList<Record>> tableRecords, ArrayList<String> tableNames, int index, Record current) {
         ArrayList<Record> result = new ArrayList<>();
-    
+
         if (index == tableRecords.size()) {
             if (current != null) {
                 result.add(current);
             }
             return result;
         }
-    
+
         for (Record rec : tableRecords.get(index)) {
             ArrayList<Attribute> combinedAttributes = new ArrayList<>();
             if (current != null) {
                 combinedAttributes.addAll(current.getAttributes());
             }
-    
+
             String tableName = tableNames.get(index);
             for (Attribute attribute : rec.getAttributes()) {
 
                 // TODO: Fix the issue with cloning
 
                 Attribute attr = attribute.clone();
-                if(!attr.getAttributeName().contains(".")){
+                if (!attr.getAttributeName().contains(".")) {
                     String prefixedName = tableName + "." + attr.getAttributeName();
                     AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
                     Attribute newAttribute = new Attribute(newSchema, attr.getData());
                     combinedAttributes.add(newAttribute);
-                }
-                else{
+                } else {
                     combinedAttributes.add(attr);
                 }
             }
-    
+
             Record newRecord = new Record(combinedAttributes);
             result.addAll(crossProduct(tableRecords, tableNames, index + 1, newRecord));
         }
-    
+
         return result;
     }
 
@@ -328,8 +305,8 @@ public class DMLParser {
     // double check that all doubles have a '.' in them
     public boolean confirmDataType(AttributeSchema attrSchema, String val) {
         var type = attrSchema.getAttributeType().type;
-        
-        if ((type == AttributeType.TYPE.CHAR || type == AttributeType.TYPE.VARCHAR) && (val.charAt(0) == '\"' && val.charAt(val.length()-1) == '\"')) {
+
+        if ((type == AttributeType.TYPE.CHAR || type == AttributeType.TYPE.VARCHAR) && (val.charAt(0) == '\"' && val.charAt(val.length() - 1) == '\"')) {
             if (type == AttributeType.TYPE.CHAR && val.length() != attrSchema.getSize()) {
                 System.out.println("Attribute (" + attrSchema.getAttributeName() + ") should be size " + attrSchema.getSize() + ".");
                 return false;
@@ -338,11 +315,11 @@ public class DMLParser {
                 return false;
             }
             return true;
-        } else if (isInteger(val) && type == AttributeType.TYPE.INT) 
+        } else if (isInteger(val) && type == AttributeType.TYPE.INT)
             return true;
-        else if (isDouble(val) && type == AttributeType.TYPE.DOUBLE) 
+        else if (isDouble(val) && type == AttributeType.TYPE.DOUBLE)
             return true;
-        else if (isBoolean(val) && type == AttributeType.TYPE.BOOLEAN) 
+        else if (isBoolean(val) && type == AttributeType.TYPE.BOOLEAN)
             return true;
 
         System.out.println("Attribute (" + attrSchema.getAttributeName() + ") should be " + attrSchema.getAttributeType().type.toString() + ".");
@@ -419,13 +396,13 @@ public class DMLParser {
                 }
                 if (value == null)
                     record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
-                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR) 
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.CHAR || updateAttr.getAttributeType().type == AttributeType.TYPE.VARCHAR)
                     record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, value));
-                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT) 
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.INT)
                     record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Integer.parseInt(value)));
-                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.DOUBLE) 
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.DOUBLE)
                     record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Double.parseDouble(value)));
-                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.BOOLEAN) 
+                else if (updateAttr.getAttributeType().type == AttributeType.TYPE.BOOLEAN)
                     record.setAttribute(updateAttr.getAttributeName(), new Attribute(updateAttr, Boolean.parseBoolean(value)));
                 this.storageManager.updateRecord(schema.getTableId(), record);
             } catch (Exception e) {
@@ -447,14 +424,14 @@ public class DMLParser {
         }
     }
 
-    public void displayInfo (String tableName) {
+    public void displayInfo(String tableName) {
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
 
         if (schema == null) { // no table by that name
             System.err.println("No table with name: " + tableName);
             return;
         }
-        
+
         System.out.println("Table: " + schema.getTableName());
 
         System.out.print("Attributes: ");
@@ -468,7 +445,7 @@ public class DMLParser {
         ArrayList<Record> records;
         try {
             records = this.storageManager.getAllRecords(schema.getTableId());
-        } catch(NoTableException e) {
+        } catch (NoTableException e) {
             System.err.println(e.getMessage());
             return;
         }
@@ -502,7 +479,7 @@ public class DMLParser {
             // if value of data is null
             if (attribute.getData() == null) {
                 if (attributeSchema.isUnique() || attributeSchema.isKey() || !attributeSchema.isNull()) { // value cannot be null
-                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " cannot be null." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " cannot be null.");
                     return false;
                 }
                 // value can be null
@@ -513,18 +490,18 @@ public class DMLParser {
             // assume all strings come in as CHAR
             if (attributeSchema.getAttributeType().type == AttributeType.TYPE.CHAR || attributeSchema.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                 if (!(attribute.getData() instanceof String)) {
-                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a char/varchar type." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " should be a char/varchar type.");
                     return false;
                 }
 
                 if (((String) attribute.getData()).length() > attributeSchema.getSize()) { // char is too big
-                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char/varchar type but is too large." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char/varchar type but is too large.");
                     return false;
                 }
 
                 // expected char of length N but got char length M
                 if (attributeSchema.getAttributeType().type == AttributeType.TYPE.CHAR && attributeSchema.getSize() != ((String) attribute.getData()).length()) {
-                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char of required length " + attributeSchema.getSize() + "." );
+                    System.err.println("The attribute " + attributeSchema.getAttributeName() + " is a char of required length " + attributeSchema.getSize() + ".");
                     return false;
                 }
 
@@ -532,7 +509,7 @@ public class DMLParser {
                 try {
                     if (attributeSchema.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
                         // if varChar, then create new attribute type with exact attr size
-                        AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String)attribute.getData()).length());
+                        AttributeType varchar = new AttributeType(catalog.AttributeType.TYPE.VARCHAR, ((String) attribute.getData()).length());
                         legalAttributes.add(new Attribute(attributeSchema, (String) attribute.getData(), varchar));
                     } else {
                         legalAttributes.add(new Attribute(attributeSchema, (String) attribute.getData()));

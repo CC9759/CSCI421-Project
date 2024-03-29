@@ -72,17 +72,9 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute>,
     public Attribute clone() {
         try {
             Attribute cloned = (Attribute) super.clone();
-            // Handle the cloning of mutable objects in `data` if necessary
-//            if (this.data instanceof ArrayList) {
-//                cloned.data = new ArrayList<>((ArrayList<?>) this.data);
-//            } else if (this.data instanceof HashMap) {
-//                cloned.data = new HashMap<>((HashMap<?, ?>) this.data);
-//            }
-//            cloned.data = data.
-            // Add more conditions for other mutable types as needed
             return cloned;
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError("Clone not supported", e); // This shouldn't happen
+            throw new AssertionError("Clone not supported", e);
         }
     }
 }
