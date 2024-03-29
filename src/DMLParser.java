@@ -61,9 +61,10 @@ public class DMLParser {
         ArrayList<Record> records;
         if(tableRecords.size() == 1){
             records = new ArrayList<>();
-            for (Record rec : tableRecords.get(0)) {
+            for (Record record : tableRecords.get(0)) {
+                Record recordClone = record.clone();
                 ArrayList<Attribute> modifiedAttributes = new ArrayList<>();
-                for (Attribute attr : rec.getAttributes()) {
+                for (Attribute attr : recordClone.getAttributes()) {
                     if(!attr.getAttributeName().contains(".")){
                         String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
                         AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
@@ -74,7 +75,10 @@ public class DMLParser {
                         modifiedAttributes.add(attr);
                     }
                 }
-                records.add(new Record(modifiedAttributes));
+
+                // TODO: Fixing the clone issue with record
+                
+                records.add(new Record(modifiedAttributes)); 
             }
         }
         else{
@@ -91,6 +95,9 @@ public class DMLParser {
             throw new IllegalOperationException("Invalid select");
         }
 
+        
+        // TODO: make sure everything has tablename.att without messing it up
+        
         for(TableSchema schema: schemaList){
             for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
                 if(!attributeSchema.getAttributeName().contains(".")){
@@ -262,11 +269,20 @@ public class DMLParser {
             }
     
             String tableName = tableNames.get(index);
-            for (Attribute attr : rec.getAttributes()) {
-                String prefixedName = tableName + "." + attr.getAttributeName();
-                AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
-                Attribute newAttribute = new Attribute(newSchema, attr.getData());
-                combinedAttributes.add(newAttribute);
+            for (Attribute attribute : rec.getAttributes()) {
+
+                // TODO: Fix the issue with cloning
+
+                Attribute attr = attribute.clone();
+                if(!attr.getAttributeName().contains(".")){
+                    String prefixedName = tableName + "." + attr.getAttributeName();
+                    AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
+                    Attribute newAttribute = new Attribute(newSchema, attr.getData());
+                    combinedAttributes.add(newAttribute);
+                }
+                else{
+                    combinedAttributes.add(attr);
+                }
             }
     
             Record newRecord = new Record(combinedAttributes);
