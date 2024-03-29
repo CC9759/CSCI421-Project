@@ -51,6 +51,7 @@ public class DMLParser {
             if (schema == null) {
                 throw new NoTableException(tableName);
             }
+            schema = schema.clone();
             schemaList.add(schema);
             tableRecords.add(getAllRecords(schema, tableName));  
         }
@@ -119,6 +120,7 @@ public class DMLParser {
         }
         else{
             for(String selectArg: selectArgs){
+                System.out.println(selectArg);
                 int attCount = 0;
                     AttributeSchema selectAttribute = null;
                     String selectString;
@@ -135,15 +137,16 @@ public class DMLParser {
                             if(attCount > 1){
                                 throw new Exception(selectArg + " is ambiguous");
                             }
+                            if(attCount == 1){
+                                selectAttributes.add(selectAttribute);
+                                System.out.print(selectAttribute.getAttributeName() + " | ");
+                            }
+                            else if(attCount == 0){
+                                throw new Exception("No such attribute: " + selectArg);
+                            }
                         }
                     }
-                    if(attCount == 1){
-                        selectAttributes.add(selectAttribute);
-                        System.out.print(selectAttribute.getAttributeName() + " | ");
-                    }
-                    else if(attCount == 0){
-                        throw new Exception("No such attribute: " + selectArg);
-                    }
+
                 }
             }
 

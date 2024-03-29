@@ -3,7 +3,7 @@ package catalog;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TableSchema implements Serializable {
+public class TableSchema implements Serializable, Cloneable {
 
     private ArrayList<AttributeSchema> tableAttributes;
     private String tableName;
@@ -82,6 +82,18 @@ public class TableSchema implements Serializable {
 
     public void incrementNumPages(int change) {
         this.numPages += change;
+    }
+
+    @Override
+    public TableSchema clone() throws CloneNotSupportedException {
+        TableSchema cloned = (TableSchema) super.clone();
+        if (this.tableAttributes != null) {
+            cloned.tableAttributes = new ArrayList<>(this.tableAttributes.size());
+            for (AttributeSchema attribute : this.tableAttributes) {
+                cloned.tableAttributes.add( (AttributeSchema) attribute.clone()); // Ensure deep copy
+            }
+        }
+        return cloned;
     }
 
 }

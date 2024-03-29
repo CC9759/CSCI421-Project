@@ -2,7 +2,7 @@ package catalog;
 
 import java.io.Serializable;
 
-public class AttributeSchema implements Serializable {
+public class AttributeSchema implements Serializable, Cloneable {
 
     private String attributeName;
     private AttributeType type;
@@ -111,5 +111,10 @@ public class AttributeSchema implements Serializable {
             return this.type.length;
         }
         return 0;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

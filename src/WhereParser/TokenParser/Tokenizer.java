@@ -91,7 +91,8 @@ public class Tokenizer {
                         while (i < input.length() &&
                                 (
                                         Character.isLetter(input.charAt(i)) ||
-                                                (isString && !isQuote(input.charAt(i)))
+                                                (isString && !isQuote(input.charAt(i))) ||
+                                                input.charAt(i) == '.'
                                 )
                         ) {
                             token.append(input.charAt(i));
