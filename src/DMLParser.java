@@ -104,7 +104,6 @@ public class DMLParser {
             }
         } else {
             for (String selectArg : selectArgs) {
-                System.out.println(selectArg);
                 int attCount = 0;
                 AttributeSchema selectAttribute = null;
                 String selectString;
@@ -123,9 +122,9 @@ public class DMLParser {
                         if (attCount == 1) {
                             selectAttributes.add(selectAttribute);
                             System.out.print(selectAttribute.getAttributeName() + " | ");
-                        } else if (attCount == 0) {
-                            throw new Exception("No such attribute: " + selectArg);
                         }
+                    } else {
+                        throw new Exception("No such attribute: " + selectArg);
                     }
                 }
 
@@ -251,9 +250,6 @@ public class DMLParser {
 
             String tableName = tableNames.get(index);
             for (Attribute attribute : rec.getAttributes()) {
-
-                // TODO: Fix the issue with cloning
-
                 Attribute attr = attribute.clone();
                 if (!attr.getAttributeName().contains(".")) {
                     String prefixedName = tableName + "." + attr.getAttributeName();
