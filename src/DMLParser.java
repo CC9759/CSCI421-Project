@@ -2,6 +2,8 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import Exceptions.*;
 import WhereParser.Nodes.BoolOpNode;
@@ -66,9 +68,9 @@ public class DMLParser {
                 for (Attribute attr : recordClone.getAttributes()) {
                     if (!attr.getAttributeName().contains(".")) {
                         String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
+                        recordClone.removeAttribute(attr.getAttributeName());
                         attr.setAttributeName(prefixedName);
                         recordClone.setAttribute(prefixedName, attr);
-                        recordClone.removeAttribute(attr.getAttributeName());
                     }
                 }
                 records.add(recordClone);
@@ -148,16 +150,21 @@ public class DMLParser {
                     return 0;
                 });
             } else {
-                boolean columnExists = selectAttributes.stream()
-                        .anyMatch(attr -> attr.getAttributeName().endsWith(orderByColumn));
-                if (!columnExists) {
+                List<AttributeSchema> matchingColumns = selectAttributes.stream()
+                        .filter(attr -> attr.getAttributeName().endsWith(orderByColumn))
+                        .collect(Collectors.toList());
+
+                if (matchingColumns.isEmpty()) {
                     throw new Exception("OrderBy column " + orderByColumn + " not found");
+                } else if (matchingColumns.size() != 1) {
+                    throw new Exception("OrderBy column " + orderByColumn + " is ambiguous");
                 }
+                String matchingColumnName = matchingColumns.get(0).getAttributeName();
                 records.sort((record1, record2) -> {
                     for (AttributeSchema attributeSchema : selectAttributes) {
-                        if (attributeSchema.getAttributeName().endsWith(orderByColumn)) {
-                            Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
-                            Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
+                        if (attributeSchema.getAttributeName().endsWith(matchingColumnName)) {
+                            Comparable value1 = (Comparable) record1.getAttribute(matchingColumnName).getData();
+                            Comparable value2 = (Comparable) record2.getAttribute(matchingColumnName).getData();
                             return value1.compareTo(value2);
                         }
                     }
