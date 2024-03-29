@@ -103,12 +103,8 @@ public class StorageManager {
         return this.bufferManager.deleteRecord(table, primaryKey);
     }
     public void updateRecord(int tableId, Record record) throws NoTableException, PageOverfullException, DuplicateKeyException {
-        Record original = deleteRecord(tableId, record.getPrimaryKey());
-        try {
-            insertRecord(tableId, record);
-        } catch (DuplicateKeyException e) {
-            insertRecord(tableId, original);
-        }
+        deleteRecord(tableId, record.getPrimaryKey());
+        insertRecord(tableId, record);
     }
 
     /**

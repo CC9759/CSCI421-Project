@@ -22,7 +22,7 @@ class StorageManagerTest {
         final int BUFFER_SIZE = 5;
         Catalog catalog = Catalog.createCatalog("dbtest/", PAGE_SIZE, BUFFER_SIZE);
         try {
-            AttributeType idType = new AttributeType("INT");
+            AttributeType idType = new AttributeType("integer");
             AttributeType nameType = new AttributeType(AttributeType.TYPE.VARCHAR, 32);
             // Define catalog
             AttributeSchema idSchema = new AttributeSchema("id", idType, 0, true, true, false);
@@ -169,11 +169,11 @@ class StorageManagerTest {
                 testRecord = new Record(attributes);
                 storageManager.insertRecord(0, testRecord);
             }
-            ddlParser.alterTable(Catalog.getCatalog(), "users", "ADD email VARCHAR(32) DEFAULT pinky@gmail.com");
+            ddlParser.alterTable(Catalog.getCatalog(), "users", "add email varchar(32) default pinky@gmail.com");
             allRecords = storageManager.getAllRecords(0);
             pass = true;
             for (Record record: allRecords) {
-                pass = pass && record.getAttribute("EMAIL").getData().equals("PINKY@GMAIL.COM");
+                pass = pass && record.getAttribute("email").getData().equals("pinky@gmail.com");
 
             }
             System.out.println(pass ? "Pass" : "Fail");
@@ -182,14 +182,14 @@ class StorageManagerTest {
             }
 
             System.out.println("Storage manager should update records on alter table DROP");
-            ddlParser.alterTable(Catalog.getCatalog(), "users", "DROP EMAIL");
+            ddlParser.alterTable(Catalog.getCatalog(), "users", "drop email");
             allRecords = storageManager.getAllRecords(0);
             pass = true;
             for (Record record: allRecords) {
-                pass = pass && record.getAttribute("EMAIL") == null;
+                pass = pass && record.getAttribute("email") == null;
 
             }
-            pass = updatedRecord.getAttribute("EMAIL") == null &&
+            pass = updatedRecord.getAttribute("email") == null &&
                     catalog.getTableSchema("users").getAttributeSchema().size() == 2;
             System.out.println(pass ? "Pass" : "Fail");
             if (!pass) {

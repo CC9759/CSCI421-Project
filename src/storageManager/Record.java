@@ -13,12 +13,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Record Class, represents a single tuple/entry
  */
-public class Record implements Comparable<Record> {
-     private final HashMap<String, Attribute> attributes;
+public class Record implements Comparable<Record>, Cloneable {
+     private HashMap<String, Attribute> attributes;
 
 
      public Record(ArrayList<Attribute> attributes) {
@@ -137,5 +138,19 @@ public class Record implements Comparable<Record> {
             finalStr.append("\n\t").append(atr.getAttributeName()).append(": ").append(atr.getData());
         }
         return finalStr.toString();
+    }
+
+    @Override
+    public Record clone() {
+        try {
+            Record cloned = (Record) super.clone();
+            cloned.attributes = new HashMap<>(this.attributes.size());
+            for (Map.Entry<String, Attribute> entry : this.attributes.entrySet()) {
+                cloned.attributes.put(entry.getKey(), (Attribute) entry.getValue().clone());
+            }
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(); // Can never happen
+        }
     }
 }
