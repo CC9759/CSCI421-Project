@@ -70,6 +70,7 @@ public class DMLParser {
                     if (!attr.getAttributeName().contains(".")) {
                         String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
                         attr.setAttributeName(prefixedName);
+                        recordClone.setAttribute(prefixedName, attr);
                     }
                 }
                 records.add(recordClone);
@@ -207,7 +208,7 @@ public class DMLParser {
                 System.out.println("");
             }
 
-        } else {
+        } else { // no where
             if (selectAll) {
                 for (Record record : records) {
                     System.out.println("");
