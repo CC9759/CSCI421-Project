@@ -64,10 +64,15 @@ public class DMLParser {
             for (Record rec : tableRecords.get(0)) {
                 ArrayList<Attribute> modifiedAttributes = new ArrayList<>();
                 for (Attribute attr : rec.getAttributes()) {
-                    String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
-                    AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
-                    Attribute newAttribute = new Attribute(newSchema, attr.getData());
-                    modifiedAttributes.add(newAttribute);
+                    if(!attr.getAttributeName().contains(".")){
+                        String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
+                        AttributeSchema newSchema = new AttributeSchema(prefixedName, attr.getAttributeType(), attr.getAttributeId(), attr.isKey(), attr.isUnique(), attr.isNull());
+                        Attribute newAttribute = new Attribute(newSchema, attr.getData());
+                        modifiedAttributes.add(newAttribute);
+                    }
+                    else{
+                        modifiedAttributes.add(attr);
+                    }
                 }
                 records.add(new Record(modifiedAttributes));
             }
