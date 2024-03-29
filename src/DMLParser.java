@@ -71,6 +71,7 @@ public class DMLParser {
                         String prefixedName = fromArgs.get(0) + "." + attr.getAttributeName();
                         attr.setAttributeName(prefixedName);
                         recordClone.setAttribute(prefixedName, attr);
+                        recordClone.removeAttribute(attr.getAttributeName());
                     }
                 }
                 records.add(recordClone);
