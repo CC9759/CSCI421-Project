@@ -107,22 +107,7 @@ public class DMLParser {
         }
         else{
             for(String selectArg: selectArgs){
-                // if(selectArg.contains(".")){  
-                //     String[] selectSplit = selectArg.split("\\.");
-                //     TableSchema selectTable = Catalog.getCatalog().getTableSchema(selectSplit[0]);
-                //     if(selectTable == null){
-                //         throw new NoTableException(selectSplit[0]);
-                //     }
-                //     AttributeSchema selectAttribute = selectTable.getAttributeSchema(selectSplit[1]);
-                //     if(selectAttribute == null){
-                //         throw new Exception("No such attribute: " + selectSplit[1]);
-                //     }
-                //     selectAttribute.setAttributeName(selectTable.getTableName() + "." + selectAttribute.getAttributeName());
-                //     selectAttributes.add(selectAttribute);
-                //     System.out.print(selectAttribute.getAttributeName() + " | ");
-                // }
-                // else{
-                    int attCount = 0;
+                int attCount = 0;
                     AttributeSchema selectAttribute = null;
                     String selectString;
                     for(TableSchema schema: schemaList){
@@ -149,7 +134,6 @@ public class DMLParser {
                     }
                 }
             }
-        // }
 
         if (orderByColumn != null && !orderByColumn.isEmpty()) { 
             if(orderByColumn.contains(".")){
