@@ -1,8 +1,5 @@
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import Exceptions.*;
@@ -95,6 +92,7 @@ public class DMLParser {
                 }
             }
         }
+        HashMap<String, Integer> counts = new HashMap<>();
         ArrayList<AttributeSchema> selectAttributes = new ArrayList<>();
         if (selectAll) {
             for (TableSchema schema : schemaList) {
@@ -105,29 +103,31 @@ public class DMLParser {
             }
         } else {
             for (String selectArg : selectArgs) {
-                int attCount = 0;
                 AttributeSchema selectAttribute = null;
-                String selectString;
+                String selectString = null;
                 for (TableSchema schema : schemaList) {
                     if (selectArg.contains(".")) {
                         selectString = selectArg;
                     } else {
                         selectString = schema.getTableName() + "." + selectArg;
                     }
-                    selectAttribute = schema.getAttributeSchema(selectString);
-                    if (selectAttribute != null) {
-                        attCount++;
+                    if (schema.getAttributeSchema(selectString) != null) {
+                        selectAttribute = schema.getAttributeSchema(selectString);
+                        if (!counts.containsKey(selectArg)) {
+                            counts.put(selectArg, 0);
+                        }
+                        counts.put(selectArg, counts.get(selectArg) + 1);
                     }
                 }
-                if (attCount > 1) {
-                    throw new Exception(selectArg + " is ambiguous");
+                if (!counts.containsKey(selectArg)) {
+                    throw new Exception("No such attribute: " + selectArg);
                 }
-                if (attCount == 1) {
+                int count = counts.get(selectArg);
+                if (count > 1) {
+                    throw new Exception(selectArg + " is ambiguous");
+                } else if (count == 1) {
                     selectAttributes.add(selectAttribute);
                     System.out.print(selectAttribute.getAttributeName() + " | ");
-                }
-                if (attCount == 0) {
-                    throw new Exception("No such attribute: " + selectArg);
                 }
             }
         }
@@ -178,36 +178,26 @@ public class DMLParser {
             BoolOpNode head = Parser.parseWhere(where);
             if (selectAll) {
                 for (Record record : records) {
-                    try {
-
-                        boolean pass = head.evaluate(record);
-                        if (pass) {
-                            System.out.println("");
-                            ArrayList<Attribute> attrs = record.getAttributes();
-
-                            Collections.sort(attrs, new AttributeComparator());
-                            for (Attribute attr : attrs) {
-                                System.out.print(attr.getData() + "   ");
-                            }
+                    boolean pass = head.evaluate(record);
+                    if (pass) {
+                        System.out.println("");
+                        ArrayList<Attribute> attrs = record.getAttributes();
+                        Collections.sort(attrs, new AttributeComparator());
+                        for (Attribute attr : attrs) {
+                            System.out.print(attr.getData() + "   ");
                         }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
                     }
                 }
                 System.out.println("");
             } else {
                 for (Record record : records) {
-                    try {
-                        boolean pass = head.evaluate(record);
-                        if (pass) {
-                            System.out.println("");
-                            for (AttributeSchema attributeSchema : selectAttributes) {
-                                Attribute attr = record.getAttribute(attributeSchema.getAttributeName());
-                                System.out.print(attr.getData() + "   ");
-                            }
+                    boolean pass = head.evaluate(record);
+                    if (pass) {
+                        System.out.println("");
+                        for (AttributeSchema attributeSchema : selectAttributes) {
+                            Attribute attr = record.getAttribute(attributeSchema.getAttributeName());
+                            System.out.print(attr.getData() + "   ");
                         }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
                     }
                 }
                 System.out.println("");
@@ -350,8 +340,14 @@ public class DMLParser {
         return str.equalsIgnoreCase("true") || str.equalsIgnoreCase("false");
     }
 
-    public void update(String tableName, String column, String value, String where) throws SyntaxErrorException {
+    public void update(String tableName, String column, String value, String where) throws SyntaxErrorException, CloneNotSupportedException {
+        // Set all columns to table.attrName
         TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+        for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+            if (!attributeSchema.getAttributeName().contains(".")) {
+                attributeSchema.setAttributeName(schema.getTableName() + "." + attributeSchema.getAttributeName());
+            }
+        }
         AttributeSchema updateAttr = null;
 
         if (schema == null) { // no table by that name
@@ -360,8 +356,9 @@ public class DMLParser {
         }
 
         // get attr name
+
         for (AttributeSchema attr : schema.getAttributeSchema()) {
-            if (attr.getAttributeName().toLowerCase().equals(column)) {
+            if (attr.getAttributeName().toLowerCase().endsWith(column)) {
                 updateAttr = attr;
             }
         }
@@ -385,7 +382,6 @@ public class DMLParser {
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
         if (records == null) {
-            System.err.println("The table is empty :( you should try filling it.");
             return;
         }
 
@@ -414,9 +410,14 @@ public class DMLParser {
 
 
                 Record toDelete = this.storageManager.getRecordByPrimaryKey(schema.getTableId(), recordClone.getPrimaryKey());
-                // Records primary key was altered to be another records id.
                 if (toDelete != record) {
-                    throw new DuplicateKeyException(toDelete.getPrimaryKey());
+                    // Records primary key was altered to be another records id.
+                    if (toDelete != null) {
+                        throw new DuplicateKeyException(toDelete.getPrimaryKey());
+                    } else {
+                        // Record is being set to a new primary key, delete old one
+                        this.storageManager.deleteRecord(schema.getTableId(), record.getPrimaryKey());
+                    }
                 }
 
                 this.storageManager.updateRecord(schema.getTableId(), recordClone);

@@ -37,7 +37,7 @@ public class ParserTests {
             testInput("name = \"dot\" and id = 1", testRecord, true);
             testInput("id < (500 * 500) and id >= 1 + 0", testRecord, true);
             testInput("id < (500 * 500) and id > 1 + 0", testRecord, false);
-            testInput("id = 1 and salary > (1.4 ^ 2)", testRecord, true);
+            testInput("id = 1 and salary > (1.4 ^ 2.0)", testRecord, true);
             testInput("id = 0 and salary > (1 / 0.0) or id = 1", testRecord, false);
             testInput("dot = \'hi\'", testRecord, false);
 

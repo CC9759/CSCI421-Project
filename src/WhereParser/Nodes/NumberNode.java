@@ -31,23 +31,17 @@ public class NumberNode extends OperandNode{
     }
 
     public boolean isInt() {
-        return number.value.contains(".");
+        return !number.value.contains(".");
     }
 
     @Override
     public int compare(Record record, OperandNode o) throws IllegalOperationException {
-//        if (!(o instanceof NumberNode || o instanceof MathOpNode)) {
-//            throw new IllegalOperationException("Type Mismatch comparing " + evaluate(record) + " and " + o.evaluate(record));
-//        }
-
-
         return MathOpNode.compareNumber(this, o, record);
-//        return thisNum.compareTo(otherNum);
     }
 
     @Override
     public Object evaluate(Record record) {
-        if (number.value.contains(".")) {
+        if (!this.isInt()) {
             try {
                 return Double.parseDouble(number.value);
             } catch (NumberFormatException e) {

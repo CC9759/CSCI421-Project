@@ -9,9 +9,12 @@ import WhereParser.TokenParser.ParseUtils;
 import WhereParser.TokenParser.Token;
 import Exceptions.IllegalOperationException;
 import Exceptions.SyntaxErrorException;
+import catalog.AttributeSchema;
 import storageManager.Record;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class IDNode extends OperandNode {
 
@@ -33,7 +36,17 @@ public class IDNode extends OperandNode {
 
     private Object getRecordValue(Record record) throws IllegalOperationException {
         try {
-            return record.getAttribute(id.value).getData();
+            List<AttributeSchema> matchingColumns = record.getAttributes().stream()
+                    .filter(attr -> attr.getAttributeName().endsWith(id.value))
+                    .collect(Collectors.toList());
+
+            if (matchingColumns.isEmpty()) {
+                throw new IllegalOperationException("Where column " + id.value + " not found");
+            } else if (matchingColumns.size() != 1) {
+                throw new IllegalOperationException("Where column " + id.value + " is ambiguous");
+            }
+            String matchingColumnName = matchingColumns.get(0).getAttributeName();
+            return record.getAttribute(matchingColumnName).getData();
         } catch (NullPointerException e) {
             throw new IllegalOperationException("Property " + id.value + " does not exist");
         }

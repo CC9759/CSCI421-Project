@@ -38,29 +38,48 @@ public class MathOpNode extends OperandNode {
         Object result1 = num1.evaluate(record);
         Object result2 = num2.evaluate(record);
 
-        // Convert integers to double if either of the operands is a double
+        boolean result1IsInt = result1 instanceof Integer;
+        boolean result2IsInt = result2 instanceof Integer;
+        boolean sameType = !((result1IsInt || result2IsInt) && !(result1IsInt && result2IsInt));
+
+        if (!sameType) {
+            throw new IllegalOperationException("Mismatch in where clause: " + result1.getClass().getName() + ", " + result2.getClass().getName());
+        }
+
         boolean isDoubleOperation = result1 instanceof Double || result2 instanceof Double;
-        double double1 = isDoubleOperation ? ((Number) result1).doubleValue() : ((Number)0).doubleValue();
-        double double2 = isDoubleOperation ? ((Number) result2).doubleValue() : ((Number)0).doubleValue();
+        double double1 = isDoubleOperation ? ((Number) result1).doubleValue() : 0.0;
+        double double2 = isDoubleOperation ? ((Number) result2).doubleValue() : 0.0;
         int int1 = !isDoubleOperation ? (Integer) result1 : 0;
         int int2 = !isDoubleOperation ? (Integer) result2 : 0;
 
         switch (operator.type) {
             case ADD:
-                return isDoubleOperation ? double1 + double2 : int1 + int2;
+                if (isDoubleOperation) {
+                    return double1 + double2;
+                } else {
+                    return (int1 + int2);
+                }
             case SUBTRACT:
-                return isDoubleOperation ? double1 - double2 : int1 - int2;
+                if (isDoubleOperation) {
+                    return double1 - double2;
+                } else {
+                    return (int1 - int2);
+                }
             case MULTIPLY:
-                return isDoubleOperation ? double1 * double2 : int1 * int2;
+                if (isDoubleOperation) {
+                    return double1 * double2;
+                } else {
+                    return (int1 * int2);
+                }
             case DIVIDE:
                 if ((isDoubleOperation && double2 == 0)|| (!isDoubleOperation && int2 == 0)) {
                     throw new IllegalOperationException("Cannot divide by 0");
                 }
-                // Convert to Number if its not clean integer division.
-                if (isDoubleOperation || (int1 % int2 != 0)) {
+
+                if (isDoubleOperation) {
                     return double1 / double2;
                 } else {
-                    return int1 / int2;
+                    return (int1 / int2);
                 }
             case POW:
                 return Math.pow(((Number) result1).doubleValue(), ((Number) result2).doubleValue());
@@ -72,9 +91,6 @@ public class MathOpNode extends OperandNode {
 
     @Override
     public int compare(Record record, OperandNode o) throws IllegalOperationException {
-//        if (!(o instanceof NumberNode || o instanceof MathOpNode)) {
-//            throw new IllegalOperationException("Type Mismatch comparing " + evaluate(record) + " and " + o.evaluate(record));
-//        }
         return compareNumber(this, o, record);
     }
 
@@ -82,25 +98,21 @@ public class MathOpNode extends OperandNode {
         Object thisObj = o1.evaluate(record);
         Object otherObj = o2.evaluate(record);
 
-        Double thisNum;
-        Double otherNum;
+        boolean thisIsInt = thisObj instanceof Integer;
+        boolean otherIsInt = otherObj instanceof Integer;
+        boolean sameType = !(( thisIsInt || otherIsInt) && ! (thisIsInt && otherIsInt));
+
+        if (!sameType) {
+            throw new IllegalOperationException("Mismatch in where clause: " + thisObj.getClass().getName() + ", " + otherObj.getClass().getName());
+        }
 
         if (thisObj instanceof Integer) {
-            thisNum = ((Integer) thisObj).doubleValue();
+            return ((Integer) thisObj).compareTo((Integer) otherObj);
         } else if (thisObj instanceof Double) {
-            thisNum = (Double) thisObj;
+            return ((Double) thisObj).compareTo((Double) otherObj);
         } else {
-            throw new IllegalArgumentException("Unsupported type: " + thisObj.getClass());
+            throw new IllegalArgumentException("Unsupported type on math comparison: " + thisObj.getClass().getName() + ", " + otherObj.getClass().getName());
         }
 
-        if (otherObj instanceof Integer) {
-            otherNum = ((Integer) otherObj).doubleValue();
-        } else if (otherObj instanceof Double) {
-            otherNum = (Double) otherObj;
-        } else {
-            throw new IllegalArgumentException("Unsupported type: " + otherObj.getClass());
-        }
-
-        return thisNum.compareTo(otherNum);
     }
 }

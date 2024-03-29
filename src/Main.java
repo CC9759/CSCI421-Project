@@ -311,6 +311,13 @@ public class Main {
         int orderbyIndex = commandsList.indexOf("orderby");
         
         ArrayList<String> selectArgs = new ArrayList<String>(commandsList.subList(1, fromIndex));
+        for (int i = 0; i < selectArgs.size(); i++) {
+            String arg = selectArgs.get(i);
+            long commaCount = arg.chars().filter(ch -> ch == ',').count();
+            if (commaCount > 0) {
+                selectArgs.set(i, arg.replace(",", ""));
+            }
+        }
 
         if(whereIndex != -1){
             fromArgs = new ArrayList<String>(commandsList.subList(fromIndex + 1, whereIndex));
