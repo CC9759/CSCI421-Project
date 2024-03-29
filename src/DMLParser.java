@@ -96,6 +96,7 @@ public class DMLParser {
         ArrayList<AttributeSchema> selectAttributes = new ArrayList<>();
         if (selectAll) {
             for (TableSchema schema : schemaList) {
+                Collections.sort(schema.getAttributeSchema(), new AttributeComparator());
                 for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
                     selectAttributes.add(attributeSchema);
                     System.out.print(attributeSchema.getAttributeName() + " | ");
@@ -585,9 +586,9 @@ public class DMLParser {
     }
 }
 
-class AttributeComparator implements Comparator<Attribute> {
+class AttributeComparator implements Comparator<AttributeSchema> {
     @Override
-    public int compare(Attribute a1, Attribute a2) {
-        return Integer.compare(a1.getAttributeId(), a2.getAttributeId());
+    public int compare(AttributeSchema a1, AttributeSchema a2) {
+        return CharSequence.compare(a1.getAttributeName(), a2.getAttributeName());
     }
 }
