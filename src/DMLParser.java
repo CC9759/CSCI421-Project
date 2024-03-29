@@ -182,10 +182,11 @@ public class DMLParser {
                     boolean pass = head.evaluate(record);
                     if (pass) {
                         System.out.println("");
-                        ArrayList<Attribute> attrs = record.getAttributes();
-                        Collections.sort(attrs, new AttributeComparator());
-                        for (Attribute attr : attrs) {
-                            System.out.print(attr.getData() + "   ");
+                        for (TableSchema schema : schemaList) {
+                            for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+                                var attr = record.getAttribute(attributeSchema.getAttributeName());
+                                System.out.print(attr.getData() + "   ");
+                            }
                         }
                     }
                 }
@@ -208,11 +209,11 @@ public class DMLParser {
             if (selectAll) {
                 for (Record record : records) {
                     System.out.println("");
-                    ArrayList<Attribute> attrs = record.getAttributes();
-
-                    Collections.sort(attrs, new AttributeComparator());
-                    for (Attribute attr : attrs) {
-                        System.out.print(attr.getData() + "   ");
+                    for (TableSchema schema : schemaList) {
+                        for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+                            var attr = record.getAttribute(attributeSchema.getAttributeName());
+                            System.out.print(attr.getData() + "   ");
+                        }
                     }
                 }
                 System.out.println("");
@@ -393,6 +394,12 @@ public class DMLParser {
         for (Record record : records) {
             // Dont record saves on original record until actually inserted
             Record recordClone = record.clone();
+            for (Attribute attribute : recordClone.getAttributes()) {
+                if (!attribute.getAttributeName().contains(".")) {
+                    attribute.setAttributeName(schema.getTableName() + "." + attribute.getAttributeName());
+                }
+            }
+
             try {
                 if (head != null) {
                     if (!head.evaluate(recordClone))
