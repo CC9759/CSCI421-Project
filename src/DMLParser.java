@@ -143,9 +143,7 @@ public class DMLParser {
                 records.sort((record1, record2) -> {
                     for (AttributeSchema attributeSchema : selectAttributes) {
                         if (attributeSchema.getAttributeName().equals(orderByColumn)) {
-                            Comparable value1 = (Comparable) record1.getAttribute(orderByColumn).getData();
-                            Comparable value2 = (Comparable) record2.getAttribute(orderByColumn).getData();
-                            return value1.compareTo(value2);
+                            return record1.getAttribute(orderByColumn).compareTo(record2.getAttribute(orderByColumn));
                         }
                     }
                     return 0;
@@ -164,9 +162,7 @@ public class DMLParser {
                 records.sort((record1, record2) -> {
                     for (AttributeSchema attributeSchema : selectAttributes) {
                         if (attributeSchema.getAttributeName().endsWith(matchingColumnName)) {
-                            Comparable value1 = (Comparable) record1.getAttribute(matchingColumnName).getData();
-                            Comparable value2 = (Comparable) record2.getAttribute(matchingColumnName).getData();
-                            return value1.compareTo(value2);
+                            return record1.getAttribute(orderByColumn).compareTo(record2.getAttribute(orderByColumn));
                         }
                     }
                     return 0;
