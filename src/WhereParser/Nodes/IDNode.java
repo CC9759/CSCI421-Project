@@ -60,13 +60,9 @@ public class IDNode extends OperandNode {
     @Override
     public int compare(Record record, OperandNode o) throws IllegalOperationException {
         Object data = getRecordValue(record);
-        // check for cast exceptions in the future
         if (data instanceof Integer || data instanceof Double) {
             return MathOpNode.compareNumber(this, o, record);
         }
-//        else if(data instanceof Double) {
-//            return Double.compare((Double) data, (Double) o.evaluate(record));
-//        }
         else if (data instanceof Character || data instanceof String) {
             return ((String) data).compareTo((String) o.evaluate(record));
         } else {

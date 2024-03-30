@@ -38,9 +38,6 @@ public class BooleanNode extends OperandNode{
 
     @Override
     public int compare(Record record, OperandNode o) throws IllegalOperationException {
-//        if(!(o instanceof BooleanNode)) {
-//            throw new IllegalOperationException("Type Mismatch comparing " + evaluate(record) + " and " + o.evaluate(record));
-//        }
         return evaluate(record).equals(o.evaluate(record)) ? 0 : 1;
     }
 }

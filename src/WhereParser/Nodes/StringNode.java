@@ -38,9 +38,6 @@ public class StringNode extends OperandNode{
 
     @Override
     public int compare(Record record, OperandNode o) throws IllegalOperationException {
-//        if (!(o instanceof StringNode)) {
-//            throw new IllegalOperationException("Type Mismatch comparing " + evaluate(record) + " and " + o.evaluate(record));
-//        }
         String thisStr = (String) evaluate(record);
         String otherStr = (String) o.evaluate(record);
 

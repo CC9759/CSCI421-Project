@@ -116,7 +116,6 @@ public class Tokenizer {
                         } else {
                             tokens.add(new Token(Token.TokenType.IDENTIFIER, tokenStr));
                         }
-                        //i--;
 
                     } else {
                         throw new IllegalArgumentException("Unexpected character: " + c);
