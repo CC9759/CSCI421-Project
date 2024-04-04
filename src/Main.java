@@ -374,7 +374,7 @@ public class Main {
         }
 
         if(whereIndex != -1){
-            whereString = String.join(" ", Arrays.copyOfRange(commands, 7, commands.length));
+            whereString = String.join(" ", Arrays.copyOfRange(commands, whereIndex + 1, commands.length));
         }
         else{
             whereString = null;
