@@ -162,7 +162,8 @@ public class DMLParser {
                 records.sort((record1, record2) -> {
                     for (AttributeSchema attributeSchema : selectAttributes) {
                         if (attributeSchema.getAttributeName().endsWith(matchingColumnName)) {
-                            return record1.getAttribute(orderByColumn).compareTo(record2.getAttribute(orderByColumn));
+                            String attrName = attributeSchema.getAttributeName();
+                            return record1.getAttribute(attrName).compareTo(record2.getAttribute(attrName));
                         }
                     }
                     return 0;
@@ -262,13 +263,8 @@ public class DMLParser {
         return result;
     }
 
-    public void delete(String tableName, String where) {
-        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
-
-        if (schema == null) { // no table by that name
-            System.err.println("No table with name: " + tableName);
-            return;
-        }
+    public void delete(String tableName, String where) throws CloneNotSupportedException, NoTableException {
+        TableSchema schema = formatSchemaName(tableName);
 
         ArrayList<Record> records = getAllRecords(schema, tableName);
 
@@ -338,14 +334,9 @@ public class DMLParser {
         return str.equalsIgnoreCase("true") || str.equalsIgnoreCase("false");
     }
 
-    public void update(String tableName, String column, String value, String where) throws SyntaxErrorException, CloneNotSupportedException {
+    public void update(String tableName, String column, String value, String where) throws SyntaxErrorException, CloneNotSupportedException, NoTableException {
         // Set all columns to table.attrName
-        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
-        for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
-            if (!attributeSchema.getAttributeName().contains(".")) {
-                attributeSchema.setAttributeName(schema.getTableName() + "." + attributeSchema.getAttributeName());
-            }
-        }
+        TableSchema schema = formatSchemaName(tableName);
         AttributeSchema updateAttr = null;
 
         if (schema == null) { // no table by that name
@@ -392,7 +383,10 @@ public class DMLParser {
             Record recordClone = record.clone();
             for (Attribute attribute : recordClone.getAttributes()) {
                 if (!attribute.getAttributeName().contains(".")) {
-                    attribute.setAttributeName(schema.getTableName() + "." + attribute.getAttributeName());
+                    String prefixedName = schema.getTableName() + "." + attribute.getAttributeName();
+                    recordClone.removeAttribute(attribute.getAttributeName());
+                    attribute.setAttributeName(prefixedName);
+                    recordClone.setAttribute(prefixedName, attribute);
                 }
             }
 
@@ -430,6 +424,20 @@ public class DMLParser {
                 break;
             }
         }
+    }
+
+    private TableSchema formatSchemaName(String tableName) throws NoTableException, CloneNotSupportedException {
+        TableSchema schema = Catalog.getCatalog().getTableSchema(tableName);
+        if (schema == null) {
+            throw new NoTableException(tableName);
+        }
+        schema = schema.clone();
+        for (AttributeSchema attributeSchema : schema.getAttributeSchema()) {
+            if (!attributeSchema.getAttributeName().contains(".")) {
+                attributeSchema.setAttributeName(schema.getTableName() + "." + attributeSchema.getAttributeName());
+            }
+        }
+        return schema;
     }
 
     public void displaySchema() {
