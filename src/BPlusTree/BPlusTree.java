@@ -17,8 +17,16 @@ public class BPlusTree {
          * @return a boolean. true if the value was succesfully added to the tree.
          *         otherwise, it returns false
          */
-        public boolean insert(String value) {
+        public boolean insert(int value) {
                 return root.insert(value);
+        }
+
+        public boolean delete(int value) {
+                return root.delete(value);
+        }
+
+        public TreeNode find(int value) {
+                return root.find(value);
         }
 
         public int getTreeSize() {
@@ -34,28 +42,28 @@ public class BPlusTree {
                         TreeNode nextNode = currentNode.keys.get(0);
                         while (currentNode.nextNode != null) {
                                 currentNode.printValues();
-                                System.out.print(" -> ");
+                                System.out.print(currentNode.nextNode == null ? "\n" : " -> ");
                                 currentNode = currentNode.nextNode;
                         }
                         currentNode = nextNode;
                 }
 
-                while (currentNode.nextNode != null) {
+                while (currentNode != null) {
                         currentNode.printValues();
-                        System.out.print(" -> ");
+                        System.out.print(currentNode.nextNode == null ? "\n" : " -> ");
                         currentNode = currentNode.nextNode;
                 }
         }
 
         public static void main(String[] args) {
                 BPlusTree tree = new BPlusTree(5);
-                tree.insert("12");
-                tree.insert("10");
-                tree.insert("11");
-                tree.insert("12"); // repeated value
-                tree.insert("32");
-                tree.insert("15");
-                tree.insert("1");
+                System.out.println(tree.insert(12));
+                System.out.println(tree.insert(10));
+                System.out.println(tree.insert(11));
+                System.out.println(tree.insert(12)); // repeated value
+                System.out.println(tree.insert(32));
+                System.out.println(tree.insert(15));
+                System.out.println(tree.insert(1));
 
                 tree.printTree();
         }
