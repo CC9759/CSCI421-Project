@@ -1,5 +1,8 @@
 package BPlusTree;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class BPlusTree {
         private int bucketSize; // Size of the b+ tree to get size of nodes and separation
         private TreeNode root;
@@ -26,7 +29,7 @@ public class BPlusTree {
         }
 
         public TreeNode find(int value) {
-                return root.find(value);
+                return root.find(value, root);
         }
 
         public int getTreeSize() {
@@ -37,26 +40,45 @@ public class BPlusTree {
          * prints the tree. gets each
          */
         public void printTree() {
-                TreeNode currentNode = root;
-                while (currentNode.isLeaf == false) {
-                        TreeNode nextNode = currentNode.keys.get(0);
-                        while (currentNode.nextNode != null) {
-                                currentNode.printValues();
-                                System.out.print(currentNode.nextNode == null ? "\n" : " -> ");
-                                currentNode = currentNode.nextNode;
-                        }
-                        currentNode = nextNode;
-                }
+                if (this.root == null)
+                        return;
 
-                while (currentNode != null) {
+                Queue<TreeNode> queue = new LinkedList<>();
+                queue.add(root);
+                while (queue.size() != 0) {
+                        queue.add(null);
+                        TreeNode currentNode = queue.remove();
+                        if (currentNode == null)
+                                return;
+                        queue.addAll(currentNode.keys);
                         currentNode.printValues();
-                        System.out.print(currentNode.nextNode == null ? "\n" : " -> ");
-                        currentNode = currentNode.nextNode;
+                        System.out.print(queue.peek() == null ? "\n" : " -> ");
+                        if (queue.peek() == null)
+                                queue.remove();
+                }
+        }
+
+        /**
+         * prints the tree. gets each
+         */
+        public void printLeafs() {
+                if (this.root == null)
+                        return;
+
+                TreeNode current = root;
+                while (!current.isLeaf) {
+                        current = current.keys.get(0);
+                }
+                while (current != null) {
+                        current.printValues();
+                        System.out.print(current.nextNode == null ? "\n" : " -> ");
+                        current = current.nextNode;
                 }
         }
 
         public static void main(String[] args) {
                 BPlusTree tree = new BPlusTree(5);
+
                 System.out.println(tree.insert(12));
                 System.out.println(tree.insert(10));
                 System.out.println(tree.insert(11));
@@ -66,5 +88,18 @@ public class BPlusTree {
                 System.out.println(tree.insert(1));
 
                 tree.printTree();
+
+                System.out.println("\nMore insertions");
+
+                int[] insertionValues = { 2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19 };
+                for (int i = 0; i < insertionValues.length; i++) {
+                        tree.insert(insertionValues[i]);
+                        tree.printTree();
+                        System.out.println();
+                }
+
+                tree.printTree();
+                System.out.println("\nLeaf Nodes:");
+                tree.printLeafs();
         }
 }

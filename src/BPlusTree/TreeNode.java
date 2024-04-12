@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TreeNode {
-        private int bucketSize; // Size of the b+ tree to get size of nodes and separation
-        public List<Integer> values;
+        private int bucketSize; // size of the b+ tree to get size of nodes and separation
+        public List<Integer> values; // the current size of the node is node.values.size()
         public List<TreeNode> keys;
-        public TreeNode nextNode;
-        public TreeNode parent;
+        public TreeNode nextNode; // null for all internal nodes and the root
+        public TreeNode parent; // null for the root
         public boolean isLeaf;
 
         // Node constructor
@@ -30,17 +30,15 @@ public class TreeNode {
          * @param value the value we are looking
          * @return the node where the value is supposed to be
          */
-        public TreeNode find(int value) {
-                if (this.isLeaf == true) {
-                        return this;
-                } else {
-                        for (int i = 0; i < values.size(); i++) {
-                                if (value < values.get(i)) {
-
-                                }
+        public TreeNode find(int value, TreeNode node) {
+                if (node.isLeaf == true)
+                        return node;
+                for (int i = 0; i < node.values.size(); i++) {
+                        if (value < node.values.get(i)) {
+                                return find(value, node.keys.get(i));
                         }
-                        return null;
                 }
+                return find(value, node.keys.get(node.values.size()));
         }
 
         /**
@@ -51,21 +49,87 @@ public class TreeNode {
          *         otherwise, it returns false
          */
         public boolean insert(int value) {
-                TreeNode node = find(value);
+                TreeNode node = find(value, this);
                 if (node.values.contains(value))
                         return false;
 
-                if (node.values.size() == this.bucketSize) {
+                if (node.values.size() + 1 == this.bucketSize) {
+                        insertToNode(node, value);
                         divideNode(node);
-                        node.values.add(value);
                 } else {
-                        node.values.add(value);
+                        insertToNode(node, value);
                 }
                 return true;
         }
 
+        private void insertToNode(TreeNode node, int value) {
+                if (node.values.size() == 0) {
+                        node.values.add(value);
+                        return;
+                } else if (node.values.size() == 1) {
+                        if (value < node.values.get(0)) {
+                                node.values.add(0, value);
+                        } else {
+                                node.values.add(value);
+                        }
+                        return;
+                }
+                for (int i = 0; i < node.values.size(); i++) {
+                        if (value < node.values.get(i)) {
+                                node.values.add(i, value);
+                                return;
+                        }
+                }
+                node.values.add(value); // if its the largest value in the node
+        }
+
         private void divideNode(TreeNode node) {
-                // TODO: finish implementation
+                TreeNode newNode1 = new TreeNode(bucketSize);
+                TreeNode newNode2 = new TreeNode(bucketSize);
+
+                int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
+                for (int i = 0; i < lowestNodeSize - 1; i++) {
+                        // copy keys and values in newNode1
+                        newNode1.values.add(node.values.remove(0));
+                }
+                for (int i = 0; i < node.values.size(); i++) {
+                        // copy remaining keys and values in newNode2
+                        newNode2.values.add(node.values.get(i));
+                }
+                node.values.clear();
+
+                // separate keys in node to new nodes
+                // TODO: separate keys T_T
+
+                if (node.parent == null) {
+                        newNode1.parent = node;
+                        newNode1.isLeaf = true;
+                        newNode2.parent = node;
+                        newNode2.isLeaf = true;
+
+                        node.keys.add(newNode1);
+                        node.keys.add(newNode2);
+                        node.isLeaf = false;
+                        node.values.add(newNode2.values.get(0));
+                } else {
+                        newNode1.parent = node.parent;
+                        newNode1.isLeaf = node.isLeaf;
+                        newNode2.parent = node.parent;
+                        newNode2.isLeaf = node.isLeaf;
+
+                        int pointer = node.parent.keys.indexOf(node); // the pointer where new nodes belong
+                        node.parent.keys.remove(node);
+
+                        node.parent.keys.add(pointer, newNode2);
+                        node.parent.keys.add(pointer, newNode1);
+                        if (!node.parent.values.contains(newNode2.values.get(0)))
+                                node.parent.values.add(pointer, newNode2.values.get(0));
+                        else if (!node.parent.values.contains(newNode1.values.get(0)))
+                                node.parent.values.add(pointer, newNode1.values.get(0));
+
+                        if (node.parent.values.size() == this.bucketSize)
+                                divideNode(node.parent);
+                }
         }
 
         /**
