@@ -201,18 +201,31 @@ public class TreeNode {
         public boolean delete(int value) {
                 TreeNode node = find(value, this);
 
-                if(node.values.contains(value)){
+                if(!node.values.contains(value)){
                         return false;
                 }
                 
                 // if root, then just remove
                 if(node.parent == null){
-                        node.values.remove(value);
+                        node.values.remove(Integer.valueOf(value));
                 }
-                // TODO: implement internal node logic
                 // if not root then delete and check for underfull
                 else{
-                        node.values.remove(value);
+                        TreeNode currNode = node;
+                        int originalNodeIndex = node.parent.keys.indexOf(node);
+                        
+                        while(currNode.parent != null){
+                                currNode.values.remove(Integer.valueOf(value));
+                                currNode = currNode.parent;
+                        }
+
+                        // remove for the root, if there is
+                        currNode.values.remove(Integer.valueOf(value));
+                        // if the root is underfull, then borrow from the leaf node
+                        if(currNode.isUnderfull()){
+                                currNode.values.add(node.parent.keys.get(originalNodeIndex).values.get(0));
+                        }
+
                         fixUnderfull(node);
                 }
 
@@ -225,17 +238,30 @@ public class TreeNode {
          * @param node the current node to check and fix for underfull
          */
         private void fixUnderfull(TreeNode node){
-                while(node.parent != null && node.isUnderfull(node)){
-                        TreeNode parent = node.parent;
-                        int nodeIndex = parent.keys.indexOf(node);
+                while(node.parent != null){
+                        if(node.isUnderfull()){
+                                int nodeIndex = node.parent.keys.indexOf(node);
 
-                        boolean borrowSucess = borrowNodes(parent, node, nodeIndex);
-                        if(!borrowSucess){
-                                mergeNodes(parent, node, nodeIndex);
+                                boolean borrowSucess = borrowNodes(node, nodeIndex);
+                                if(!borrowSucess){
+                                        mergeNodes(node, nodeIndex);
+                                }
                         }
-
-                        parent = node;
+                        node = node.parent;
                 }
+
+                // if root and not enough children
+                if(node.keys.size() < 2){
+                        if(node.keys.size() == 1){
+                                TreeNode onlyChild = node.keys.get(0);
+                                node.keys = onlyChild.keys;
+                                node.values = onlyChild.values;
+                                node.parent = null;
+                        }
+                        else{
+                                node = null;
+                        }
+                }       
         }
 
         /**
@@ -244,20 +270,44 @@ public class TreeNode {
          * @param node the current node to be merged
          * @return whether the operation is successful
          */
-        private boolean mergeNodes(TreeNode parent, TreeNode node, int nodeIndex){
+        private boolean mergeNodes(TreeNode node, int nodeIndex){
                 // merge with left sibling
                 if(nodeIndex > 0){
-                        TreeNode leftSibling = parent.keys.get(nodeIndex - 1);
+                        TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
                         leftSibling.values.addAll(node.values);
-                        parent.keys.remove(nodeIndex);
+
+                        // inner node
+                        if(this.nextNode == null){
+                                leftSibling.keys.addAll(node.keys);
+                        }
+                        // if leaf node, then we gotta change the nextNode value of the left sibling
+                        else if(this.isLeaf){
+                                leftSibling.nextNode = this.nextNode;
+                        }
+
+                        node.parent.keys.remove(nodeIndex);
+
                         return true;
                 }
                 // merge with right sibling
-                else if(parent.keys.size() > 1 && nodeIndex < parent.keys.size() - 1){
-                        TreeNode rightSibling = parent.keys.get(nodeIndex + 1);
+                else if(node.parent.keys.size() > 1 && nodeIndex < node.parent.keys.size() - 1){
+                        TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
                         node.values.addAll(rightSibling.values);
                         rightSibling.values = List.copyOf(node.values);
-                        parent.keys.remove(nodeIndex);
+
+                        // inner node
+                        if(this.nextNode == null){
+                                node.keys.addAll(rightSibling.keys);
+                                rightSibling.keys = List.copyOf(node.keys);
+                        }
+                        // if leaf node, then we gotta change the nextNode value of the left sibling
+                        else if(this.isLeaf){
+                                if(nodeIndex - 1 >= 0){
+                                        node.parent.keys.get(nodeIndex - 1).nextNode = rightSibling;
+                                }
+                        }
+
+                        node.parent.keys.remove(nodeIndex);
                         return true;
                 }
 
@@ -272,17 +322,23 @@ public class TreeNode {
          * @param nodeIndex the index of the node
          * @return whether the operation is successful
          */
-        private boolean borrowNodes(TreeNode parent, TreeNode node, int nodeIndex){
+        private boolean borrowNodes(TreeNode node, int nodeIndex){
                 // try borrowing from left
-                if(nodeIndex > 0 && parent.keys.get(nodeIndex - 1).values.size() > (Math.ceil(this.bucketSize/2) - 1)){
-                        TreeNode leftSibling = parent.keys.get(nodeIndex - 1);
-                        insertToNode(node, leftSibling.values.remove(leftSibling.values.size() - 1));
+                if(nodeIndex > 0 && node.parent.keys.get(nodeIndex - 1).values.size() > (Math.ceil((double)this.bucketSize/2.0) - 1)){
+                        TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
+                        int borrowedValue = leftSibling.values.remove(leftSibling.values.size() - 1);
+                        insertToNode(node, borrowedValue);
+                        node.parent.values.set(nodeIndex - 1, borrowedValue);
                         return true;
                 }
                 // try borrowing from right
-                else if(parent.keys.size() > 1 && nodeIndex < parent.keys.size() - 1 && parent.keys.get(nodeIndex + 1).values.size() > (Math.ceil(this.bucketSize/2) - 1)){
-                        TreeNode rightSibling = parent.keys.get(nodeIndex + 1);
-                        insertToNode(node, rightSibling.values.remove(rightSibling.values.size() - 1));
+                else if(node.parent.keys.size() > 1 
+                        && nodeIndex < node.parent.keys.size() - 1 
+                        && node.parent.keys.get(nodeIndex + 1).values.size() > (Math.ceil((double)this.bucketSize/2.0) - 1)){
+                        TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
+                        int borrowedValue = rightSibling.values.remove(0);
+                        insertToNode(node, borrowedValue);
+                        node.parent.values.set(nodeIndex, borrowedValue);
                         return true;
                 }
 
@@ -290,12 +346,15 @@ public class TreeNode {
         }
 
         /**
-         * checks if the node has enough children 
+         * checks if the node has enough values 
          * @param node the node to check
          * @return true or false if the node has enough children for deletion
          */
-        private boolean isUnderfull(TreeNode node){
-                return node.values.size() < Math.ceil(this.bucketSize/2) - 1;
+        private boolean isUnderfull(){
+                if(this.parent == null) 
+                        return this.values.size() < 1;
+                else 
+                        return this.values.size() < Math.ceil(((double)this.bucketSize)/2.0) - 1;
         }
 
         public void printValues() {
