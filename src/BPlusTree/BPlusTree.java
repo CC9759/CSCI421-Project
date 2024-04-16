@@ -93,6 +93,38 @@ public class BPlusTree {
                 }
         }
 
+        /**
+         * alternative way of prints the tree leafs
+         * 
+         * @param formatOption the format in which to display the tree leafs.
+         *                     default = 0
+         *                     available = [1]
+         */
+        public void printLeafs(int formatOption) {
+                if (this.root == null)
+                        return;
+
+                TreeNode current = root;
+                while (!current.isLeaf) {
+                        current = current.keys.get(0);
+                }
+                while (current != null) {
+                        if (formatOption == 1) {
+                                current.parent.printValues();
+                                for (int i = 0; i < this.bucketSize - current.parent.values.size(); i++) {
+                                        System.out.print("\t");
+                                }
+                                System.out.print("=>\t");
+                                current.printValues();
+                                System.out.println();
+                        } else {
+                                current.printValues();
+                                System.out.print(current.nextNode == null ? "\n" : " -> ");
+                        }
+                        current = current.nextNode;
+                }
+        }
+
         public static void main(String[] args) {
                 BPlusTree tree = new BPlusTree(5);
 
@@ -116,6 +148,7 @@ public class BPlusTree {
                 }
                 System.out.println("\nLeaf Nodes:");
                 tree.printLeafs();
+                tree.printLeafs(1);
 
                 // delete testing
                 System.out.println("\nDelete testing");
@@ -128,5 +161,6 @@ public class BPlusTree {
                 }
                 System.out.println("\nLeaf Nodes:");
                 tree.printLeafs();
+                tree.printLeafs(1);
         }
 }
