@@ -43,23 +43,40 @@ public class BPlusTree {
                 if (this.root == null)
                         return;
 
-                Queue<TreeNode> queue = new LinkedList<>();
+                Queue<TreeNode> queue = new LinkedList<TreeNode>();
+                Queue<TreeNode> newLineQueue = new LinkedList<TreeNode>();
+                TreeNode currentNode = root;
+                int treeLevel = 0; // the current tree level
+                // add all the leftmost nodes to get the new lines
+                while (currentNode.keys.size() != 0) {
+                        newLineQueue.add(currentNode);
+                        currentNode = currentNode.keys.get(0);
+                        treeLevel += 1;
+                }
+                newLineQueue.add(currentNode); // add the leaf node
+                newLineQueue.poll(); // remove the root so there is no \n in before the root
+
                 queue.add(root);
-                while (queue.size() != 0) {
-                        queue.add(null);
-                        TreeNode currentNode = queue.remove();
-                        if (currentNode == null)
-                                return;
-                        queue.addAll(currentNode.keys);
+                while (!queue.isEmpty()) { // later change to currentNode.isLeaf == false
+                        currentNode = queue.poll();
+                        for (int i = 0; i < treeLevel; i++) {
+                                System.out.print("\t");
+                        }
                         currentNode.printValues();
-                        System.out.print(queue.peek() == null ? "\n" : " -> ");
-                        if (queue.peek() == null)
-                                queue.remove();
+
+                        queue.addAll(currentNode.keys);
+                        if (queue.peek() == newLineQueue.peek()) {
+                                System.out.print("\n");
+                                newLineQueue.poll();
+                                treeLevel -= 1;
+                        } else {
+                                System.out.print("   ");
+                        }
                 }
         }
 
         /**
-         * prints the tree. gets each
+         * prints the tree leafs (only the leafs)
          */
         public void printLeafs() {
                 if (this.root == null)
@@ -90,15 +107,25 @@ public class BPlusTree {
                 tree.printTree();
 
                 System.out.println("\nMore insertions");
-
-                int[] insertionValues = { 2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19 };
+                int[] insertionValues = { 2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19, 22,
+                                23, 24, 25, 26, 27, 28, 29, 30, 31 };
                 for (int i = 0; i < insertionValues.length; i++) {
                         tree.insert(insertionValues[i]);
                         tree.printTree();
                         System.out.println();
                 }
+                System.out.println("\nLeaf Nodes:");
+                tree.printLeafs();
 
-                tree.printTree();
+                // delete testing
+                System.out.println("\nDelete testing");
+                int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21 };
+                for (int i = 0; i < deleteValues.length; i++) {
+                        System.out.println("Tree after deleting value \'" + deleteValues[i] + "\'");
+                        tree.delete(deleteValues[i]);
+                        tree.printTree();
+                        System.out.println();
+                }
                 System.out.println("\nLeaf Nodes:");
                 tree.printLeafs();
         }

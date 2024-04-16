@@ -84,106 +84,81 @@ public class TreeNode {
         }
 
         private void divideNode(TreeNode node) {
-                TreeNode newNode1 = new TreeNode(bucketSize);
-                TreeNode newNode2 = new TreeNode(bucketSize);
+                if (node.parent == null) { // if im dividing the root
+                        TreeNode newNode1 = new TreeNode(bucketSize);
+                        TreeNode newNode2 = new TreeNode(bucketSize);
 
-                int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
-                for (int i = 0; i < lowestNodeSize - 1; i++) {
-                        // copy keys and values in newNode1
-                        newNode1.values.add(node.values.remove(0));
-                }
-                for (int i = 0; i < node.values.size(); i++) {
-                        // copy remaining keys and values in newNode2
-                        newNode2.values.add(node.values.get(i));
-                }
-                node.values.clear();
+                        int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
+                        for (int i = 0; i < lowestNodeSize - 1; i++) {
+                                // copy values in newNode1
+                                newNode1.values.add(node.values.remove(0));
+                        }
+                        for (int i = 0; i < node.values.size(); i++) {
+                                // copy remaining values in newNode2
+                                newNode2.values.add(node.values.get(i));
+                        }
+                        node.values.clear();
 
-                if (node.parent == null) {
                         newNode1.parent = node;
-                        newNode1.isLeaf = true;
+                        newNode1.isLeaf = node.isLeaf;
                         newNode2.parent = node;
-                        newNode2.isLeaf = true;
+                        newNode2.isLeaf = node.isLeaf;
+                        if (node.isLeaf == true)
+                                newNode1.nextNode = newNode2;
+                        node.isLeaf = false;
 
-                        newNode1.nextNode = newNode2;
+                        // get copy the keys of node into new nodes
+                        int keysDivision = node.keys.size() / 2;
+                        for (int i = 0; i < keysDivision; i++) {
+                                // copy keys in newNode1
+                                node.keys.get(0).parent = newNode1;
+                                newNode1.keys.add(node.keys.remove(0));
+                        }
+                        for (int i = 0; i < node.keys.size(); i++) {
+                                // copy remaining keys in newNode2
+                                node.keys.get(i).parent = newNode2;
+                                newNode2.keys.add(node.keys.get(i));
+                        }
+                        node.keys.clear();
 
                         node.keys.add(newNode1);
                         node.keys.add(newNode2);
-                        node.isLeaf = false;
                         node.values.add(newNode2.values.get(0));
+                        if (newNode2.isLeaf == false)
+                                newNode2.values.remove(0);
                 } else {
-                        newNode1.parent = node.parent;
-                        newNode1.isLeaf = node.isLeaf;
-                        newNode2.parent = node.parent;
-                        newNode2.isLeaf = node.isLeaf;
+                        TreeNode newNode = new TreeNode(bucketSize);
 
-                        newNode1.nextNode = newNode2;
-                        newNode2.nextNode = node.nextNode;
+                        int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
+                        for (int i = 0; i < lowestNodeSize; i++) {
+                                // copy values in newNode so:
+                                // node.values (original) = node.values.addAll(newNode)
+                                newNode.values.add(node.values.remove(lowestNodeSize - 1));
+                        }
 
-                        int pointer = node.parent.keys.indexOf(node); // the pointer where new nodes belong
-                        node.parent.keys.remove(node);
+                        newNode.parent = node.parent;
+                        newNode.isLeaf = node.isLeaf;
 
-                        node.parent.keys.add(pointer, newNode2);
-                        node.parent.keys.add(pointer, newNode1);
-                        if (!node.parent.values.contains(newNode2.values.get(0)))
-                                node.parent.values.add(pointer, newNode2.values.get(0));
-                        else if (!node.parent.values.contains(newNode1.values.get(0)))
-                                node.parent.values.add(pointer, newNode1.values.get(0));
+                        newNode.nextNode = node.nextNode; // have new node to point to potential nextNode
+                        node.nextNode = newNode; // have node point to newNode
+
+                        // copy the keys of node into newNode so: newNode = node[keyDiv:]
+                        int keysDivision = node.keys.size() / 2;
+                        for (int i = 0; i < keysDivision; i++) {
+                                // copy keys in newNode
+                                node.keys.get(keysDivision).parent = newNode;
+                                newNode.keys.add(node.keys.remove(keysDivision));
+                        }
+
+                        // put newNode in the correct position for parent keys
+                        node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
+                        // insert the value to the parent node
+                        insertToNode(node.parent, newNode.values.get(0));
+                        if (newNode.isLeaf == false)
+                                newNode.values.remove(0);
 
                         if (node.parent.values.size() == this.bucketSize)
-                                divideInternal(node.parent);
-                }
-        }
-
-        private void divideInternal(TreeNode node) {
-                TreeNode newNode1 = new TreeNode(bucketSize);
-                TreeNode newNode2 = new TreeNode(bucketSize);
-
-                int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
-                for (int i = 0; i < lowestNodeSize - 1; i++) {
-                        // copy keys and values in newNode1
-                        newNode1.values.add(node.values.remove(0));
-                }
-                for (int i = 0; i < lowestNodeSize - 1; i++) {
-                        // copy remaining keys and values in newNode2
-                        newNode2.values.add(node.values.remove(1));
-                }
-
-                // give keys to nodes
-                int split = node.keys.size() / 2; // split the pointers
-                for (int i = 0; i < split; i++) {
-                        newNode1.keys.add(node.keys.remove(0));
-                }
-                for (int i = 0; i < split; i++) {
-                        newNode2.keys.add(node.keys.remove(0));
-                }
-
-                if (node.parent == null) {
-                        newNode1.parent = node;
-                        newNode1.isLeaf = false;
-                        newNode2.parent = node;
-                        newNode2.isLeaf = false;
-
-                        node.keys.add(newNode1);
-                        node.keys.add(newNode2);
-                        node.isLeaf = false;
-                } else {
-                        newNode1.parent = node.parent;
-                        newNode1.isLeaf = node.isLeaf;
-                        newNode2.parent = node.parent;
-                        newNode2.isLeaf = node.isLeaf;
-
-                        int pointer = node.parent.keys.indexOf(node); // the pointer where new nodes belong
-                        node.parent.keys.remove(node);
-
-                        node.parent.keys.add(pointer, newNode2);
-                        node.parent.keys.add(pointer, newNode1);
-                        if (!node.parent.values.contains(newNode2.values.get(0)))
-                                node.parent.values.add(pointer, newNode2.values.get(0));
-                        else if (!node.parent.values.contains(newNode1.values.get(0)))
-                                node.parent.values.add(pointer, newNode1.values.get(0));
-
-                        if (node.parent.values.size() == this.bucketSize)
-                                divideInternal(node.parent);
+                                divideNode(node.parent);
                 }
         }
 
@@ -191,8 +166,8 @@ public class TreeNode {
          * function to delete a value in the B+ Tree
          * 
          * 2 Cases for delete:
-         *      1. The key to delete is only at the leaf node and not in the internal nodes
-         *      2. The key to delete is both at the leaf node and in the internal nodes
+         * 1. The key to delete is only at the leaf node and not in the internal nodes
+         * 2. The key to delete is both at the leaf node and in the internal nodes
          * 
          * @param value the specified value that will be deleted
          * @return a boolean. true if the value was succesfully deleted from the tree.
@@ -201,20 +176,20 @@ public class TreeNode {
         public boolean delete(int value) {
                 TreeNode node = find(value, this);
 
-                if(!node.values.contains(value)){
+                if (!node.values.contains(value)) {
                         return false;
                 }
-                
+
                 // if root, then just remove
-                if(node.parent == null){
+                if (node.parent == null) {
                         node.values.remove(Integer.valueOf(value));
                 }
                 // if not root then delete and check for underfull
-                else{
+                else {
                         TreeNode currNode = node;
                         int originalNodeIndex = node.parent.keys.indexOf(node);
-                        
-                        while(currNode.parent != null){
+
+                        while (currNode.parent != null) {
                                 currNode.values.remove(Integer.valueOf(value));
                                 currNode = currNode.parent;
                         }
@@ -222,7 +197,7 @@ public class TreeNode {
                         // remove for the root, if there is
                         currNode.values.remove(Integer.valueOf(value));
                         // if the root is underfull, then borrow from the leaf node
-                        if(currNode.isUnderfull()){
+                        if (currNode.isUnderfull()) {
                                 currNode.values.add(node.parent.keys.get(originalNodeIndex).values.get(0));
                         }
 
@@ -237,13 +212,13 @@ public class TreeNode {
          * 
          * @param node the current node to check and fix for underfull
          */
-        private void fixUnderfull(TreeNode node){
-                while(node.parent != null){
-                        if(node.isUnderfull()){
+        private void fixUnderfull(TreeNode node) {
+                while (node.parent != null) {
+                        if (node.isUnderfull()) {
                                 int nodeIndex = node.parent.keys.indexOf(node);
 
                                 boolean borrowSucess = borrowNodes(node, nodeIndex);
-                                if(!borrowSucess){
+                                if (!borrowSucess) {
                                         mergeNodes(node, nodeIndex);
                                 }
                         }
@@ -251,37 +226,36 @@ public class TreeNode {
                 }
 
                 // if root and not enough children
-                if(node.keys.size() < 2){
-                        if(node.keys.size() == 1){
+                if (node.keys.size() < 2) {
+                        if (node.keys.size() == 1) {
                                 TreeNode onlyChild = node.keys.get(0);
                                 node.keys = onlyChild.keys;
                                 node.values = onlyChild.values;
                                 node.parent = null;
-                        }
-                        else{
+                        } else {
                                 node = null;
                         }
-                }       
+                }
         }
 
         /**
-         *  Tries to merge the current node to first the left node, then the right node
+         * Tries to merge the current node to first the left node, then the right node
          * 
          * @param node the current node to be merged
          * @return whether the operation is successful
          */
-        private boolean mergeNodes(TreeNode node, int nodeIndex){
+        private boolean mergeNodes(TreeNode node, int nodeIndex) {
                 // merge with left sibling
-                if(nodeIndex > 0){
+                if (nodeIndex > 0) {
                         TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
                         leftSibling.values.addAll(node.values);
 
                         // inner node
-                        if(this.nextNode == null){
+                        if (this.nextNode == null) {
                                 leftSibling.keys.addAll(node.keys);
                         }
                         // if leaf node, then we gotta change the nextNode value of the left sibling
-                        else if(this.isLeaf){
+                        else if (this.isLeaf) {
                                 leftSibling.nextNode = this.nextNode;
                         }
 
@@ -290,19 +264,19 @@ public class TreeNode {
                         return true;
                 }
                 // merge with right sibling
-                else if(node.parent.keys.size() > 1 && nodeIndex < node.parent.keys.size() - 1){
+                else if (node.parent.keys.size() > 1 && nodeIndex < node.parent.keys.size() - 1) {
                         TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
                         node.values.addAll(rightSibling.values);
                         rightSibling.values = List.copyOf(node.values);
 
                         // inner node
-                        if(this.nextNode == null){
+                        if (this.nextNode == null) {
                                 node.keys.addAll(rightSibling.keys);
                                 rightSibling.keys = List.copyOf(node.keys);
                         }
                         // if leaf node, then we gotta change the nextNode value of the left sibling
-                        else if(this.isLeaf){
-                                if(nodeIndex - 1 >= 0){
+                        else if (this.isLeaf) {
+                                if (nodeIndex - 1 >= 0) {
                                         node.parent.keys.get(nodeIndex - 1).nextNode = rightSibling;
                                 }
                         }
@@ -317,14 +291,15 @@ public class TreeNode {
         /**
          * Tries to borrow values from first left and then right sibling
          * 
-         * @param parent the parent node of the current node
-         * @param node the current node that is borrowing
+         * @param parent    the parent node of the current node
+         * @param node      the current node that is borrowing
          * @param nodeIndex the index of the node
          * @return whether the operation is successful
          */
-        private boolean borrowNodes(TreeNode node, int nodeIndex){
+        private boolean borrowNodes(TreeNode node, int nodeIndex) {
                 // try borrowing from left
-                if(nodeIndex > 0 && node.parent.keys.get(nodeIndex - 1).values.size() > (Math.ceil((double)this.bucketSize/2.0) - 1)){
+                if (nodeIndex > 0 && node.parent.keys.get(nodeIndex - 1).values
+                                .size() > (Math.ceil((double) this.bucketSize / 2.0) - 1)) {
                         TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
                         int borrowedValue = leftSibling.values.remove(leftSibling.values.size() - 1);
                         insertToNode(node, borrowedValue);
@@ -332,9 +307,10 @@ public class TreeNode {
                         return true;
                 }
                 // try borrowing from right
-                else if(node.parent.keys.size() > 1 
-                        && nodeIndex < node.parent.keys.size() - 1 
-                        && node.parent.keys.get(nodeIndex + 1).values.size() > (Math.ceil((double)this.bucketSize/2.0) - 1)){
+                else if (node.parent.keys.size() > 1
+                                && nodeIndex < node.parent.keys.size() - 1
+                                && node.parent.keys.get(nodeIndex + 1).values
+                                                .size() > (Math.ceil((double) this.bucketSize / 2.0) - 1)) {
                         TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
                         int borrowedValue = rightSibling.values.remove(0);
                         insertToNode(node, borrowedValue);
@@ -346,17 +322,21 @@ public class TreeNode {
         }
 
         /**
-         * checks if the node has enough values 
+         * checks if the node has enough values
+         * 
          * @param node the node to check
          * @return true or false if the node has enough children for deletion
          */
-        private boolean isUnderfull(){
-                if(this.parent == null) 
+        private boolean isUnderfull() {
+                if (this.parent == null)
                         return this.values.size() < 1;
-                else 
-                        return this.values.size() < Math.ceil(((double)this.bucketSize)/2.0) - 1;
+                else
+                        return this.values.size() < Math.ceil(((double) this.bucketSize) / 2.0) - 1;
         }
 
+        /**
+         * function to print the values contained in a TreeNode
+         */
         public void printValues() {
                 System.out.print(String.join(" | ",
                                 values.stream().map(Object::toString).collect(Collectors.toUnmodifiableList())));
