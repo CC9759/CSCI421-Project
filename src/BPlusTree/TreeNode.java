@@ -194,6 +194,7 @@ public class TreeNode {
 
                         while (currNode != null) {
                                 currNode.values.remove(Integer.valueOf(value));
+                                
                                 currNode = currNode.parent;
                         }
 
@@ -222,6 +223,8 @@ public class TreeNode {
                         } else if (!currNode.isLeaf && currNode.isChildless()) {
                                 int nodeIndex = currNode.parent.keys.indexOf(currNode);
                                 mergeNodes(currNode, nodeIndex);
+                        } else if (!currNode.isLeaf && currNode.values.size() < currNode.keys.size() - 1) {
+                                insertToNode(currNode, node.parent.keys.get(originalNodeIndex).values.get(0));
                         }
                         currNode = currNode.parent;
                 }

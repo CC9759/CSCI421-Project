@@ -148,7 +148,6 @@ public class BPlusTree {
                 }
                 System.out.println("\nLeaf Nodes:");
                 tree.printLeafs();
-                tree.printLeafs(1);
 
                 // delete testing
                 System.out.println("\nDelete testing");
