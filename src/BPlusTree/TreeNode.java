@@ -154,8 +154,11 @@ public class TreeNode {
                         node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
                         // insert the value to the parent node
                         insertToNode(node.parent, newNode.values.get(0));
-                        if (newNode.isLeaf == false)
+                        if (newNode.isLeaf == false) {
                                 newNode.values.remove(0);
+                                node.nextNode = null;
+                                newNode.nextNode = null;
+                        }
 
                         if (node.parent.values.size() == this.bucketSize)
                                 divideNode(node.parent);
@@ -216,8 +219,7 @@ public class TreeNode {
                                 if (!borrowSucess) {
                                         mergeNodes(currNode, nodeIndex);
                                 }
-                        }
-                        else if(!currNode.isLeaf && currNode.isChildless()){
+                        } else if (!currNode.isLeaf && currNode.isChildless()) {
                                 int nodeIndex = currNode.parent.keys.indexOf(currNode);
                                 mergeNodes(currNode, nodeIndex);
                         }
@@ -257,7 +259,7 @@ public class TreeNode {
                         // inner node
                         if (node.nextNode == null) {
                                 leftSibling.keys.addAll(node.keys);
-                                for(TreeNode key : leftSibling.keys){
+                                for (TreeNode key : leftSibling.keys) {
                                         key.parent = leftSibling;
                                 }
                         }
@@ -281,7 +283,7 @@ public class TreeNode {
                         if (node.nextNode == null) {
                                 node.keys.addAll(rightSibling.keys);
                                 rightSibling.keys = new ArrayList<>(node.keys);
-                                for(TreeNode key : rightSibling.keys){
+                                for (TreeNode key : rightSibling.keys) {
                                         key.parent = rightSibling;
                                 }
                         }
@@ -292,7 +294,7 @@ public class TreeNode {
                                 }
                         }
 
-                        if(rightSiblingOriginalNum != -1){
+                        if (rightSiblingOriginalNum != -1) {
                                 node.parent.values.set(rightSiblingOriginalNum, rightSibling.values.get(0));
                         }
 
@@ -353,8 +355,8 @@ public class TreeNode {
          * 
          * @return true or false if the node has enough children
          */
-        private boolean isChildless(){
-                return this.keys.size() < Math.floor((double)bucketSize / 2.0) + 1; 
+        private boolean isChildless() {
+                return this.keys.size() < Math.floor((double) bucketSize / 2.0) + 1;
         }
 
         /**
