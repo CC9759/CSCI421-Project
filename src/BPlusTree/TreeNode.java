@@ -369,4 +369,8 @@ public class TreeNode {
                 System.out.print(String.join(" | ",
                                 values.stream().map(Object::toString).collect(Collectors.toUnmodifiableList())));
         }
+
+        public void writeNode() {
+
+        }
 }

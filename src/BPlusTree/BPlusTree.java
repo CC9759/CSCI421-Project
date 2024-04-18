@@ -162,4 +162,8 @@ public class BPlusTree {
                 tree.printLeafs();
                 tree.printLeafs(1);
         }
+
+        public static TreeNode readNode(int pageNumber) {
+                return null;
+        }
 }
