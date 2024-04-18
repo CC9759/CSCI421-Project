@@ -1,16 +1,19 @@
 package BPlusTree;
 
+import storageManager.Attribute;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class TreeNode {
         private int bucketSize; // size of the b+ tree to get size of nodes and separation
-        public List<Integer> values; // the current size of the node is node.values.size()
-        public List<TreeNode> keys;
+        public List<Integer> values; // The index in the array the current size of the node is node.values.size()
+        public List<TreeNode> keys; // the primary key attribute
         public TreeNode nextNode; // null for all internal nodes and the root
         public TreeNode parent; // null for the root
         public boolean isLeaf;
+        public int pageNumber;
 
         // Node constructor
         public TreeNode(int size) {
@@ -20,6 +23,7 @@ public class TreeNode {
                 this.nextNode = null;
                 this.parent = null;
                 this.isLeaf = false;
+                this.pageNumber = 0;
         }
 
         /**
@@ -311,7 +315,6 @@ public class TreeNode {
         /**
          * Tries to borrow values from first left and then right sibling
          * 
-         * @param parent    the parent node of the current node
          * @param node      the current node that is borrowing
          * @param nodeIndex the index of the node
          * @return whether the operation is successful
