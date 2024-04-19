@@ -38,7 +38,7 @@ public class TreeNode {
                 if (node.isLeaf)
                         return node;
                 for (int i = 0; i < node.values.size(); i++) {
-                        if (Attribute.compareTo(value, node.values.get(i)) < 0) {
+                        if (Attribute.compareTo(value, node.values.get(i).getData()) < 0) {
                                 return find(value, node.keys.get(i));
                         }
                 }
@@ -53,9 +53,9 @@ public class TreeNode {
          *         otherwise, it returns false
          */
         public boolean insert(Attribute value) {
-                TreeNode node = find(value, this);
+                TreeNode node = find(value.getData(), this);
 
-                if (contains(value)) {
+                if (node.contains(value.getData())) {
                         return false;
                 }
 
@@ -157,7 +157,8 @@ public class TreeNode {
                         }
 
                         // put newNode in the correct position for parent keys
-                        node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
+                        //node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
+                        node.parent.keys.add(node.parent.getKeyIndex(node) + 1, newNode);
                         // insert the value to the parent node
                         insertToNode(node.parent, newNode.values.get(0));
                         if (!newNode.isLeaf) {
@@ -185,22 +186,29 @@ public class TreeNode {
         public boolean delete(Object value) {
                 TreeNode node = find(value, this);
 
-                if (!contains(value)) {
+                if (!node.contains(value)) {
                         return false;
                 }
 
                 // if root, then just remove
                 if (node.parent == null) {
-                        int index = getIndex(value);
-                        node.values.remove(index);
+                        int index = getValueIndex(value);
+                        if (index > -1) {
+                                node.values.remove(index);
+                        }
                 }
                 // if not root then delete and check for underfull
                 else {
                         TreeNode currNode = node;
-                        int originalNodeIndex = node.parent.keys.indexOf(node);
+                        // take a look at this
+                        int originalNodeIndex = node.parent.getKeyIndex(node);
 
                         while (currNode != null) {
-                                currNode.values.remove(getIndex(value));
+                                int index = currNode.getValueIndex(value);
+                                if (index > -1) {
+                                        currNode.values.remove(index);
+
+                                }
                                 currNode = currNode.parent;
                         }
 
@@ -220,14 +228,14 @@ public class TreeNode {
 
                 while (currNode.parent != null) {
                         if (currNode.isUnderfull()) {
-                                int nodeIndex = currNode.parent.keys.indexOf(currNode);
+                                int nodeIndex = currNode.parent.getKeyIndex(currNode);
 
                                 boolean borrowSucess = borrowNodes(currNode, nodeIndex);
                                 if (!borrowSucess) {
                                         mergeNodes(currNode, nodeIndex);
                                 }
                         } else if (!currNode.isLeaf && currNode.isChildless()) {
-                                int nodeIndex = currNode.parent.keys.indexOf(currNode);
+                                int nodeIndex = currNode.parent.getKeyIndex(currNode);
                                 mergeNodes(currNode, nodeIndex);
                         } else if (!currNode.isLeaf && currNode.values.size() < currNode.keys.size() - 1) {
                                 insertToNode(currNode, node.parent.keys.get(originalNodeIndex).values.get(0));
@@ -381,16 +389,24 @@ public class TreeNode {
 
         private boolean contains(Object attribute) {
                 for (Attribute attr : this.values) {
-                        if (Attribute.compareTo(attr, attribute) == 0) {
+                        if (Attribute.compareTo(attr.getData(), attribute) == 0) {
                                 return true;
                         }
                 }
                 return false;
         }
 
-        private int getIndex(Object value) {
+        private int getValueIndex(Object value) {
                 for (int i = 0; i < this.values.size(); i++) {
-                        if (Attribute.compareTo(value, this.values.get(i)) == 0) {
+                        if (Attribute.compareTo(value, this.values.get(i).getData()) == 0) {
+                                return i;
+                        }
+                }
+                return -1;
+        }
+        private int getKeyIndex(TreeNode node) {
+                for (int i = 0; i < this.keys.size(); i++) {
+                        if (keys.get(i) == node) {
                                 return i;
                         }
                 }

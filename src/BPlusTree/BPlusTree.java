@@ -138,7 +138,7 @@ public class BPlusTree {
                 AttributeSchema idSchema = new AttributeSchema("id", idType, 0, true, true, false);
                 for (int num : inserts) {
                         Attribute id = new Attribute(idSchema, num);
-                        System.out.println(tree.insert(id));;
+                        System.out.println(tree.insert(id));
                 }
                 tree.printTree();
 
@@ -160,8 +160,7 @@ public class BPlusTree {
                 int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21 };
                 for (int i = 0; i < deleteValues.length; i++) {
                         System.out.println("Tree after deleting value \'" + deleteValues[i] + "\'");
-                        Attribute id = new Attribute(idSchema, insertionValues[i]);
-                        tree.delete(id);
+                        tree.delete(deleteValues[i]);
                         tree.printTree();
                         System.out.println();
                 }
