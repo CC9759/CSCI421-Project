@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 public class TreeNode {
         private final int bucketSize; // size of the b+ tree to get size of nodes and separation
-        public List<Attribute> values; // The index in the array the current size of the node is node.values.size()
-        public List<TreeNode> keys; // the primary key attribute
+        public List<Attribute> searchKeys; // The index in the array the current size of the node is node.values.size()
+        public List<TreeNode> pagePointers; // the primary key attribute
         public TreeNode nextNode; // null for all internal nodes and the root
         public TreeNode parent; // null for the root
         public boolean isLeaf;
@@ -18,8 +18,8 @@ public class TreeNode {
         // Node constructor
         public TreeNode(int size) {
                 this.bucketSize = size;
-                this.values = new ArrayList<>();
-                this.keys = new ArrayList<>();
+                this.searchKeys = new ArrayList<>();
+                this.pagePointers = new ArrayList<>();
                 this.nextNode = null;
                 this.parent = null;
                 this.isLeaf = false;
@@ -37,12 +37,12 @@ public class TreeNode {
         public TreeNode find(Object value, TreeNode node) {
                 if (node.isLeaf)
                         return node;
-                for (int i = 0; i < node.values.size(); i++) {
-                        if (Attribute.compareTo(value, node.values.get(i).getData()) < 0) {
-                                return find(value, node.keys.get(i));
+                for (int i = 0; i < node.searchKeys.size(); i++) {
+                        if (Attribute.compareTo(value, node.searchKeys.get(i).getData()) < 0) {
+                                return find(value, node.pagePointers.get(i));
                         }
                 }
-                return find(value, node.keys.get(node.values.size()));
+                return find(value, node.pagePointers.get(node.searchKeys.size()));
         }
 
         /**
@@ -59,7 +59,7 @@ public class TreeNode {
                         return false;
                 }
 
-                if (node.values.size() + 1 == this.bucketSize) {
+                if (node.searchKeys.size() + 1 == this.bucketSize) {
                         insertToNode(node, value);
                         divideNode(node);
                 } else {
@@ -69,24 +69,24 @@ public class TreeNode {
         }
 
         private void insertToNode(TreeNode node, Attribute value) {
-                if (node.values.size() == 0) {
-                        node.values.add(value);
+                if (node.searchKeys.size() == 0) {
+                        node.searchKeys.add(value);
                         return;
-                } else if (node.values.size() == 1) {
-                        if (value.compareTo(node.values.get(0)) <  0) {
-                                node.values.add(0, value);
+                } else if (node.searchKeys.size() == 1) {
+                        if (value.compareTo(node.searchKeys.get(0)) <  0) {
+                                node.searchKeys.add(0, value);
                         } else {
-                                node.values.add(value);
+                                node.searchKeys.add(value);
                         }
                         return;
                 }
-                for (int i = 0; i < node.values.size(); i++) {
-                        if (value.compareTo(node.values.get(i)) <  0) {
-                                node.values.add(i, value);
+                for (int i = 0; i < node.searchKeys.size(); i++) {
+                        if (value.compareTo(node.searchKeys.get(i)) <  0) {
+                                node.searchKeys.add(i, value);
                                 return;
                         }
                 }
-                node.values.add(value); // if its the largest value in the node
+                node.searchKeys.add(value); // if its the largest value in the node
         }
 
         private void divideNode(TreeNode node) {
@@ -94,16 +94,16 @@ public class TreeNode {
                         TreeNode newNode1 = new TreeNode(bucketSize);
                         TreeNode newNode2 = new TreeNode(bucketSize);
 
-                        int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
+                        int lowestNodeSize = (int) Math.ceil(node.searchKeys.size() / 2.0);
                         for (int i = 0; i < lowestNodeSize - 1; i++) {
                                 // copy values in newNode1
-                                newNode1.values.add(node.values.remove(0));
+                                newNode1.searchKeys.add(node.searchKeys.remove(0));
                         }
-                        for (int i = 0; i < node.values.size(); i++) {
+                        for (int i = 0; i < node.searchKeys.size(); i++) {
                                 // copy remaining values in newNode2
-                                newNode2.values.add(node.values.get(i));
+                                newNode2.searchKeys.add(node.searchKeys.get(i));
                         }
-                        node.values.clear();
+                        node.searchKeys.clear();
 
                         newNode1.parent = node;
                         newNode1.isLeaf = node.isLeaf;
@@ -114,32 +114,32 @@ public class TreeNode {
                         node.isLeaf = false;
 
                         // get copy the keys of node into new nodes
-                        int keysDivision = node.keys.size() / 2;
+                        int keysDivision = node.pagePointers.size() / 2;
                         for (int i = 0; i < keysDivision; i++) {
                                 // copy keys in newNode1
-                                node.keys.get(0).parent = newNode1;
-                                newNode1.keys.add(node.keys.remove(0));
+                                node.pagePointers.get(0).parent = newNode1;
+                                newNode1.pagePointers.add(node.pagePointers.remove(0));
                         }
-                        for (int i = 0; i < node.keys.size(); i++) {
+                        for (int i = 0; i < node.pagePointers.size(); i++) {
                                 // copy remaining keys in newNode2
-                                node.keys.get(i).parent = newNode2;
-                                newNode2.keys.add(node.keys.get(i));
+                                node.pagePointers.get(i).parent = newNode2;
+                                newNode2.pagePointers.add(node.pagePointers.get(i));
                         }
-                        node.keys.clear();
+                        node.pagePointers.clear();
 
-                        node.keys.add(newNode1);
-                        node.keys.add(newNode2);
-                        node.values.add(newNode2.values.get(0));
+                        node.pagePointers.add(newNode1);
+                        node.pagePointers.add(newNode2);
+                        node.searchKeys.add(newNode2.searchKeys.get(0));
                         if (!newNode2.isLeaf)
-                                newNode2.values.remove(0);
+                                newNode2.searchKeys.remove(0);
                 } else {
                         TreeNode newNode = new TreeNode(bucketSize);
 
-                        int lowestNodeSize = (int) Math.ceil(node.values.size() / 2.0);
+                        int lowestNodeSize = (int) Math.ceil(node.searchKeys.size() / 2.0);
                         for (int i = 0; i < lowestNodeSize; i++) {
                                 // copy values in newNode so:
                                 // node.values (original) = node.values.addAll(newNode)
-                                newNode.values.add(node.values.remove(lowestNodeSize - 1));
+                                newNode.searchKeys.add(node.searchKeys.remove(lowestNodeSize - 1));
                         }
 
                         newNode.parent = node.parent;
@@ -149,25 +149,25 @@ public class TreeNode {
                         node.nextNode = newNode; // have node point to newNode
 
                         // copy the keys of node into newNode so: newNode = node[keyDiv:]
-                        int keysDivision = node.keys.size() / 2;
+                        int keysDivision = node.pagePointers.size() / 2;
                         for (int i = 0; i < keysDivision; i++) {
                                 // copy keys in newNode
-                                node.keys.get(keysDivision).parent = newNode;
-                                newNode.keys.add(node.keys.remove(keysDivision));
+                                node.pagePointers.get(keysDivision).parent = newNode;
+                                newNode.pagePointers.add(node.pagePointers.remove(keysDivision));
                         }
 
                         // put newNode in the correct position for parent keys
                         //node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
-                        node.parent.keys.add(node.parent.getKeyIndex(node) + 1, newNode);
+                        node.parent.pagePointers.add(node.parent.getKeyIndex(node) + 1, newNode);
                         // insert the value to the parent node
-                        insertToNode(node.parent, newNode.values.get(0));
+                        insertToNode(node.parent, newNode.searchKeys.get(0));
                         if (!newNode.isLeaf) {
-                                newNode.values.remove(0);
+                                newNode.searchKeys.remove(0);
                                 node.nextNode = null;
                                 newNode.nextNode = null;
                         }
 
-                        if (node.parent.values.size() == this.bucketSize)
+                        if (node.parent.searchKeys.size() == this.bucketSize)
                                 divideNode(node.parent);
                 }
         }
@@ -194,7 +194,7 @@ public class TreeNode {
                 if (node.parent == null) {
                         int index = getValueIndex(value);
                         if (index > -1) {
-                                node.values.remove(index);
+                                node.searchKeys.remove(index);
                         }
                 }
                 // if not root then delete and check for underfull
@@ -206,7 +206,7 @@ public class TreeNode {
                         while (currNode != null) {
                                 int index = currNode.getValueIndex(value);
                                 if (index > -1) {
-                                        currNode.values.remove(index);
+                                        currNode.searchKeys.remove(index);
 
                                 }
                                 currNode = currNode.parent;
@@ -237,23 +237,23 @@ public class TreeNode {
                         } else if (!currNode.isLeaf && currNode.isChildless()) {
                                 int nodeIndex = currNode.parent.getKeyIndex(currNode);
                                 mergeNodes(currNode, nodeIndex);
-                        } else if (!currNode.isLeaf && currNode.values.size() < currNode.keys.size() - 1) {
-                                insertToNode(currNode, node.parent.keys.get(originalNodeIndex).values.get(0));
+                        } else if (!currNode.isLeaf && currNode.searchKeys.size() < currNode.pagePointers.size() - 1) {
+                                insertToNode(currNode, node.parent.pagePointers.get(originalNodeIndex).searchKeys.get(0));
                         }
                         currNode = currNode.parent;
                 }
 
                 // if the root is underfull, then borrow from the leaf node
-                if (currNode.values.size() < currNode.keys.size() - 1) {
-                        insertToNode(currNode, node.parent.keys.get(originalNodeIndex).values.get(0));
+                if (currNode.searchKeys.size() < currNode.pagePointers.size() - 1) {
+                        insertToNode(currNode, node.parent.pagePointers.get(originalNodeIndex).searchKeys.get(0));
                 }
 
                 // if root and not enough children
-                if (currNode.keys.size() < 2) {
-                        if (node.keys.size() == 1) {
-                                TreeNode onlyChild = node.keys.get(0);
-                                node.keys = onlyChild.keys;
-                                node.values = onlyChild.values;
+                if (currNode.pagePointers.size() < 2) {
+                        if (node.pagePointers.size() == 1) {
+                                TreeNode onlyChild = node.pagePointers.get(0);
+                                node.pagePointers = onlyChild.pagePointers;
+                                node.searchKeys = onlyChild.searchKeys;
                                 node.parent = null;
                         } else {
                                 node = null;
@@ -270,13 +270,13 @@ public class TreeNode {
         private boolean mergeNodes(TreeNode node, int nodeIndex) {
                 // merge with left sibling
                 if (nodeIndex > 0) {
-                        TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
-                        leftSibling.values.addAll(node.values);
+                        TreeNode leftSibling = node.parent.pagePointers.get(nodeIndex - 1);
+                        leftSibling.searchKeys.addAll(node.searchKeys);
 
                         // inner node
                         if (node.nextNode == null) {
-                                leftSibling.keys.addAll(node.keys);
-                                for (TreeNode key : leftSibling.keys) {
+                                leftSibling.pagePointers.addAll(node.pagePointers);
+                                for (TreeNode key : leftSibling.pagePointers) {
                                         key.parent = leftSibling;
                                 }
                         }
@@ -285,37 +285,37 @@ public class TreeNode {
                                 leftSibling.nextNode = node.nextNode;
                         }
 
-                        node.parent.keys.remove(nodeIndex);
+                        node.parent.pagePointers.remove(nodeIndex);
 
                         return true;
                 }
                 // merge with right sibling
-                else if (node.parent.keys.size() > 1 && nodeIndex < node.parent.keys.size() - 1) {
-                        TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
-                        int rightSiblingOriginalNum = node.parent.values.indexOf(rightSibling.values.get(0));
-                        node.values.addAll(rightSibling.values);
-                        rightSibling.values = new ArrayList<>(node.values);
+                else if (node.parent.pagePointers.size() > 1 && nodeIndex < node.parent.pagePointers.size() - 1) {
+                        TreeNode rightSibling = node.parent.pagePointers.get(nodeIndex + 1);
+                        int rightSiblingOriginalNum = node.parent.searchKeys.indexOf(rightSibling.searchKeys.get(0));
+                        node.searchKeys.addAll(rightSibling.searchKeys);
+                        rightSibling.searchKeys = new ArrayList<>(node.searchKeys);
 
                         // inner node
                         if (node.nextNode == null) {
-                                node.keys.addAll(rightSibling.keys);
-                                rightSibling.keys = new ArrayList<>(node.keys);
-                                for (TreeNode key : rightSibling.keys) {
+                                node.pagePointers.addAll(rightSibling.pagePointers);
+                                rightSibling.pagePointers = new ArrayList<>(node.pagePointers);
+                                for (TreeNode key : rightSibling.pagePointers) {
                                         key.parent = rightSibling;
                                 }
                         }
                         // if leaf node, then we gotta change the nextNode value of the left sibling
                         else if (node.isLeaf) {
                                 if (nodeIndex - 1 >= 0) {
-                                        node.parent.keys.get(nodeIndex - 1).nextNode = rightSibling;
+                                        node.parent.pagePointers.get(nodeIndex - 1).nextNode = rightSibling;
                                 }
                         }
 
                         if (rightSiblingOriginalNum != -1) {
-                                node.parent.values.set(rightSiblingOriginalNum, rightSibling.values.get(0));
+                                node.parent.searchKeys.set(rightSiblingOriginalNum, rightSibling.searchKeys.get(0));
                         }
 
-                        node.parent.keys.remove(nodeIndex);
+                        node.parent.pagePointers.remove(nodeIndex);
                         return true;
                 }
 
@@ -331,23 +331,23 @@ public class TreeNode {
          */
         private boolean borrowNodes(TreeNode node, int nodeIndex) {
                 // try borrowing from left
-                if (nodeIndex > 0 && node.parent.keys.get(nodeIndex - 1).values
+                if (nodeIndex > 0 && node.parent.pagePointers.get(nodeIndex - 1).searchKeys
                                 .size() > (Math.ceil((double) this.bucketSize / 2.0) - 1)) {
-                        TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
-                        Attribute borrowedValue = leftSibling.values.remove(leftSibling.values.size() - 1);
+                        TreeNode leftSibling = node.parent.pagePointers.get(nodeIndex - 1);
+                        Attribute borrowedValue = leftSibling.searchKeys.remove(leftSibling.searchKeys.size() - 1);
                         insertToNode(node, borrowedValue);
-                        node.parent.values.set(nodeIndex - 1, borrowedValue);
+                        node.parent.searchKeys.set(nodeIndex - 1, borrowedValue);
                         return true;
                 }
                 // try borrowing from right
-                else if (node.parent.keys.size() > 1
-                                && nodeIndex < node.parent.keys.size() - 1
-                                && node.parent.keys.get(nodeIndex + 1).values
+                else if (node.parent.pagePointers.size() > 1
+                                && nodeIndex < node.parent.pagePointers.size() - 1
+                                && node.parent.pagePointers.get(nodeIndex + 1).searchKeys
                                                 .size() > (Math.ceil((double) this.bucketSize / 2.0) - 1)) {
-                        TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
-                        Attribute borrowedValue = rightSibling.values.remove(0);
+                        TreeNode rightSibling = node.parent.pagePointers.get(nodeIndex + 1);
+                        Attribute borrowedValue = rightSibling.searchKeys.remove(0);
                         insertToNode(node, borrowedValue);
-                        node.parent.values.set(nodeIndex, borrowedValue);
+                        node.parent.searchKeys.set(nodeIndex, borrowedValue);
                         return true;
                 }
 
@@ -361,9 +361,9 @@ public class TreeNode {
          */
         private boolean isUnderfull() {
                 if (this.parent == null)
-                        return this.values.size() < 1;
+                        return this.searchKeys.size() < 1;
                 else
-                        return this.values.size() < Math.ceil(((double) this.bucketSize) / 2.0) - 1;
+                        return this.searchKeys.size() < Math.ceil(((double) this.bucketSize) / 2.0) - 1;
         }
 
         /**
@@ -372,7 +372,7 @@ public class TreeNode {
          * @return true or false if the node has enough children
          */
         private boolean isChildless() {
-                return this.keys.size() < Math.floor((double) bucketSize / 2.0) + 1;
+                return this.pagePointers.size() < Math.floor((double) bucketSize / 2.0) + 1;
         }
 
         /**
@@ -380,7 +380,7 @@ public class TreeNode {
          */
         public void printValues() {
                 System.out.print(String.join(" | ",
-                                values.stream().map(Object::toString).collect(Collectors.toUnmodifiableList())));
+                                searchKeys.stream().map(Object::toString).collect(Collectors.toUnmodifiableList())));
         }
 
         public void writeNode() {
@@ -388,7 +388,7 @@ public class TreeNode {
         }
 
         private boolean contains(Object attribute) {
-                for (Attribute attr : this.values) {
+                for (Attribute attr : this.searchKeys) {
                         if (Attribute.compareTo(attr.getData(), attribute) == 0) {
                                 return true;
                         }
@@ -397,16 +397,16 @@ public class TreeNode {
         }
 
         private int getValueIndex(Object value) {
-                for (int i = 0; i < this.values.size(); i++) {
-                        if (Attribute.compareTo(value, this.values.get(i).getData()) == 0) {
+                for (int i = 0; i < this.searchKeys.size(); i++) {
+                        if (Attribute.compareTo(value, this.searchKeys.get(i).getData()) == 0) {
                                 return i;
                         }
                 }
                 return -1;
         }
         private int getKeyIndex(TreeNode node) {
-                for (int i = 0; i < this.keys.size(); i++) {
-                        if (keys.get(i) == node) {
+                for (int i = 0; i < this.pagePointers.size(); i++) {
+                        if (pagePointers.get(i) == node) {
                                 return i;
                         }
                 }

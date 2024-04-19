@@ -53,9 +53,9 @@ public class BPlusTree {
                 TreeNode currentNode = root;
                 int treeLevel = 0; // the current tree level
                 // add all the leftmost nodes to get the new lines
-                while (currentNode.keys.size() != 0) {
+                while (currentNode.pagePointers.size() != 0) {
                         newLineQueue.add(currentNode);
-                        currentNode = currentNode.keys.get(0);
+                        currentNode = currentNode.pagePointers.get(0);
                         treeLevel += 1;
                 }
                 newLineQueue.add(currentNode); // add the leaf node
@@ -69,7 +69,7 @@ public class BPlusTree {
                         }
                         currentNode.printValues();
 
-                        queue.addAll(currentNode.keys);
+                        queue.addAll(currentNode.pagePointers);
                         if (queue.peek() == newLineQueue.peek()) {
                                 System.out.print("\n");
                                 newLineQueue.poll();
@@ -89,7 +89,7 @@ public class BPlusTree {
 
                 TreeNode current = root;
                 while (!current.isLeaf) {
-                        current = current.keys.get(0);
+                        current = current.pagePointers.get(0);
                 }
                 while (current != null) {
                         current.printValues();
@@ -111,12 +111,12 @@ public class BPlusTree {
 
                 TreeNode current = root;
                 while (!current.isLeaf) {
-                        current = current.keys.get(0);
+                        current = current.pagePointers.get(0);
                 }
                 while (current != null) {
                         if (formatOption == 1) {
                                 current.parent.printValues();
-                                for (int i = 0; i < this.bucketSize - current.parent.values.size(); i++) {
+                                for (int i = 0; i < this.bucketSize - current.parent.searchKeys.size(); i++) {
                                         System.out.print("\t");
                                 }
                                 System.out.print("=>\t");
