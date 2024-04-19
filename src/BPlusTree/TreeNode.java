@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TreeNode {
-        private int bucketSize; // size of the b+ tree to get size of nodes and separation
-        public List<Integer> values; // The index in the array the current size of the node is node.values.size()
+        private final int bucketSize; // size of the b+ tree to get size of nodes and separation
+        public List<Attribute> values; // The index in the array the current size of the node is node.values.size()
         public List<TreeNode> keys; // the primary key attribute
         public TreeNode nextNode; // null for all internal nodes and the root
         public TreeNode parent; // null for the root
@@ -34,11 +34,11 @@ public class TreeNode {
          * @param value the value we are looking
          * @return the node where the value is supposed to be
          */
-        public TreeNode find(int value, TreeNode node) {
-                if (node.isLeaf == true)
+        public TreeNode find(Object value, TreeNode node) {
+                if (node.isLeaf)
                         return node;
                 for (int i = 0; i < node.values.size(); i++) {
-                        if (value < node.values.get(i)) {
+                        if (Attribute.compareTo(value, node.values.get(i)) < 0) {
                                 return find(value, node.keys.get(i));
                         }
                 }
@@ -52,10 +52,12 @@ public class TreeNode {
          * @return a boolean. true if the value was succesfully added to the tree.
          *         otherwise, it returns false
          */
-        public boolean insert(int value) {
+        public boolean insert(Attribute value) {
                 TreeNode node = find(value, this);
-                if (node.values.contains(value))
+
+                if (contains(value)) {
                         return false;
+                }
 
                 if (node.values.size() + 1 == this.bucketSize) {
                         insertToNode(node, value);
@@ -66,12 +68,12 @@ public class TreeNode {
                 return true;
         }
 
-        private void insertToNode(TreeNode node, int value) {
+        private void insertToNode(TreeNode node, Attribute value) {
                 if (node.values.size() == 0) {
                         node.values.add(value);
                         return;
                 } else if (node.values.size() == 1) {
-                        if (value < node.values.get(0)) {
+                        if (value.compareTo(node.values.get(0)) <  0) {
                                 node.values.add(0, value);
                         } else {
                                 node.values.add(value);
@@ -79,7 +81,7 @@ public class TreeNode {
                         return;
                 }
                 for (int i = 0; i < node.values.size(); i++) {
-                        if (value < node.values.get(i)) {
+                        if (value.compareTo(node.values.get(i)) <  0) {
                                 node.values.add(i, value);
                                 return;
                         }
@@ -107,7 +109,7 @@ public class TreeNode {
                         newNode1.isLeaf = node.isLeaf;
                         newNode2.parent = node;
                         newNode2.isLeaf = node.isLeaf;
-                        if (node.isLeaf == true)
+                        if (node.isLeaf)
                                 newNode1.nextNode = newNode2;
                         node.isLeaf = false;
 
@@ -128,7 +130,7 @@ public class TreeNode {
                         node.keys.add(newNode1);
                         node.keys.add(newNode2);
                         node.values.add(newNode2.values.get(0));
-                        if (newNode2.isLeaf == false)
+                        if (!newNode2.isLeaf)
                                 newNode2.values.remove(0);
                 } else {
                         TreeNode newNode = new TreeNode(bucketSize);
@@ -158,7 +160,7 @@ public class TreeNode {
                         node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
                         // insert the value to the parent node
                         insertToNode(node.parent, newNode.values.get(0));
-                        if (newNode.isLeaf == false) {
+                        if (!newNode.isLeaf) {
                                 newNode.values.remove(0);
                                 node.nextNode = null;
                                 newNode.nextNode = null;
@@ -180,16 +182,17 @@ public class TreeNode {
          * @return a boolean. true if the value was succesfully deleted from the tree.
          *         otherwise, it returns false
          */
-        public boolean delete(int value) {
+        public boolean delete(Object value) {
                 TreeNode node = find(value, this);
 
-                if (!node.values.contains(value)) {
+                if (!contains(value)) {
                         return false;
                 }
 
                 // if root, then just remove
                 if (node.parent == null) {
-                        node.values.remove(Integer.valueOf(value));
+                        int index = getIndex(value);
+                        node.values.remove(index);
                 }
                 // if not root then delete and check for underfull
                 else {
@@ -197,8 +200,7 @@ public class TreeNode {
                         int originalNodeIndex = node.parent.keys.indexOf(node);
 
                         while (currNode != null) {
-                                currNode.values.remove(Integer.valueOf(value));
-                                
+                                currNode.values.remove(getIndex(value));
                                 currNode = currNode.parent;
                         }
 
@@ -314,7 +316,7 @@ public class TreeNode {
 
         /**
          * Tries to borrow values from first left and then right sibling
-         * 
+         *
          * @param node      the current node that is borrowing
          * @param nodeIndex the index of the node
          * @return whether the operation is successful
@@ -324,7 +326,7 @@ public class TreeNode {
                 if (nodeIndex > 0 && node.parent.keys.get(nodeIndex - 1).values
                                 .size() > (Math.ceil((double) this.bucketSize / 2.0) - 1)) {
                         TreeNode leftSibling = node.parent.keys.get(nodeIndex - 1);
-                        int borrowedValue = leftSibling.values.remove(leftSibling.values.size() - 1);
+                        Attribute borrowedValue = leftSibling.values.remove(leftSibling.values.size() - 1);
                         insertToNode(node, borrowedValue);
                         node.parent.values.set(nodeIndex - 1, borrowedValue);
                         return true;
@@ -335,7 +337,7 @@ public class TreeNode {
                                 && node.parent.keys.get(nodeIndex + 1).values
                                                 .size() > (Math.ceil((double) this.bucketSize / 2.0) - 1)) {
                         TreeNode rightSibling = node.parent.keys.get(nodeIndex + 1);
-                        int borrowedValue = rightSibling.values.remove(0);
+                        Attribute borrowedValue = rightSibling.values.remove(0);
                         insertToNode(node, borrowedValue);
                         node.parent.values.set(nodeIndex, borrowedValue);
                         return true;
@@ -375,5 +377,23 @@ public class TreeNode {
 
         public void writeNode() {
 
+        }
+
+        private boolean contains(Object attribute) {
+                for (Attribute attr : this.values) {
+                        if (Attribute.compareTo(attr, attribute) == 0) {
+                                return true;
+                        }
+                }
+                return false;
+        }
+
+        private int getIndex(Object value) {
+                for (int i = 0; i < this.values.size(); i++) {
+                        if (Attribute.compareTo(value, this.values.get(i)) == 0) {
+                                return i;
+                        }
+                }
+                return -1;
         }
 }

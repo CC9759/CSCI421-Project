@@ -56,6 +56,11 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute>,
     }
 
     @Override
+    public String toString() {
+        return data.toString();
+    }
+
+    @Override
     public int compareTo(Attribute o) {
         if (this.data instanceof Integer ) {
             return Integer.compare((Integer) this.data, (Integer) o.data);
@@ -65,6 +70,20 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute>,
             return ((String) this.data).compareTo((String) o.data);
         } else {
             return ((Boolean) this.data).compareTo((Boolean) o.data);
+        }
+    }
+
+    public static int compareTo(Object foo, Object bar) {
+        if (foo instanceof Integer ) {
+            return Integer.compare((Integer) foo, (Integer) bar);
+        } else if(foo instanceof Double) {
+            return Double.compare((Double) foo, (Double) bar);
+        } else if (foo instanceof Character || foo instanceof String) {
+            return ((String) foo).compareTo((String) bar);
+        } else if (foo instanceof Attribute) {
+            return ((Attribute) foo).compareTo((Attribute) bar);
+        } else{
+            return ((Boolean) foo).compareTo((Boolean) bar);
         }
     }
 

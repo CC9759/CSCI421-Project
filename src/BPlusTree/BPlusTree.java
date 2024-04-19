@@ -1,5 +1,10 @@
 package BPlusTree;
 
+import Exceptions.InvalidTypeException;
+import catalog.AttributeSchema;
+import catalog.AttributeType;
+import storageManager.Attribute;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -20,15 +25,15 @@ public class BPlusTree {
          * @return a boolean. true if the value was succesfully added to the tree.
          *         otherwise, it returns false
          */
-        public boolean insert(int value) {
+        public boolean insert(Attribute value) {
                 return root.insert(value);
         }
 
-        public boolean delete(int value) {
+        public boolean delete(Object value) {
                 return root.delete(value);
         }
 
-        public TreeNode find(int value) {
+        public TreeNode find(Object value) {
                 return root.find(value, root);
         }
 
@@ -125,24 +130,25 @@ public class BPlusTree {
                 }
         }
 
-        public static void main(String[] args) {
+        public static void main(String[] args) throws InvalidTypeException {
                 BPlusTree tree = new BPlusTree(5);
 
-                System.out.println(tree.insert(12));
-                System.out.println(tree.insert(10));
-                System.out.println(tree.insert(11));
-                System.out.println(tree.insert(12)); // repeated value
-                System.out.println(tree.insert(32));
-                System.out.println(tree.insert(15));
-                System.out.println(tree.insert(1));
-
+                int [] inserts = {12, 10, 11, 12, 32, 15, 1};
+                AttributeType idType = new AttributeType("integer");
+                AttributeSchema idSchema = new AttributeSchema("id", idType, 0, true, true, false);
+                for (int num : inserts) {
+                        Attribute id = new Attribute(idSchema, num);
+                        System.out.println(tree.insert(id));;
+                }
                 tree.printTree();
 
                 System.out.println("\nMore insertions");
                 int[] insertionValues = { 2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19, 22,
                                 23, 24, 25, 26, 27, 28, 29, 30, 31 };
+
                 for (int i = 0; i < insertionValues.length; i++) {
-                        tree.insert(insertionValues[i]);
+                        Attribute id = new Attribute(idSchema, insertionValues[i]);
+                        tree.insert(id);
                         tree.printTree();
                         System.out.println();
                 }
@@ -154,7 +160,8 @@ public class BPlusTree {
                 int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21 };
                 for (int i = 0; i < deleteValues.length; i++) {
                         System.out.println("Tree after deleting value \'" + deleteValues[i] + "\'");
-                        tree.delete(deleteValues[i]);
+                        Attribute id = new Attribute(idSchema, insertionValues[i]);
+                        tree.delete(id);
                         tree.printTree();
                         System.out.println();
                 }
