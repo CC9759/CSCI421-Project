@@ -34,7 +34,7 @@ public class BPlusTree {
         }
 
         public TreeNode find(Object value) {
-                return root.find(value, root);
+                return root.find(value, root.pageNumber);
         }
 
         public int getTreeSize() {
@@ -48,22 +48,22 @@ public class BPlusTree {
                 if (this.root == null)
                         return;
 
-                Queue<TreeNode> queue = new LinkedList<TreeNode>();
-                Queue<TreeNode> newLineQueue = new LinkedList<TreeNode>();
+                Queue<Integer> queue = new LinkedList<Integer>();
+                Queue<Integer> newLineQueue = new LinkedList<Integer>();
                 TreeNode currentNode = root;
                 int treeLevel = 0; // the current tree level
                 // add all the leftmost nodes to get the new lines
                 while (currentNode.pagePointers.size() != 0) {
-                        newLineQueue.add(currentNode);
-                        currentNode = currentNode.pagePointers.get(0);
+                        newLineQueue.add(currentNode.pageNumber);
+                        currentNode = BPlusTree.readNode(currentNode.pagePointers.get(0));
                         treeLevel += 1;
                 }
-                newLineQueue.add(currentNode); // add the leaf node
+                newLineQueue.add(currentNode.pageNumber); // add the leaf node
                 newLineQueue.poll(); // remove the root so there is no \n in before the root
 
-                queue.add(root);
+                queue.add(root.pageNumber);
                 while (!queue.isEmpty()) { // later change to currentNode.isLeaf == false
-                        currentNode = queue.poll();
+                        currentNode = BPlusTree.readNode(queue.poll());
                         for (int i = 0; i < treeLevel; i++) {
                                 System.out.print("\t");
                         }
@@ -89,7 +89,7 @@ public class BPlusTree {
 
                 TreeNode current = root;
                 while (!current.isLeaf) {
-                        current = current.pagePointers.get(0);
+                        current = BPlusTree.readNode(current.pagePointers.get(0));
                 }
                 while (current != null) {
                         current.printValues();
@@ -111,7 +111,7 @@ public class BPlusTree {
 
                 TreeNode current = root;
                 while (!current.isLeaf) {
-                        current = current.pagePointers.get(0);
+                        current = BPlusTree.readNode(current.pagePointers.get(0));
                 }
                 while (current != null) {
                         if (formatOption == 1) {
