@@ -19,9 +19,9 @@ public class BPlusTree {
 
     public BPlusTree(Table table) {
         AttributeSchema primaryKey = table.schema.getPrimaryKey();
-        // - 5 for numNodes and isLeaf
-        // 4 + 4 + 1 for node info
-        this.N = ((Catalog.getCatalog().getPageSize() - 5) / (8 + primaryKey.getSize()));
+        // - 17 for numNodes (4), numIndices(4), isLeaf(1), nextNode(4), parent(4)
+        // 4 + 4 + (keySize) for each node info
+        this.N = Math.floorDiv((Catalog.getCatalog().getPageSize() - table.getNodeHeaderSpace()), (8 + primaryKey.getSize()));
         this.table = table;
         this.table.root = this;
         this.numNodes = readNumNodes();
@@ -33,6 +33,7 @@ public class BPlusTree {
             }
         } else {
             this.root = new TreeNode(table, 0, true);
+            this.numNodes = 1;
         }
         this.root.isLeaf = true;
 
@@ -43,10 +44,9 @@ public class BPlusTree {
      * function to insert a value in the B+ Tree
      *
      * @param value the specified value that will be insert
-     * @return a boolean. true if the value was succesfully added to the tree.
-     * otherwise, it returns false
+     * @return treenode that has the insert, null if not found
      */
-    public boolean insert(Attribute value) throws IllegalOperationException {
+    public TreeNode insert(Attribute value) throws IllegalOperationException {
         return root.insert(value);
     }
 

@@ -213,6 +213,16 @@ public class Table {
         return new Attribute(attributeSchema, data);
     }
 
+    public int getNodeHeaderSpace() {
+        int headerSpace = 0;
+        headerSpace += 4; // number of keys
+        headerSpace += 4; // number of indices
+        headerSpace += 1; // is leaf
+        headerSpace += 4; // next pointer
+        headerSpace += 4; // parent pointer
+        return headerSpace;
+    }
+
     public TreeNode readNode(int nodeNumber) throws IllegalOperationException {
         try {
             String location = schema.getNodeLocation();
@@ -224,17 +234,25 @@ public class Table {
                 throw new IllegalOperationException("Cant use indexes with no primary key defined");
             }
             int numberOfKeys = file.readInt();
+            int numberOfIndices = file.readInt();
             boolean isLeaf = file.readBoolean();
+            int nextNode = file.readInt();
+            int parent = file.readInt();
             TreeNode newNode = new TreeNode(this, nodeNumber, isLeaf);
+            newNode.nextNode = nextNode;
+            newNode.parent = parent;
+
+            int attributeSize = primaryKey.getSize();
             for (int i = 0; i < numberOfKeys; i++) {
-                int pagePointer = file.readInt();
-                int recordPointer = file.readInt();
-                int attributeSize = primaryKey.getSize();
                 byte[] attributeData = new byte[attributeSize];
                 file.readFully(attributeData);
                 Attribute attribute = readAttribute(attributeData, primaryKey);
-                newNode.indices.add(new Index(pagePointer, recordPointer));
-                newNode.searchKeys.add(attribute);
+                newNode.addKey(attribute);
+            }
+            for (int i = 0; i < numberOfIndices; i++) {
+                int pagePointer = file.readInt();
+                int recordPointer = file.readInt();
+                newNode.addIndex(new Index(pagePointer, recordPointer));
             }
             file.close();
             return newNode;
@@ -243,5 +261,4 @@ public class Table {
         }
         return null;
     }
-
 }

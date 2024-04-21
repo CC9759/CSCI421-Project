@@ -13,14 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// These are index pages in hardware
 public class TreeNode {
-        public List<Attribute> searchKeys; // The index in the array the current size of the node is node.values.size()
-//        public List<Integer> pagePointers; // If not leaf node, these are node numbers
-//        public List<Integer> recordPointers;
-
-        public List<Index> indices;
-        public Integer nextNode; // null for all internal nodes and the root
-        public Integer parent; // null for the root
+        private List<Attribute> searchKeys; // The index in the array the current size of the node is node.values.size()
+        private List<Index> indices;
+        public int nextNode; // null for all internal nodes and the root
+        public int parent; // null for the root
         public boolean isLeaf;
         public int nodeNumber;
         private int freeSpaceAmount;
@@ -31,22 +29,24 @@ public class TreeNode {
         public TreeNode(Table table, boolean isLeaf) {
                 this.table = table;
                 this.searchKeys = new ArrayList<>();
-                this.indices = new ArrayList<Index>();
-                this.nextNode = null;
-                this.parent = null;
+                this.indices = new ArrayList<>();
+                this.nextNode = -1;
+                this.parent = -1;
                 this.isLeaf = isLeaf;
                 this.nodeNumber = table.root.getNumNodes();
                 table.root.setNumNodes(table.root.getNumNodes() + 1);
+                this.update();
         }
 
         public TreeNode(Table table, int nodeNumber, boolean isLeaf) {
                 this.table = table;
                 this.searchKeys = new ArrayList<>();
-                this.indices = new ArrayList<Index>();
-                this.nextNode = null;
-                this.parent = null;
+                this.indices = new ArrayList<>();
+                this.nextNode = -1;
+                this.parent = -1;
                 this.isLeaf = isLeaf;
                 this.nodeNumber = nodeNumber;
+                this.update();
         }
 
         /**
@@ -73,59 +73,62 @@ public class TreeNode {
          * function to insert a value in the B+ Tree
          *
          * @param value the specified value that will be insert
-         * @return a boolean. true if the value was succesfully added to the tree.
-         * otherwise, it returns false
+         * @return treenode which has the insert
          */
-        public boolean insert(Attribute value) throws IllegalOperationException {
+        public TreeNode insert(Attribute value) throws IllegalOperationException {
                 TreeNode node = find(value.getData(), this.nodeNumber);
 
                 if (node.contains(value.getData())) {
-                        return false;
+                        return null;
                 }
 
                 if (node.searchKeys.size() + 1 == this.table.root.N) {
+
                         insertToNode(node, value);
+                        System.out.println("Div root");
                         divideNode(node);
                 } else {
                         insertToNode(node, value);
                 }
-                return true;
+                node.writeNode();
+                return node;
         }
 
         private void insertToNode(TreeNode node, Attribute value) {
                 if (node.searchKeys.size() == 0) {
-                        node.searchKeys.add(value);
+                        node.addKey(value);
                         return;
                 } else if (node.searchKeys.size() == 1) {
                         if (value.compareTo(node.searchKeys.get(0)) < 0) {
-                                node.searchKeys.add(0, value);
+                                node.addKey(0, value);
                         } else {
-                                node.searchKeys.add(value);
+                                node.addKey(value);
                         }
                         return;
                 }
                 for (int i = 0; i < node.searchKeys.size(); i++) {
                         if (value.compareTo(node.searchKeys.get(i)) < 0) {
-                                node.searchKeys.add(i, value);
+                                node.addKey(i, value);
                                 return;
                         }
                 }
-                node.searchKeys.add(value); // if its the largest value in the node
+                node.addKey(value); // if its the largest value in the node
+                node.writeNode();
         }
 
         private void divideNode(TreeNode node) throws IllegalOperationException {
-                if (node.parent == null) { // if im dividing the root
+                if (node.parent == -1) { // if im dividing the root
                         TreeNode newNode1 = new TreeNode(table, isLeaf);
                         TreeNode newNode2 = new TreeNode(table, isLeaf);
 
                         int lowestNodeSize = (int) Math.ceil(node.searchKeys.size() / 2.0);
                         for (int i = 0; i < lowestNodeSize - 1; i++) {
                                 // copy values in newNode1
-                                newNode1.searchKeys.add(node.searchKeys.remove(0));
+                                newNode1.addKey(node.removeKey(0));
                         }
                         for (int i = 0; i < node.searchKeys.size(); i++) {
                                 // copy remaining values in newNode2
-                                newNode2.searchKeys.add(node.searchKeys.get(i));
+                                newNode2.addKey(node.searchKeys.get(i));
                         }
                         node.searchKeys.clear();
 
@@ -142,22 +145,27 @@ public class TreeNode {
                                 TreeNode child = table.readNode(node.indices.get(0).pageNumber);
                                 child.parent = newNode1.nodeNumber;
                                 child.writeNode();
-                                newNode1.indices.add(node.indices.remove(0));
+                                newNode1.addIndex(node.removeIndex(0));;
                         }
                         for (int i = 0; i < node.indices.size(); i++) {
                                 // copy remaining keys in newNode2
                                 TreeNode child = table.readNode(node.indices.get(i).pageNumber);
                                 child.parent = newNode2.nodeNumber;
                                 child.writeNode();
-                                newNode2.indices.add(node.indices.get(i));
+                                newNode2.addIndex(node.indices.get(i));
                         }
                         node.indices.clear();
 
-                        node.indices.add(new Index(newNode1.nodeNumber, -1));
-                        node.indices.add(new Index(newNode2.nodeNumber, -1));
-                        node.searchKeys.add(newNode2.searchKeys.get(0));
-                        if (!newNode2.isLeaf)
+                        node.addIndex(new Index(newNode1.nodeNumber, -1));
+                        node.addIndex(new Index(newNode2.nodeNumber, -1));
+                        node.addKey(newNode2.searchKeys.get(0));
+                        if (!newNode2.isLeaf) {
                                 newNode2.searchKeys.remove(0);
+                        }
+                        newNode1.writeNode();
+                        newNode2.writeNode();
+                        node.writeNode();
+
                 } else {
                         TreeNode newNode = new TreeNode(table, isLeaf);
 
@@ -165,7 +173,7 @@ public class TreeNode {
                         for (int i = 0; i < lowestNodeSize; i++) {
                                 // copy values in newNode so:
                                 // node.values (original) = node.values.addAll(newNode)
-                                newNode.searchKeys.add(node.searchKeys.remove(lowestNodeSize - 1));
+                                newNode.addKey(node.removeKey(lowestNodeSize - 1));
                         }
 
                         newNode.parent = node.parent;
@@ -181,21 +189,23 @@ public class TreeNode {
                                 TreeNode child = table.readNode(node.indices.get(keysDivision).pageNumber);
                                 child.parent = newNode.nodeNumber;
                                 child.writeNode();
-                                newNode.indices.add(node.indices.remove(keysDivision));
+                                newNode.addIndex(node.removeIndex(keysDivision));
                         }
 
                         // put newNode in the correct position for parent keys
                         //node.parent.keys.add(node.parent.keys.indexOf(node) + 1, newNode);
                         TreeNode parent = table.readNode(node.parent);
-                        parent.indices.add(parent.getKeyIndex(node) + 1, new Index(newNode.nodeNumber, -1));
+                        parent.addIndex(parent.getKeyIndex(node) + 1, new Index(newNode.nodeNumber, -1));
                         parent.writeNode();
                         // insert the value to the parent node
                         insertToNode(parent, newNode.searchKeys.get(0));
                         if (!newNode.isLeaf) {
                                 newNode.searchKeys.remove(0);
-                                node.nextNode = null;
-                                newNode.nextNode = null;
+                                node.nextNode = -1;
+                                newNode.nextNode = -1;
                         }
+                        node.writeNode();
+                        newNode.writeNode();
 
                         if (parent.searchKeys.size() == this.table.root.N)
                                 divideNode(parent);
@@ -221,10 +231,11 @@ public class TreeNode {
                 }
 
                 // if root, then just remove
-                if (node.parent == null) {
+                if (node.parent == -1) {
                         int index = getValueIndex(value);
                         if (index > -1) {
-                                node.searchKeys.remove(index);
+                                node.removeKey(index);
+                                node.writeNode();
                         }
                 }
                 // if not root then delete and check for underfull
@@ -237,7 +248,7 @@ public class TreeNode {
                         while (currNode != null) {
                                 int index = currNode.getValueIndex(value);
                                 if (index > -1) {
-                                        currNode.searchKeys.remove(index);
+                                        currNode.removeKey(index);
                                         currNode.writeNode();
                                 }
                                 TreeNode curParent = table.readNode(currNode.parent);
@@ -258,7 +269,7 @@ public class TreeNode {
         private void fixUnderfull(TreeNode node, int originalNodeIndex) throws IllegalOperationException {
                 TreeNode currNode = node;
 
-                while (currNode.parent != null) {
+                while (currNode.parent != -1) {
                         TreeNode parent = table.readNode(currNode.parent);
                         if (currNode.isUnderfull()) {
                                 int nodeIndex = parent.getKeyIndex(currNode);
@@ -289,7 +300,7 @@ public class TreeNode {
                                 TreeNode onlyChild = table.readNode(node.indices.get(0).pageNumber);
                                 node.indices = onlyChild.indices;
                                 node.searchKeys = onlyChild.searchKeys;
-                                node.parent = null;
+                                node.parent = -1;
                                 node.writeNode();
                         } else {
                                 node = null;
@@ -308,11 +319,11 @@ public class TreeNode {
                 TreeNode parent = table.readNode(node.parent);
                 if (nodeIndex > 0) {
                         TreeNode leftSibling = table.readNode(parent.indices.get(nodeIndex - 1).pageNumber);
-                        leftSibling.searchKeys.addAll(node.searchKeys);
+                        leftSibling.addAllKeys(node.searchKeys);
 
                         // inner node
-                        if (node.nextNode == null) {
-                                leftSibling.indices.addAll(node.indices);
+                        if (node.nextNode == -1) {
+                                leftSibling.addAllIndices(node.indices);
                                 for (Index pointer : leftSibling.indices) {
                                         TreeNode child = table.readNode(pointer.pageNumber);
                                         child.parent = leftSibling.nodeNumber;
@@ -325,7 +336,7 @@ public class TreeNode {
                         }
                         leftSibling.writeNode();
 
-                        parent.indices.remove(nodeIndex);
+                        parent.removeIndex(nodeIndex);
                         parent.writeNode();
 
                         return true;
@@ -334,14 +345,14 @@ public class TreeNode {
                 else if (parent.indices.size() > 1 && nodeIndex < parent.indices.size() - 1) {
                         TreeNode rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);
                         int rightSiblingOriginalNum = parent.searchKeys.indexOf(rightSibling.searchKeys.get(0));
-                        node.searchKeys.addAll(rightSibling.searchKeys);
-                        rightSibling.searchKeys = new ArrayList<>(node.searchKeys);
+                        node.addAllKeys(rightSibling.searchKeys);
+                        rightSibling.clearKeys();
 
                         // inner node
-                        if (node.nextNode == null) {
-                                node.indices.addAll(rightSibling.indices);
-                                rightSibling.indices = new ArrayList<>(node.indices);
-                                for (Index pointer : rightSibling.indices) {
+                        if (node.nextNode == -1) {
+                                node.addAllIndices(rightSibling.indices);
+                                rightSibling.clearIndices();
+                                for (Index pointer : node.indices) {
                                         TreeNode child = table.readNode(pointer.pageNumber);
                                         child.parent = rightSibling.nodeNumber;
                                         child.writeNode();
@@ -361,7 +372,7 @@ public class TreeNode {
                         }
                         rightSibling.writeNode();
 
-                        parent.indices.remove(nodeIndex);
+                        parent.removeIndex(nodeIndex);
                         parent.writeNode();
                         return true;
                 }
@@ -412,7 +423,7 @@ public class TreeNode {
          * @return true or false if the node has enough values
          */
         private boolean isUnderfull() {
-                if (this.parent == null)
+                if (this.parent == -1)
                         return this.searchKeys.size() < 1;
                 else
                         return this.searchKeys.size() < Math.ceil(((double) this.table.root.N) / 2.0) - 1;
@@ -436,6 +447,7 @@ public class TreeNode {
         }
 
         public void writeNode() {
+                if (!this.wasUpdated) return;
                 try {
                         String location = table.schema.getNodeLocation();
                         Catalog catalog = Catalog.getCatalog();
@@ -480,14 +492,68 @@ public class TreeNode {
                 return -1;
         }
 
+        public void addIndex(Index index) {
+                indices.add(index);
+                update();
+        }
+
+        public void addIndex(int spot, Index index) {
+                indices.add(spot, index);
+                update();
+        }
+
+        public void addAllIndices(List<Index> indices) {
+                this.indices.addAll(indices);
+                update();
+        }
+
+
+        public Index removeIndex(int index) {
+                Index removed = indices.remove(index);
+                update();
+                return removed;
+        }
+
+        public void clearIndices() {
+                indices.clear();
+                update();
+        }
+
+        public void addKey(Attribute searchKey) {
+                searchKeys.add(searchKey);
+                update();
+        }
+
+        public void addKey(int spot, Attribute searchKey) {
+                searchKeys.add(spot, searchKey);
+                update();
+        }
+
+        public Attribute removeKey(int index) {
+                Attribute removed = searchKeys.remove(index);
+                update();
+                return removed;
+        }
+
+        public void clearKeys() {
+                searchKeys.clear();
+                update();
+        }
+
+        public void addAllKeys(List<Attribute> searchKeys) {
+                this.searchKeys.addAll(searchKeys);
+                update();
+        }
+
+
 
         public void calculateFreeSpace() {
                 int usedSpace = 0;
-                usedSpace += 4; // number of keys
-                usedSpace += 1; // is leaf
+                usedSpace += table.getNodeHeaderSpace();
+                for (Index index : indices) {
+                        usedSpace += 8;
+                }
                 for (Attribute attribute : searchKeys) {
-                        usedSpace += 4; // record pointer
-                        usedSpace += 4; // page number
                         usedSpace += attribute.getSize();
                 }
                 this.freeSpaceAmount = Catalog.getCatalog().getPageSize() - usedSpace;
@@ -504,17 +570,22 @@ public class TreeNode {
 
         public byte[] serializeNode() throws IOException, IllegalOperationException {
                 int numKeys = searchKeys.size();
-
+                int numIndices = indices.size();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(baos);
 
                 dos.writeInt(numKeys);
+                dos.writeInt(numIndices);
                 dos.writeBoolean(isLeaf);
-                for (int i = 0; i < searchKeys.size(); i++) {
+                dos.writeInt(nextNode);
+                dos.writeInt(parent);
+                for (int i = 0; i < numKeys; i++) {
                         Attribute key = searchKeys.get(i);
+                        key.serialize(dos);
+                }
+                for (int i = 0; i < numIndices; i++) {
                         dos.writeInt(indices.get(i).pageNumber);
                         dos.writeInt(indices.get(i).recordPointer);
-                        key.serialize(dos);
                 }
                 System.out.println(getFreeSpaceAmount());
                 for (int i = 0; i < getFreeSpaceAmount(); i++) {

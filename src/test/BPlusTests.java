@@ -8,20 +8,18 @@ import catalog.AttributeType;
 import catalog.Catalog;
 import catalog.TableSchema;
 import storageManager.Attribute;
-import storageManager.Record;
 import storageManager.StorageManager;
 import storageManager.Table;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class BPlusTests {
     public static void main(String[] args) throws InvalidTypeException, IllegalOperationException {
         try {
             // Init DB and catalog
-            final int PAGE_SIZE = 300;
+            final int PAGE_SIZE = 155;
             final int BUFFER_SIZE = 5;
             Catalog catalog = Catalog.createCatalog("./dbtest/", PAGE_SIZE, BUFFER_SIZE);
             AttributeType idType = new AttributeType(AttributeType.TYPE.VARCHAR, 16);
@@ -34,16 +32,34 @@ public class BPlusTests {
 
             Table table = StorageManager.GetStorageManager().ensureTable(schema.getTableId());
 
+            boolean pass;
+            System.out.println("Individual Nodes are written and read to memory");
             TreeNode treeNode = new TreeNode(table, 0, true);
-            treeNode.searchKeys.add(id);
-            treeNode.indices = new ArrayList<>();
-            treeNode.indices.add(new Index(1, 2));
+            treeNode.addKey(id);
             treeNode.calculateFreeSpace();
             treeNode.writeNode();
 
-            TreeNode readNode = table.readNode(0);
-            System.out.println(readNode.searchKeys.get(0).getData());
-            System.out.println(readNode.isLeaf);
+            TreeNode root = table.readNode(0);
+            pass = root != null;
+            System.out.println(pass ? "Pass" : "Fail");
+            if (!pass) {
+                System.exit(1);
+            }
+
+            System.out.println("Treenodes successfully insert");
+
+            String [] inserts = {"12", "13", "14", "15", "16"};
+            for (String num : inserts) {
+                Attribute newId = new Attribute(idSchema, num);
+                root.insert(newId);
+                root = table.readNode(0);
+
+            }
+
+            System.out.println("hi");
+
+
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
         } finally {
@@ -51,12 +67,7 @@ public class BPlusTests {
             testTable.delete();
         }
 
-//        BPlusTree tree = new BPlusTree(5);
-//        int [] inserts = {12, 10, 11, 12, 32, 15, 1};
-//        for (int num : inserts) {
-//            Attribute newId = new Attribute(idSchema, num);
-//            System.out.println(tree.insert(newId));
-//        }
+//
 
     }
 }
