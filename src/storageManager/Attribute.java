@@ -49,7 +49,7 @@ public class Attribute extends AttributeSchema implements Comparable<Attribute>,
                 break;
             case CHAR:
             case VARCHAR:
-                byte[] stringBytes = ((String) data).getBytes();
+                byte[] stringBytes = (Page.ljust((String) data, getSize())).getBytes();
                 dos.write(stringBytes);
                 break;
         }

@@ -123,7 +123,7 @@ public class StorageManager {
      * @return Table of tableId
      * @throws NoTableException no table of tableId
      */
-    private Table ensureTable(int tableId) throws NoTableException {
+    public Table ensureTable(int tableId) throws NoTableException {
         Table table = this.idToTable.get(tableId);
         if (table == null) {
             TableSchema newTableSchema = Catalog.getCatalog().getTableSchema(tableId);

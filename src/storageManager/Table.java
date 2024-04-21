@@ -5,6 +5,7 @@
  */
 package storageManager;
 
+import BPlusTree.*;
 import Exceptions.IllegalOperationException;
 import catalog.AttributeSchema;
 import catalog.AttributeType;
@@ -20,17 +21,20 @@ import java.util.ArrayList;
 
 public class Table {
     public TableSchema schema;
+    public BPlusTree root;
 
 
     public Table(TableSchema schema) {
         this.schema = schema;
         this.schema.setNumPages(readNumPages());
+        this.root = new BPlusTree(this);
     }
 
 
     public int getNumPages() {
         return this.schema.getNumPages();
     }
+
 
     /**
      * Get the number of pages that belong to this table
@@ -39,7 +43,7 @@ public class Table {
      */
     public int readNumPages() {
         try {
-            String location = getLocation();
+            String location = schema.getPageLocation();
             File file = new File(location);
 
             if (!file.exists()) {
@@ -72,7 +76,7 @@ public class Table {
      */
     public void updatePageCount(int change) {
         this.schema.incrementNumPages(change);
-        String location = getLocation();
+        String location = schema.getPageLocation();
         try (RandomAccessFile file = new RandomAccessFile(location, "rw");
              FileChannel fileChannel = file.getChannel()) {
                 fileChannel.truncate((long) getNumPages() * Catalog.getCatalog().getPageSize());
@@ -84,7 +88,7 @@ public class Table {
 
     public void writePage(Page page) {
         try {
-            String location = getLocation();
+            String location = schema.getPageLocation();
             Catalog catalog = Catalog.getCatalog();
             RandomAccessFile file = new RandomAccessFile(location, "rw");
             long offset = page.getPageId() * Catalog.getCatalog().getPageSize();
@@ -103,7 +107,7 @@ public class Table {
 
     public Page readPage(int pageNumber) {
         try {
-            String location = getLocation();
+            String location = schema.getPageLocation();
             RandomAccessFile file = new RandomAccessFile(location, "r");
 
             long pageOffset = pageNumber * Catalog.getCatalog().getPageSize();
@@ -201,7 +205,7 @@ public class Table {
                     break;
                 case CHAR:
                 case VARCHAR:
-                    data = new String(attributeData);
+                    data = (new String(attributeData).trim());
                     break;
             }
         }
@@ -209,7 +213,35 @@ public class Table {
         return new Attribute(attributeSchema, data);
     }
 
-    private String getLocation() {
-        return Catalog.getCatalog().getLocation() + "/" + this.schema.getTableId() + ".bin";
+    public TreeNode readNode(int nodeNumber) throws IllegalOperationException {
+        try {
+            String location = schema.getNodeLocation();
+            RandomAccessFile file = new RandomAccessFile(location, "rw");
+            long offset = nodeNumber * Catalog.getCatalog().getPageSize();
+            file.seek(offset);
+            AttributeSchema primaryKey = schema.getPrimaryKey();
+            if (primaryKey == null) {
+                throw new IllegalOperationException("Cant use indexes with no primary key defined");
+            }
+            int numberOfKeys = file.readInt();
+            boolean isLeaf = file.readBoolean();
+            TreeNode newNode = new TreeNode(this, nodeNumber, isLeaf);
+            for (int i = 0; i < numberOfKeys; i++) {
+                int pagePointer = file.readInt();
+                int recordPointer = file.readInt();
+                int attributeSize = primaryKey.getSize();
+                byte[] attributeData = new byte[attributeSize];
+                file.readFully(attributeData);
+                Attribute attribute = readAttribute(attributeData, primaryKey);
+                newNode.indices.add(new Index(pagePointer, recordPointer));
+                newNode.searchKeys.add(attribute);
+            }
+            file.close();
+            return newNode;
+        } catch (IOException error) {
+            System.err.println(error.getMessage());
+        }
+        return null;
     }
+
 }

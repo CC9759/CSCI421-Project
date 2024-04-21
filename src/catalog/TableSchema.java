@@ -96,4 +96,21 @@ public class TableSchema implements Serializable, Cloneable {
         return cloned;
     }
 
+    public String getNodeLocation() {
+        return Catalog.getCatalog().getLocation() + "/" + getTableId() + "-index" + ".bin";
+    }
+
+    public String getPageLocation() {
+        return Catalog.getCatalog().getLocation() + "/" + getTableId() + ".bin";
+    }
+
+    public AttributeSchema getPrimaryKey() {
+        AttributeSchema primaryKey = null;
+        for (AttributeSchema attributeSchema : tableAttributes) {
+            if (attributeSchema.isKey()) {
+                return attributeSchema;
+            }
+        }
+        return null;
+    }
 }

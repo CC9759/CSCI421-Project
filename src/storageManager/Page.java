@@ -191,4 +191,19 @@ public class Page {
         pageDos.flush();
         return pageBaos.toByteArray();
     }
+
+    public static String ljust(String input, int length) {
+        if (input.length() >= length) {
+            return input;
+        }
+
+        int paddingCount = length - input.length();
+        StringBuilder sb = new StringBuilder(input);
+
+        for (int i = 0; i < paddingCount; i++) {
+            sb.append(" ");
+        }
+
+        return sb.toString();
+    }
 }

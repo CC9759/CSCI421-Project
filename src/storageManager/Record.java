@@ -74,7 +74,7 @@ public class Record implements Comparable<Record>, Cloneable {
             if (attribute.getData() == null) {
                 totalSize += pointerSize + 1; // null bitmap plus pointer
             } else if (attribute.getAttributeType().type == AttributeType.TYPE.VARCHAR) {
-                totalSize += pointerSize + ((String)attribute.getData()).length();
+                totalSize += pointerSize + attribute.getSize();
             } else {
                 totalSize += pointerSize + attribute.getSize();
             }

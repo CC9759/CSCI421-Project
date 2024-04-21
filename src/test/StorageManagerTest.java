@@ -18,9 +18,9 @@ import storageManager.Record;
 
 class StorageManagerTest {
     public static void main(String[] args) {
-        final int PAGE_SIZE = 200;
+        final int PAGE_SIZE = 300;
         final int BUFFER_SIZE = 5;
-        Catalog catalog = Catalog.createCatalog("dbtest/", PAGE_SIZE, BUFFER_SIZE);
+        Catalog catalog = Catalog.createCatalog("./dbtest/", PAGE_SIZE, BUFFER_SIZE);
         try {
             AttributeType idType = new AttributeType("integer");
             AttributeType nameType = new AttributeType(AttributeType.TYPE.VARCHAR, 32);
@@ -50,7 +50,6 @@ class StorageManagerTest {
 
             Table table = storageManager.getIdToTable().get(0);
             int numPagesOnFile = table.readNumPages();
-            System.out.println(numPagesOnFile);
             boolean pass = (insertRecord.compareTo(testRecord) == 0 &&
                             allRecords.size() == 1 &&
                             numPagesOnFile == 1 &&
