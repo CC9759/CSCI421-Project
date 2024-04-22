@@ -71,6 +71,29 @@ public class TreeNode {
                 return find(value, node.indices.get(node.searchKeys.size()).pageNumber);
         }
 
+        public Index findIndex(Object value) throws IllegalOperationException {
+                TreeNode foundNode = find(value, nodeNumber);
+                int numKeys = foundNode.searchKeys.size();
+                if (numKeys == 0) {
+                        return null;
+                }
+                // Check if the primary key is on this page
+                int left = 0;
+                int right = numKeys - 1;
+                while (left <= right) {
+                        int middle = left + (right - left) / 2;
+                        Object middleKey = foundNode.searchKeys.get(middle).getData();
+                        if (Attribute.compareTo(value, middleKey) == 0) {
+                                return foundNode.indices.get(middle); // Record found
+                        } else if (Attribute.compareTo(value, middleKey) < 0) {
+                                right = middle - 1;
+                        } else {
+                                left = middle + 1;
+                        }
+                }
+                return null;
+        }
+
         /**
          * function to insert a value in the B+ Tree
          *
@@ -343,7 +366,6 @@ public class TreeNode {
 
                         // inner node
                         if (node.nextNode == -1) {
-                                leftSibling.addAllIndices(node.indices);
                                 for (Index pointer : leftSibling.indices) {
                                         TreeNode child = table.readNode(pointer.pageNumber);
                                         child.parent = leftSibling.nodeNumber;
