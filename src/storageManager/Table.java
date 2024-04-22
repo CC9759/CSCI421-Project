@@ -239,6 +239,7 @@ public class Table {
 
     public TreeNode readNode(int nodeNumber) throws IllegalOperationException {
         try {
+            if (nodeNumber == -1) return null;
             String location = schema.getNodeLocation();
             RandomAccessFile file = new RandomAccessFile(location, "rw");
             long offset = nodeNumber * Catalog.getCatalog().getPageSize();
@@ -301,5 +302,23 @@ public class Table {
 
     public void setNumNodes(int numNodes) {
         this.numNodes = numNodes;
+    }
+
+    // Find the index of a primary key. If not found, find the page it should be inserted
+    public Index findIndex(Object value) throws IllegalOperationException {
+        TreeNode root = readNode(0);
+        return root.findIndex(value);
+    }
+
+    // insert a primary key. prepropulate the index so use findIndex and where on the page it is
+    public TreeNode insertNode(Attribute attribute, Index index) throws IllegalOperationException {
+        TreeNode root = readNode(0);
+        return root.insert(attribute, index);
+    }
+
+    // delete a primary key please and thank you
+    public boolean deleteNode(Object value) throws IllegalOperationException {
+        TreeNode root = readNode(0);
+        return root.delete(value);
     }
 }

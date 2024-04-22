@@ -75,7 +75,7 @@ public class TreeNode {
                 TreeNode foundNode = find(value, nodeNumber);
                 int numKeys = foundNode.searchKeys.size();
                 if (numKeys == 0) {
-                        return null;
+                        return new Index(foundNode.nodeNumber, -1);
                 }
                 // Check if the primary key is on this page
                 int left = 0;
@@ -91,7 +91,7 @@ public class TreeNode {
                                 left = middle + 1;
                         }
                 }
-                return null;
+                return new Index(foundNode.nodeNumber, -1);
         }
 
         /**

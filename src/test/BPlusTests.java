@@ -70,6 +70,7 @@ public class BPlusTests {
                 root.insert(newId, new Index(num, num));
                 root = table.readNode(0);
                 root.printTree();
+
                 System.out.println("-------------------");
             }
 
@@ -79,6 +80,7 @@ public class BPlusTests {
                 System.out.println("Deleting " + num);
 //                Attribute toDelete = new Attribute(idSchema, num);
                 root.delete(num);
+                root = table.readNode(0);
                 root.printTree();
                 System.out.println("-------------------");
 
