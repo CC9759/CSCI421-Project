@@ -91,8 +91,8 @@ public class TreeNode {
                         divideNode(node);
                 } else {
                         insertToNode(node, value, index, false);
+                        node.writeNode();
                 }
-                node.writeNode();
                 return node;
         }
 
@@ -185,7 +185,7 @@ public class TreeNode {
                         newRightNode.writeNode();
                         node.writeNode();
 
-                } else {
+                } else { // split right, send to parent
                         TreeNode newRightNode = new TreeNode(table, node.isLeaf);
 
                         int lowestNodeSize = (int) Math.ceil(node.searchKeys.size() / 2.0);
@@ -264,7 +264,7 @@ public class TreeNode {
                 else {
                         TreeNode currNode = node;
 
-                        TreeNode parent = table.readNode(nodeNumber);
+                        TreeNode parent = table.readNode(node.parent);
                         int originalNodeIndex = parent.getKeyIndex(node);
 
                         while (currNode != null) {
@@ -641,7 +641,7 @@ public class TreeNode {
                                 }
 
                         }
-                        System.out.print(" ("  +currentNode.nodeNumber + ")");
+                        System.out.print(" ("  +currentNode.nodeNumber + ", " + currentNode.parent + ")");
 
                         if (queue.peek() == newLineQueue.peek()) {
                                 System.out.print("\n");

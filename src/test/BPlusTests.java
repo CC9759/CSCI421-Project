@@ -70,17 +70,16 @@ public class BPlusTests {
                 System.out.println("-------------------");
             }
 
-//            System.out.println("\nDelete testing");
+//            System.out.println("\nDelete testing\n");
 //            int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21 };
-//            for (int i = 0; i < deleteValues.length; i++) {
-//                System.out.println("Tree after deleting value \'" + deleteValues[i] + "\'");
-//                tree.delete(deleteValues[i]);
-//                tree.printTree();
-//                System.out.println();
+//            for (int num : deleteValues) {
+//                System.out.println("Deleting " + num);
+////                Attribute toDelete = new Attribute(idSchema, num);
+//                root.delete(num);
+//                root.printTree();
+//                System.out.println("-------------------");
+//
 //            }
-//            System.out.println("\nLeaf Nodes:");
-//            tree.printLeafs();
-//            tree.printLeafs(1);
 
 
         } catch (Exception e) {
