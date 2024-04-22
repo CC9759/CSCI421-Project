@@ -21,13 +21,27 @@ import java.util.ArrayList;
 
 public class Table {
     public TableSchema schema;
-    public BPlusTree root;
+    public int N;
+    public int numNodes;
 
 
     public Table(TableSchema schema) {
         this.schema = schema;
         this.schema.setNumPages(readNumPages());
-        this.root = new BPlusTree(this);
+
+        AttributeSchema primaryKey = schema.getPrimaryKey();
+        // - 17 for numNodes (4), numIndices(4), isLeaf(1), nextNode(4), parent(4)
+        // 4 + 4 + (keySize) for each node info
+//        System.out.println((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()));
+//        System.out.println((8 + primaryKey.getSize()));
+//        System.out.println((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()) /(8 + primaryKey.getSize()));
+        this.N = Math.floorDiv((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()), (8 + primaryKey.getSize()));
+        this.numNodes = readNumNodes();
+        if (this.numNodes == 0) {
+            TreeNode root = new TreeNode(this, 0, true);
+            root.writeNode();
+            this.numNodes = 1;
+        }
     }
 
 
@@ -260,5 +274,32 @@ public class Table {
             System.err.println(error.getMessage());
         }
         return null;
+    }
+
+    public int readNumNodes() {
+        try {
+            String location = schema.getPageLocation();
+            File file = new File(location);
+
+            if (!file.exists()) {
+                return 0;
+            }
+            long fileSize = file.length();
+            int pageSize = Catalog.getCatalog().getPageSize();
+            int numPages = (int) Math.ceil((double) fileSize / pageSize);
+
+            return numPages;
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return -1;
+        }
+    }
+
+    public int getNumNodes() {
+        return numNodes;
+    }
+
+    public void setNumNodes(int numNodes) {
+        this.numNodes = numNodes;
     }
 }
