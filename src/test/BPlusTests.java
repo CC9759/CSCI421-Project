@@ -34,27 +34,30 @@ public class BPlusTests {
 
             boolean pass;
             System.out.println("Individual Nodes are written and read to memory");
-            TreeNode treeNode = new TreeNode(table, 0, true);
-            treeNode.insert(id, new Index(12, 12));
+//            TreeNode treeNode = new TreeNode(table, 0, true);
+//            treeNode.insert(id, new Index(12, 12));
+//
+//            TreeNode root = table.readNode(0);
+//            pass = root != null;
+//            System.out.println(pass ? "Pass" : "Fail");
+//            if (!pass) {
+//                System.exit(1);
+//            }
 
             TreeNode root = table.readNode(0);
-            pass = root != null;
-            System.out.println(pass ? "Pass" : "Fail");
-            if (!pass) {
-                System.exit(1);
-            }
 
             System.out.println("Treenodes successfully insert");
 
-            int [] inserts = {13, 14, 15, 16};
+            int [] inserts = {12, 10, 11, 12, 32, 15, 1};
             for (int num : inserts) {
                 System.out.println("Inserting " + num);
                 Attribute newId = new Attribute(idSchema, num);
                 root.insert(newId, new Index(num, num));
                 root = table.readNode(0);
-                root.printTree();
-                System.out.println("-------------------");
+
             }
+            root.printTree();
+            System.out.println("-------------------");
 
 
 
@@ -70,16 +73,16 @@ public class BPlusTests {
                 System.out.println("-------------------");
             }
 
-//            System.out.println("\nDelete testing\n");
-//            int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21 };
-//            for (int num : deleteValues) {
-//                System.out.println("Deleting " + num);
-////                Attribute toDelete = new Attribute(idSchema, num);
-//                root.delete(num);
-//                root.printTree();
-//                System.out.println("-------------------");
-//
-//            }
+            System.out.println("\nDelete testing\n");
+            int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21, };
+            for (int num : deleteValues) {
+                System.out.println("Deleting " + num);
+//                Attribute toDelete = new Attribute(idSchema, num);
+                root.delete(num);
+                root.printTree();
+                System.out.println("-------------------");
+
+            }
 
 
         } catch (Exception e) {

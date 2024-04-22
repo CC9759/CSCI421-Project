@@ -107,7 +107,7 @@ public class TreeNode {
                 } else if (node.searchKeys.size() == 1) {
                         if (value.compareTo(node.searchKeys.get(0)) < 0) {
                                 node.addKey(0, value);
-                                node.addIndex(0, index);
+                                node.addIndex(isRight ? 1 : 0, index);
                         } else {
                                 node.addKey(value);
                                 node.addIndex(index);
@@ -214,7 +214,6 @@ public class TreeNode {
 
                         // put newNode in the correct position for parent keys
                         TreeNode parent = table.readNode(node.parent);
-//                        parent.addIndex(parent.getKeyIndex(node) + 1, );
                         // insert the value to the parent node
                         insertToNode(parent, newRightNode.searchKeys.get(0), new Index(newRightNode.nodeNumber, -1), true);
                         if (!newRightNode.isLeaf) {
@@ -434,6 +433,7 @@ public class TreeNode {
                         rightSibling.writeNode();
                         insertToNode(node, borrowedValue, borrowedIndex, true);
                         parent.searchKeys.set(nodeIndex, borrowedValue);
+                        parent.indices.set(nodeIndex - 1, borrowedIndex);
                         parent.writeNode();
                         return true;
                 }
@@ -661,11 +661,13 @@ public class TreeNode {
                 sb.append(String.join(" | ",
                         searchKeys.stream().map(Object::toString).toList()));
 
-                sb.append("\t [");
-                indices.forEach((index)-> {
-                        sb.append("(").append(index.pageNumber).append(", ").append(index.recordPointer).append("),");
-                });
-                sb.append("]");
+//                sb.append("\t [");
+//                indices.forEach((index)-> {
+//                        sb.append("(")
+//                                .append(index.pageNumber).append(", ")
+//                                .append(index.recordPointer).append("),");
+//                });
+//                sb.append("]");
                 System.out.print(sb);
         }
 
