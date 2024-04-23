@@ -83,8 +83,13 @@ public class StorageManager {
 
     }
 
-    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
+    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey, boolean indexing) throws NoTableException {
         Table table = ensureTable(tableId);
+
+        if (Catalog.getCatalog().getIndexing()) {
+            // TODO: get by using index
+            return null;
+        }
         return this.bufferManager.getRecordByPrimaryKey(table, primaryKey);
 
     }
@@ -100,6 +105,10 @@ public class StorageManager {
 
     public Record deleteRecord(int tableId, Attribute primaryKey) throws NoTableException {
         Table table = ensureTable(tableId);
+        if (Catalog.getCatalog().getIndexing()) {
+            // TODO: delete by using index
+            return null;
+        }
         return this.bufferManager.deleteRecord(table, primaryKey);
     }
     public void updateRecord(int tableId, Record record) throws NoTableException, PageOverfullException, DuplicateKeyException {

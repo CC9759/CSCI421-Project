@@ -45,6 +45,15 @@ public class Catalog implements Serializable {
     }
 
     /**
+     * getter for indexing
+     * 
+     * @return boolean flag of indexing
+     */
+    public boolean getIndexing() {
+        return this.indexing;
+    }
+
+    /**
      * Read the Catalogue from file
      * 
      * @param fileLocation the file from where the binary Catalog will be read
