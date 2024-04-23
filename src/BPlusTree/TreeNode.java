@@ -490,7 +490,6 @@ public class TreeNode {
                         leftSibling.writeNode();
                         insertToNode(node, borrowedValue, borrowedIndex, false);
                         parent.searchKeys.set(nodeIndex - 1, borrowedValue);
-                        parent.indices.set(nodeIndex - 1, borrowedIndex);
                         parent.writeNode();
                         return true;
                 }
@@ -505,7 +504,6 @@ public class TreeNode {
                         rightSibling.writeNode();
                         insertToNode(node, borrowedValue, borrowedIndex, true);
                         parent.searchKeys.set(nodeIndex, borrowedValue);
-                        parent.indices.set(nodeIndex - 1, borrowedIndex);
                         parent.writeNode();
                         return true;
                 }
@@ -733,13 +731,13 @@ public class TreeNode {
                 sb.append(String.join(" | ",
                         searchKeys.stream().map(Object::toString).toList()));
 
-                sb.append("\t [");
-                indices.forEach((index)-> {
-                        sb.append("(")
-                                .append(index.pageNumber).append(", ")
-                                .append(index.recordPointer).append("),");
-                });
-                sb.append("]");
+//                sb.append("\t [");
+//                indices.forEach((index)-> {
+//                        sb.append("(")
+//                                .append(index.pageNumber).append(", ")
+//                                .append(index.recordPointer).append("),");
+//                });
+//                sb.append("]");
                 System.out.print(sb);
         }
 
