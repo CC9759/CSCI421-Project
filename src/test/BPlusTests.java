@@ -60,8 +60,6 @@ public class BPlusTests {
             System.out.println("-------------------");
 
 
-
-
             inserts = new int[]{2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19, 22,
                     23, 24, 25, 26, 27, 28, 29, 30, 31};
             for (int num : inserts) {

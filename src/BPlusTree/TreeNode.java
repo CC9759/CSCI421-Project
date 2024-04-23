@@ -9,10 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // These are index pages in hardware
@@ -149,6 +146,31 @@ public class TreeNode {
                 }
                 node.addKey(value); // if its the largest value in the node
                 node.addIndex(index);
+        }
+
+        private void insertToNode(TreeNode node, Attribute value, boolean isRight) {
+                if (node.searchKeys.size() == 0) {
+                        node.addKey(value);
+                        node.writeNode();
+                        return;
+                } else if (node.searchKeys.size() == 1) {
+                        if (value.compareTo(node.searchKeys.get(0)) < 0) {
+                                node.addKey(0, value);
+                        } else {
+                                node.addKey(value);
+                        }
+
+                        node.writeNode();
+                        return;
+                }
+                // code below has potential to insert keys over max limit. dont write yet
+                for (int i = 0; i < node.searchKeys.size(); i++) {
+                        if (value.compareTo(node.searchKeys.get(i)) < 0) {
+                                node.addKey(i, value);
+                                return;
+                        }
+                }
+                node.addKey(value); // if its the largest value in the node
         }
 
         private void divideNode(TreeNode node) throws IllegalOperationException {
@@ -293,6 +315,9 @@ public class TreeNode {
                                 int index = currNode.getValueIndex(value);
                                 if (index > -1) {
                                         currNode.removeKey(index);
+                                        if (currNode.isLeaf) {
+                                                currNode.removeIndex(index);
+                                        }
                                         currNode.writeNode();
                                 }
                                 currNode = table.readNode(currNode.parent);
@@ -311,8 +336,8 @@ public class TreeNode {
          */
         private void fixUnderfull(TreeNode node, int originalNodeIndex) throws IllegalOperationException {
                 TreeNode currNode = node;
-
                 while (currNode.parent != -1) {
+                        currNode = table.readNode(currNode.nodeNumber); // if parent was updated at all during last loop update it here
                         TreeNode parent = table.readNode(currNode.parent);
                         if (currNode.isUnderfull()) {
                                 int nodeIndex = parent.getKeyIndex(currNode);
@@ -324,17 +349,24 @@ public class TreeNode {
                                 int nodeIndex = parent.getKeyIndex(currNode);
                                 mergeNodes(currNode, nodeIndex);
                         } else if (!currNode.isLeaf && currNode.searchKeys.size() < currNode.indices.size() - 1) {
-                                TreeNode toInsert = table.readNode(parent.indices.get(originalNodeIndex).pageNumber);
-                                insertToNode(currNode, toInsert.searchKeys.get(0), toInsert.indices.get(0), false); // fix
+                                TreeNode parentToInsert = table.readNode(node.parent);
+                                TreeNode toInsert = table.readNode(parentToInsert.indices.get(originalNodeIndex).pageNumber); // jeez
+                                insertToNode(currNode, toInsert.searchKeys.get(0), false);
+                                currNode.writeNode();
                         }
                         currNode = parent;
                 }
+                currNode = table.readNode(currNode.nodeNumber);
 
                 // if the root is underfull, then borrow from the leaf node
                 if (currNode.searchKeys.size() < currNode.indices.size() - 1) {
                         TreeNode parent = table.readNode(node.parent);
                         TreeNode toInsert = table.readNode(parent.indices.get(originalNodeIndex).pageNumber);
-                        insertToNode(currNode, toInsert.searchKeys.get(0), toInsert.indices.get(0), false); //fix
+                        if (currNode.isLeaf) { // root is leaf
+                                insertToNode(currNode, toInsert.searchKeys.get(0), toInsert.indices.get(0), false);
+                        } else {
+                                insertToNode(currNode, toInsert.searchKeys.get(0), false);
+                        }
                 }
 
                 // if root and not enough children
@@ -349,6 +381,7 @@ public class TreeNode {
                                 node = null;
                         }
                 }
+                currNode.writeNode();
         }
 
         /**
@@ -366,6 +399,7 @@ public class TreeNode {
 
                         // inner node
                         if (node.nextNode == -1) {
+                                leftSibling.addAllIndices(node.indices);
                                 for (Index pointer : leftSibling.indices) {
                                         TreeNode child = table.readNode(pointer.pageNumber);
                                         child.parent = leftSibling.nodeNumber;
@@ -385,10 +419,14 @@ public class TreeNode {
                 }
                 // merge with right sibling
                 else if (parent.indices.size() > 1 && nodeIndex < parent.indices.size() - 1) {
-                        TreeNode rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);
-                        int rightSiblingOriginalNum = parent.searchKeys.indexOf(rightSibling.searchKeys.get(0));
+                        TreeNode rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);//node.nextnode
+                        int rightSiblingOriginalNum = parent.getValueIndex(rightSibling.searchKeys.get(0).getData());
                         node.addAllKeys(rightSibling.searchKeys);
+                        node.addAllIndices(rightSibling.indices);
                         rightSibling.clearKeys();
+                        rightSibling.clearIndices();
+                        rightSibling.addAllKeys(node.searchKeys);
+                        rightSibling.addAllIndices(node.indices);
 
                         // inner node
                         if (node.nextNode == -1) {
@@ -432,20 +470,28 @@ public class TreeNode {
         private boolean borrowNodes(TreeNode node, int nodeIndex) throws IllegalOperationException {
                 // try borrowing from left
                 TreeNode parent = table.readNode(node.parent);
-                TreeNode leftSibling = table.readNode(parent.indices.get(nodeIndex - 1).pageNumber);
-                TreeNode rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);
-                if (nodeIndex > 0 && leftSibling.searchKeys
+                TreeNode leftSibling = null;
+                TreeNode rightSibling = null;
+                if (nodeIndex != 0) {
+                        leftSibling = table.readNode(parent.indices.get(nodeIndex - 1).pageNumber);
+                }
+                if (nodeIndex != parent.indices.size() - 1) {
+                        rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);
+                }
+
+                if (leftSibling != null && nodeIndex > 0 && leftSibling.searchKeys
                         .size() > (Math.ceil((double) this.table.N / 2.0) - 1)) {
                         Attribute borrowedValue = leftSibling.removeKey(leftSibling.searchKeys.size() - 1);
                         Index borrowedIndex = leftSibling.removeIndex(leftSibling.indices.size() - 1);
                         leftSibling.writeNode();
                         insertToNode(node, borrowedValue, borrowedIndex, false);
                         parent.searchKeys.set(nodeIndex - 1, borrowedValue);
+                        parent.indices.set(nodeIndex - 1, borrowedIndex);
                         parent.writeNode();
                         return true;
                 }
                 // try borrowing from right
-                else if (parent.indices.size() > 1
+                else if (rightSibling != null && parent.indices.size() > 1
                         && nodeIndex < parent.indices.size() - 1
                         && rightSibling.searchKeys
                         .size() > (Math.ceil((double) this.table.N / 2.0) - 1)) {
@@ -683,13 +729,13 @@ public class TreeNode {
                 sb.append(String.join(" | ",
                         searchKeys.stream().map(Object::toString).toList()));
 
-//                sb.append("\t [");
-//                indices.forEach((index)-> {
-//                        sb.append("(")
-//                                .append(index.pageNumber).append(", ")
-//                                .append(index.recordPointer).append("),");
-//                });
-//                sb.append("]");
+                sb.append("\t [");
+                indices.forEach((index)-> {
+                        sb.append("(")
+                                .append(index.pageNumber).append(", ")
+                                .append(index.recordPointer).append("),");
+                });
+                sb.append("]");
                 System.out.print(sb);
         }
 
