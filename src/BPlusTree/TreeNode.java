@@ -400,10 +400,12 @@ public class TreeNode {
                         // inner node
                         if (node.nextNode == -1) {
                                 leftSibling.addAllIndices(node.indices);
-                                for (Index pointer : leftSibling.indices) {
-                                        TreeNode child = table.readNode(pointer.pageNumber);
-                                        child.parent = leftSibling.nodeNumber;
-                                        child.writeNode();
+                                if (!leftSibling.isLeaf) {
+                                        for (Index pointer : leftSibling.indices) {
+                                                TreeNode child = table.readNode(pointer.pageNumber);
+                                                child.parent = leftSibling.nodeNumber;
+                                                child.writeNode();
+                                        }
                                 }
                         }
                         // if leaf node, then we gotta change the nextNode value of the left sibling
@@ -432,10 +434,12 @@ public class TreeNode {
                         if (node.nextNode == -1) {
                                 node.addAllIndices(rightSibling.indices);
                                 rightSibling.clearIndices();
-                                for (Index pointer : node.indices) {
-                                        TreeNode child = table.readNode(pointer.pageNumber);
-                                        child.parent = rightSibling.nodeNumber;
-                                        child.writeNode();
+                                if (!node.isLeaf) {
+                                        for (Index pointer : node.indices) {
+                                                TreeNode child = table.readNode(pointer.pageNumber);
+                                                child.parent = rightSibling.nodeNumber;
+                                                child.writeNode();
+                                        }
                                 }
                         }
                         // if leaf node, then we gotta change the nextNode value of the left sibling
