@@ -17,22 +17,27 @@ import storageManager.Attribute;
 
 public class Main {
     public static void main(String[] args) {
-        if (args.length != 3) {
-            System.err.println("Usage: java Main <dbLoc> <pageSize> <bufferSize>");
+        if (args.length != 4) {
+            System.err.println("Usage: java Main <dbLoc> <pageSize> <bufferSize> <indexing>");
             System.exit(1);
         }
         
         String dbLoc = args[0];
         int pageSize = 0;
         int bufferSize = 0;
+        boolean indexing = false;
         try {
             pageSize = Integer.parseInt(args[1]);
             bufferSize = Integer.parseInt(args[2]);
+
             if (pageSize <= 0) {
                 throw new Exception("Fatal: pageSize parameter must be a positive integer. Aborting.");
             }
             if (bufferSize <= 0) {
                 throw new Exception("Fatal: bufferSize parameter must be a positive integer. Aborting.");
+            }
+            if (args[3].toLowerCase().equals("true")) {
+                indexing = true;
             }
         } catch (NumberFormatException e) {
             System.err.println("Fatal: pageSize and/or bufferSize parameters contain no parseable integers. Aborting.");
@@ -47,7 +52,7 @@ public class Main {
         try {
             Files.createDirectories(Paths.get(dbLoc));
             File dbDirectory = new File(dbLoc);
-            catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize);
+            catalog = Catalog.createCatalog(dbLoc, pageSize, bufferSize, indexing);
             String[] files = dbDirectory.list();
             if (files != null && files.length > 0) {
                 Catalog.readBinary(dbLoc + "/catalog.bin");

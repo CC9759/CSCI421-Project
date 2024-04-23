@@ -11,12 +11,14 @@ public class Catalog implements Serializable {
     private int pageSize;
     private String location;
     private int bufferSize;
+    private boolean indexing;
 
-    private Catalog(String location, int size, int bufferSize) {
+    private Catalog(String location, int size, int bufferSize, boolean indexing) {
         this.location = location;
         this.pageSize = size;
         this.bufferSize = bufferSize;
         this.tables = new ArrayList<TableSchema>();
+        this.indexing = indexing;
         // dbLocation is the file location?
     }
 
@@ -27,9 +29,9 @@ public class Catalog implements Serializable {
      * @param pageSize   size
      * @return
      */
-    public static synchronized Catalog createCatalog(String dbLocation, int pageSize, int bufferSize) {
+    public static synchronized Catalog createCatalog(String dbLocation, int pageSize, int bufferSize, boolean indexing) {
         if (catalogue == null)
-            catalogue = new Catalog(dbLocation, pageSize, bufferSize);
+            catalogue = new Catalog(dbLocation, pageSize, bufferSize, indexing);
         return catalogue;
     }
 
