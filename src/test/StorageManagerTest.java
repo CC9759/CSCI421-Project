@@ -20,7 +20,7 @@ class StorageManagerTest {
     public static void main(String[] args) {
         final int PAGE_SIZE = 300;
         final int BUFFER_SIZE = 5;
-        Catalog catalog = Catalog.createCatalog("./dbtest/", PAGE_SIZE, BUFFER_SIZE);
+        Catalog catalog = Catalog.createCatalog("./dbtest/", PAGE_SIZE, BUFFER_SIZE, false);
         try {
             AttributeType idType = new AttributeType("integer");
             AttributeType nameType = new AttributeType(AttributeType.TYPE.VARCHAR, 32);

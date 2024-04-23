@@ -70,6 +70,16 @@ public class Main {
         // Initialize Storage Manager
         StorageManager.InitStorageManager(bufferSize);
 
+        if (!catalog.getIndexing() && indexing) {
+            System.out.println("Turning on indexing");
+            boolean success = StorageManager.GetStorageManager().turnOnIndexing();
+            if (!success) {
+                System.out.println("Failed to index. Aborting");
+                System.exit(1);
+            }
+        }
+
+
         System.out.println("DB location: " + catalog.getLocation());
         System.out.println("Page size: " + catalog.getPageSize());
         System.out.println("Buffer size: " + catalog.getBufferSize());

@@ -723,6 +723,37 @@ public class TreeNode {
                 }
         }
 
+        public void getAllLeaves(List<TreeNode> nodes) throws IllegalOperationException {
+                Queue<Integer> queue = new LinkedList<Integer>();
+                Queue<Integer> newLineQueue = new LinkedList<Integer>();
+                TreeNode currentNode = this;
+                // add all the leftmost nodes to get the new lines
+                while (currentNode.isLeaf == false && currentNode.indices.size() != 0) {
+                        newLineQueue.add(currentNode.nodeNumber);
+                        currentNode = table.readNode(currentNode.indices.get(0).pageNumber);
+                }
+                newLineQueue.add(currentNode.nodeNumber); // add the leaf node
+                newLineQueue.poll(); // remove the root so there is no \n in before the root
+
+                queue.add(this.nodeNumber);
+                while (!queue.isEmpty()) { // later change to currentNode.isLeaf == false
+
+                        currentNode = table.readNode(queue.poll());
+                        if (currentNode.isLeaf) {
+                                nodes.add(currentNode);
+                        }
+                        if (!currentNode.isLeaf) {
+                                for (Index index : currentNode.indices) {
+                                        queue.add(index.pageNumber);
+                                }
+
+                        }
+                        if (queue.peek() == newLineQueue.peek()) {
+                                newLineQueue.poll();
+                        }
+                }
+        }
+
         /**
          * function to print the values contained in a TreeNode
          */
@@ -739,6 +770,14 @@ public class TreeNode {
 //                });
 //                sb.append("]");
                 System.out.print(sb);
+        }
+
+        public List<Attribute> getSearchKeys() {
+                return searchKeys;
+        }
+
+        public List<Index> getIndices() {
+                return indices;
         }
 
 }

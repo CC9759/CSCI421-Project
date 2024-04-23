@@ -7,7 +7,10 @@ package storageManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import BPlusTree.Index;
 import Exceptions.DuplicateKeyException;
+import Exceptions.IllegalOperationException;
 import Exceptions.NoTableException;
 import Exceptions.PageOverfullException;
 import catalog.TableSchema;
@@ -83,7 +86,7 @@ public class StorageManager {
 
     }
 
-    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey, boolean indexing) throws NoTableException {
+    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
         Table table = ensureTable(tableId);
 
         if (Catalog.getCatalog().getIndexing()) {
@@ -166,5 +169,24 @@ public class StorageManager {
     // For test class use only
     public HashMap<Integer, Table> getIdToTable() {
         return idToTable;
+    }
+
+    public boolean turnOnIndexing() {
+        Catalog.getCatalog().setIndexing(true);
+        try {
+            for (Table table: idToTable.values()) {
+                for (int i = 0; i < table.getNumPages(); i++) {
+                    Page page = getPage(table.schema.getTableId(), i);
+                    var records = page.getRecords();
+                    for (int j = 0; j < records.size(); j++) {
+                        table.insertNode(records.get(i).getPrimaryKey(), new Index(page.getPageId(), i));
+                    }
+                }
+            }
+        } catch (NoTableException | IllegalOperationException nte) {
+            System.err.println(nte.getMessage());
+            return false;
+        }
+        return true;
     }
 }
