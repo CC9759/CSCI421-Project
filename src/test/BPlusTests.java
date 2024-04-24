@@ -61,7 +61,6 @@ public class BPlusTests {
                 var sk = leaves.get(i).getSearchKeys();
                 var index = leaves.get(i).getIndices();
                 for (int j = 0; j < sk.size(); j++) {
-                    System.out.println(sk.get(j).getData() + "  " +  newList.get(listIndex));
                     pass = pass && (sk.get(j).getData().equals(newList.get(listIndex))) && (newList.get(listIndex).equals(index.get(j).recordPointer));
                     listIndex++;
                 }
@@ -77,11 +76,26 @@ public class BPlusTests {
             for (int num : deleteValues) {
                 System.out.println("Deleting " + num);
 //                Attribute toDelete = new Attribute(idSchema, num);
-                root.delete(num);
-                root = table.readNode(0);
-                root.printTree();
-                System.out.println("-------------------");
+                table.deleteNode(num);
+                newList.remove(Integer.valueOf(num));
+            }
 
+            leaves.clear();
+            root.getAllLeaves(leaves);
+            pass = true;
+            listIndex = 0;
+            for (int i = 0; i < leaves.size(); i++) {
+                var sk = leaves.get(i).getSearchKeys();
+                var index = leaves.get(i).getIndices();
+                for (int j = 0; j < sk.size(); j++) {
+                    pass = pass && (sk.get(j).getData().equals(newList.get(listIndex))) && (newList.get(listIndex).equals(index.get(j).recordPointer));
+                    listIndex++;
+                }
+            }
+
+            System.out.println(pass ? "Pass" : "Fail");
+            if (!pass) {
+                System.exit(1);
             }
 
 
