@@ -61,6 +61,7 @@ public class BPlusTests {
                 var sk = leaves.get(i).getSearchKeys();
                 var index = leaves.get(i).getIndices();
                 for (int j = 0; j < sk.size(); j++) {
+                    System.out.println(newList.get(listIndex) + " " + sk.get(j).getData());
                     pass = pass && (sk.get(j).getData().equals(newList.get(listIndex))) && (newList.get(listIndex).equals(index.get(j).recordPointer));
                     listIndex++;
                 }

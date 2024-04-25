@@ -125,11 +125,14 @@ class StorageManagerTest {
                 testRecord = new Record(attributes);
                 storageManager.insertRecord(0, testRecord);
             }
+            System.out.println("N:" + table.N);
+            table.readNode(0).printTree();
             for (int i = 0; i < 500; i++) {
                 System.out.println("delete " + i);
 
                 id = new Attribute(idSchema, i);
                 Record delete = storageManager.deleteRecord(0, id);
+                table.readNode(0).printTree();
                 if (delete == null) {
                     System.out.println("FAILED TO DELETE RECORD " + i);
                     System.exit(1);

@@ -348,11 +348,48 @@ public class TreeNode {
                                 int nodeIndex = parent.getKeyIndex(currNode);
                                 boolean borrowSucess = borrowNodes(currNode, nodeIndex, valueAlreadyRemoved);
                                 if (!borrowSucess) {
-                                        mergeNodes(currNode, nodeIndex, valueAlreadyRemoved);
+                                        int mergedIntoId  = mergeNodes(currNode, nodeIndex, valueAlreadyRemoved);
+                                        if (!currNode.isLeaf) {
+                                                TreeNode mergedInto = table.readNode(mergedIntoId);
+                                                for (int i = 0; i < mergedInto.searchKeys.size(); i++) {
+                                                        TreeNode child = table.readNode(mergedInto.indices.get(i + 1).pageNumber);
+                                                        mergedInto.searchKeys.set(i, child.searchKeys.getFirst());
+
+                                                }
+                                                mergedInto.writeNode();
+                                        }
+
+                                }
+                                if (!currNode.isLeaf) {
+                                        System.out.println(currNode.searchKeys.size());
+//                                        for (int i = 0; i < currNode.searchKeys.size(); i++) {
+//                                                TreeNode child = table.readNode(currNode.indices.get(i + 1).pageNumber);
+//                                                System.out.println("Set " + currNode.searchKeys.get(i) + " to " + child.searchKeys.getFirst());
+//                                                currNode.searchKeys.set(i, child.searchKeys.getFirst());
+//
+//                                        }
+//                                        currNode.writeNode();
                                 }
                         } else if (!currNode.isLeaf && currNode.isChildless()) {
                                 int nodeIndex = parent.getKeyIndex(currNode);
-                                mergeNodes(currNode, nodeIndex, valueAlreadyRemoved);
+                                int mergedIntoId  = mergeNodes(currNode, nodeIndex, valueAlreadyRemoved);
+                                if (!currNode.isLeaf) {
+                                        TreeNode mergedInto = table.readNode(mergedIntoId);
+                                        for (int i = 0; i < mergedInto.searchKeys.size(); i++) {
+                                                TreeNode child = table.readNode(mergedInto.indices.get(i + 1).pageNumber);
+                                                mergedInto.searchKeys.set(i, child.searchKeys.getFirst());
+
+                                        }
+                                        mergedInto.writeNode();
+                                }
+//                                if (nodeIndex == 0) { // left most search key should have values lower than it
+//                                        var child = table.readNode(currNode.indices.get(0).pageNumber);
+//                                        currNode.searchKeys.set(0, child.searchKeys.getLast());
+//                                        System.out.println("removing " + currNode.searchKeys.get(0));
+//                                        currNode.removeKey(0);
+//                                        fixUnderfull(currNode, 0, valueAlreadyRemoved);
+//                                        mergeNodes(currNode, nodeIndex, valueAlreadyRemoved);
+//                                }
                         } else if (!currNode.isLeaf && currNode.searchKeys.size() < currNode.indices.size() - 1) {
                                 TreeNode parentToInsert = table.readNode(node.parent);
                                 TreeNode toInsert = table.readNode(parentToInsert.indices.get(originalNodeIndex).pageNumber); // jeez
@@ -390,7 +427,7 @@ public class TreeNode {
                         currNode.clearKeys();
                         currNode.addAllKeys(onlyChild.searchKeys);
                         currNode.parent = -1;
-                        currNode.writeNode();
+                        currNode.isLeaf = true;
                 }
                 currNode.writeNode();
         }
@@ -401,14 +438,18 @@ public class TreeNode {
          * @param node the current node to be merged
          * @return whether the operation is successful
          */
-        private boolean mergeNodes(TreeNode node, int nodeIndex, HashMap<Integer, Boolean> valueAlreadyRemoved) throws IllegalOperationException {
+        private int mergeNodes(TreeNode node, int nodeIndex, HashMap<Integer, Boolean> valueAlreadyRemoved) throws IllegalOperationException {
                 // merge with left sibling
                 TreeNode parent = table.readNode(node.parent);
-                if (nodeIndex > 0) {
+                TreeNode leftSibling = null, rightSibling = null;
+                if (nodeIndex > 0) leftSibling = table.readNode(parent.indices.get(nodeIndex - 1).pageNumber);
+                if (parent.indices.size() > 1 && nodeIndex < parent.indices.size() - 1) {
+                        rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);
+                }
+                // when I do size checking it may leave the node unable to merge or borrow
+                if (leftSibling != null && leftSibling.searchKeys.size() + node.searchKeys.size() < table.N) {
                         System.out.println("MERGED LEFT");
-                        TreeNode leftSibling = table.readNode(parent.indices.get(nodeIndex - 1).pageNumber);
                         leftSibling.addAllKeys(node.searchKeys);
-
                         leftSibling.addAllIndices(node.indices);
                         // inner node
                         if (node.nextNode == -1) {
@@ -434,13 +475,12 @@ public class TreeNode {
                         }
                         parent.writeNode();
 
-                        return true;
+                        return leftSibling.nodeNumber;
                 }
                 // merge with right sibling
-                else if (parent.indices.size() > 1 && nodeIndex < parent.indices.size() - 1) {
+                else if (rightSibling != null && rightSibling.searchKeys.size() + node.searchKeys.size() < table.N) {
                         System.out.println("MERGED RIGHT");
 
-                        TreeNode rightSibling = table.readNode(parent.indices.get(nodeIndex + 1).pageNumber);//node.nextnode
                         int rightSiblingOriginalNum = parent.getValueIndex(rightSibling.searchKeys.get(0).getData());
                         if (rightSiblingOriginalNum == -1) {
                                 int index = 0;
@@ -460,7 +500,6 @@ public class TreeNode {
                         rightSibling.clearIndices();
                         rightSibling.addAllKeys(node.searchKeys);
                         rightSibling.addAllIndices(node.indices);
-                        node.addAllIndices(rightSibling.indices);
                         // inner node
                         if (node.nextNode == -1) {
                                 if (!node.isLeaf) {
@@ -485,18 +524,25 @@ public class TreeNode {
                         rightSibling.writeNode();
                         parent.removeIndex(nodeIndex);
 //                        if (rightSiblingOriginalNum != -1) {
-                        if (checkChildless(parent.indices.size(), table)) { // parent will be merged later. wont remove
+                        if (checkChildless(parent.indices.size(), table) && parent.parent != -1) { // UNLESS FOR ROOT FIXparent will be merged later. wont remove
                                 parent.searchKeys.set(rightSiblingOriginalNum, rightSibling.searchKeys.get(0));
-                        }  else {
+                        }
+                        else if (parent.indices.size() == parent.searchKeys.size() &&
+                                parent.searchKeys.size() != 1 &&
+                                parent.parent == -1) {
+                                parent.removeKey(rightSiblingOriginalNum);
+                                System.out.println("removed from root: " + rightSiblingOriginalNum);
+                        }
+                        else if (parent.parent != -1){
                                 parent.removeKey(rightSiblingOriginalNum);
                         }
 //                        }
 
                         parent.writeNode();
-                        return true;
+                        return rightSibling.nodeNumber;
                 }
 
-                return false;
+                return -1;
         }
 
         /**
@@ -534,7 +580,7 @@ public class TreeNode {
                         && nodeIndex < parent.indices.size() - 1
                         && rightSibling.searchKeys
                         .size() > (Math.ceil((double) this.table.N / 2.0) - 1)) {
-                        System.out.println("BORROWED LEFT");
+                        System.out.println("BORROWED RIGHT");
 
                         Attribute borrowedValue = rightSibling.removeKey(0);
                         Index borrowedIndex = rightSibling.removeIndex(0);
@@ -542,9 +588,9 @@ public class TreeNode {
                         rightSibling.writeNode();
                         insertToNode(node, borrowedValue, borrowedIndex, false);
                         if (valueAlreadyRemoved.get(parent.nodeNumber)) {
-                                parent.searchKeys.set(nodeIndex - 1, borrowedValue);
+                                parent.searchKeys.set(nodeIndex - 1, rightSibling.searchKeys.get(0));
                         } else {
-                                parent.searchKeys.set(nodeIndex, borrowedValue);
+                                parent.searchKeys.set(nodeIndex, rightSibling.searchKeys.get(0));
                         }
 
                         parent.writeNode();

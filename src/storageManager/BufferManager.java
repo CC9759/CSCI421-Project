@@ -87,12 +87,13 @@ public class BufferManager {
     public Record deleteRecord(Table table, Attribute primaryKey, Index index) throws NoTableException, IllegalOperationException {
         if (Catalog.getCatalog().getIndexing()) {
             Page page = getPage(table, index.pageNumber);
-            page.deleteRecord(index.recordPointer);
+            Record deleted = page.deleteRecord(index.recordPointer);
             table.deleteNode(primaryKey.getData());
             page.updateIndices(table, index.recordPointer);
             if (page.getRecords().isEmpty()) {
                 handleEmptyPageRemoval(table, page);
             }
+            return deleted;
         } else {
             for (int i = 0; i < table.getNumPages(); i++) {
                 Page page = this.getPage(table, i);
