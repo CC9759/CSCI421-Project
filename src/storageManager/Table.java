@@ -30,11 +30,6 @@ public class Table {
         this.schema.setNumPages(readNumPages());
 
         AttributeSchema primaryKey = schema.getPrimaryKey();
-        // - 17 for numNodes (4), numIndices(4), isLeaf(1), nextNode(4), parent(4)
-        // 4 + 4 + (keySize) for each node info
-//        System.out.println((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()));
-//        System.out.println((8 + primaryKey.getSize()));
-//        System.out.println((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()) /(8 + primaryKey.getSize()));
         this.N = Math.floorDiv((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()), (8 + primaryKey.getSize()));
         this.numNodes = readNumNodes();
         if (this.numNodes == 0) {
@@ -304,13 +299,14 @@ public class Table {
         this.numNodes = numNodes;
     }
 
-    // Find the index of a primary key. If not found, find the page it should be inserted
+    // Find the index of a primary key. If not found, find the node it should be inserted (indicdated with -1 as recordpointer)
     public Index findIndex(Object value) throws IllegalOperationException {
         TreeNode root = readNode(0);
         return root.findIndex(value);
     }
 
     // insert a primary key. prepropulate the index so use findIndex and where on the page it is
+    // handle null on read node
     public TreeNode insertNode(Attribute attribute, Index index) throws IllegalOperationException {
         TreeNode root = readNode(0);
         return root.insert(attribute, index);
@@ -320,5 +316,10 @@ public class Table {
     public boolean deleteNode(Object value) throws IllegalOperationException {
         TreeNode root = readNode(0);
         return root.delete(value);
+    }
+
+    public void updateNode(Attribute attribute, Index index) throws IllegalOperationException {
+        deleteNode(attribute.getData());
+        insertNode(attribute, index);
     }
 }

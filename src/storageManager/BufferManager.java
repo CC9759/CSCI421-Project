@@ -5,7 +5,11 @@
  */
 package storageManager;
 
+import BPlusTree.Index;
+import Exceptions.IllegalOperationException;
 import Exceptions.NoTableException;
+import catalog.Catalog;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -33,9 +37,14 @@ public class BufferManager {
         return page;
     }
 
-    public void insertRecord(Page insertPage, Record record, int index) {
+    public void insertRecord(Table table, Page insertPage, Record record, int insertIndex) {
         try {
-            insertPage.insertRecord(record, index);
+            insertPage.insertRecord(record, insertIndex);
+            // On insert, create an index and update all those shifted to the right
+            if (Catalog.getCatalog().getIndexing()) {
+                table.insertNode(record.getPrimaryKey(), new Index(insertPage.getPageId(), insertIndex));
+                insertPage.updateIndices(table, insertIndex);
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -75,16 +84,27 @@ public class BufferManager {
         this.buffer = new ArrayList<Page>();
     }
 
-    public Record deleteRecord(Table table, Attribute primaryKey) throws NoTableException {
-        for (int i = 0; i < table.getNumPages(); i++) {
-            Page page = this.getPage(table, i);
-            int recordIndex = page.getRecordByKey(primaryKey);
-            if (recordIndex != -1) {
-                Record deleted = page.deleteRecord(recordIndex);
-                if (page.getRecords().size() == 0) {
-                    handleEmptyPageRemoval(table, page);
+    public Record deleteRecord(Table table, Attribute primaryKey, Index index) throws NoTableException, IllegalOperationException {
+        if (Catalog.getCatalog().getIndexing()) {
+            Page page = getPage(table, index.pageNumber);
+            page.deleteRecord(index.recordPointer);
+            table.deleteNode(primaryKey.getData());
+            page.updateIndices(table, index.recordPointer);
+            if (page.getRecords().isEmpty()) {
+                handleEmptyPageRemoval(table, page);
+            }
+        } else {
+            for (int i = 0; i < table.getNumPages(); i++) {
+                Page page = this.getPage(table, i);
+                int recordIndex = page.getRecordByKey(primaryKey);
+                if (recordIndex != -1) {
+                    Record deleted = page.deleteRecord(recordIndex);
+                    page.updateIndices(table, recordIndex);
+                    if (page.getRecords().size() == 0) {
+                        handleEmptyPageRemoval(table, page);
+                    }
+                    return deleted;
                 }
-                return deleted;
             }
         }
         return null; 
@@ -108,16 +128,20 @@ public class BufferManager {
      * @param removedPageId id of the new page
      * @throws NoTableException No table of tableId
      */
-    public void updatePageNumbers(Table table, int removedPageId, int change) {
+    public void updatePageNumbers(Table table, int removedPageId, int change) throws IllegalOperationException {
         if (change > 0) {
             // start from the end to avoid duplicate IDs in buffer at one time
             for (int i = table.getNumPages() - 1; i >= removedPageId; i--) {
-                getPage(table, i).updatePageNumber(change);
+                Page page = getPage(table, i);
+                page.updatePageNumber(change);
+                page.updateIndices(table, 0);
             }
         } else {
             // start from the beginning to avoid duplicate IDs in buffer at one time
             for (int i = removedPageId + 1; i < table.getNumPages(); i++) {
-                getPage(table, i).updatePageNumber(change);
+                Page page = getPage(table, i);
+                page.updatePageNumber(change);
+                page.updateIndices(table, 0);
             }
         }
 
@@ -133,7 +157,7 @@ public class BufferManager {
         return -1;
     }
 
-    private void handleEmptyPageRemoval(Table table, Page page) throws NoTableException {
+    private void handleEmptyPageRemoval(Table table, Page page) throws NoTableException, IllegalOperationException {
         int toRemove = this.getIndexInBuffer(page.getPageId());
         if (toRemove != -1) {
             this.buffer.remove(toRemove);

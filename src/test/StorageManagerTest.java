@@ -20,7 +20,7 @@ class StorageManagerTest {
     public static void main(String[] args) {
         final int PAGE_SIZE = 300;
         final int BUFFER_SIZE = 5;
-        Catalog catalog = Catalog.createCatalog("./dbtest/", PAGE_SIZE, BUFFER_SIZE, false);
+        Catalog catalog = Catalog.createCatalog("./dbtest/", PAGE_SIZE, BUFFER_SIZE, true);
         try {
             AttributeType idType = new AttributeType("integer");
             AttributeType nameType = new AttributeType(AttributeType.TYPE.VARCHAR, 32);
@@ -118,6 +118,7 @@ class StorageManagerTest {
 
             System.out.println("Storage manager should be able to mass insert and delete records");
             for (int i = 0; i < 500; i++) {
+                System.out.println("insert " + i);
                 id = new Attribute(idSchema, i);
                 name = new Attribute(nameSchema, "dot" + i);
                 attributes = new ArrayList<>(Arrays.asList(id, name));
@@ -125,6 +126,8 @@ class StorageManagerTest {
                 storageManager.insertRecord(0, testRecord);
             }
             for (int i = 0; i < 500; i++) {
+                System.out.println("delete " + i);
+
                 id = new Attribute(idSchema, i);
                 Record delete = storageManager.deleteRecord(0, id);
                 if (delete == null) {
@@ -200,6 +203,8 @@ class StorageManagerTest {
         } finally {
             File testTable = new File("./dbtest/0.bin");
             testTable.delete();
+            File testIndex = new File("./dbtest/0-index.bin");
+            testIndex.delete();
         }
 
     }

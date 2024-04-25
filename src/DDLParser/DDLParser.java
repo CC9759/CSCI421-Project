@@ -75,7 +75,7 @@ public class DDLParser {
      *
      * @param tableName the name of the Table to drop
      */
-    public void dropTable(Catalog catalog, String tableName) throws NoTableException {
+    public void dropTable(Catalog catalog, String tableName) throws NoTableException, IllegalOperationException {
         deleteAllRecords(tableName);
         catalog.removeTableSchema(tableName);
     }
@@ -93,7 +93,7 @@ public class DDLParser {
      */
     public void alterTable(Catalog catalog, String tableName, String argument)
             throws InsufficientArgumentException, InvalidTypeException, PageOverfullException, NoTableException,
-            DuplicateKeyException {
+            DuplicateKeyException, IllegalOperationException {
         String[] attributes = argument.split(" ");
         String keyWord = attributes[0];
         TableSchema tableSchema = catalog.getTableSchema(tableName);
@@ -137,7 +137,7 @@ public class DDLParser {
     }
 
     private void updateAttributes(String tableName, AttributeSchema attributeSchema, String defaultValue, String action)
-            throws NoTableException, PageOverfullException, DuplicateKeyException {
+            throws NoTableException, PageOverfullException, DuplicateKeyException, IllegalOperationException {
         var storageManager = StorageManager.GetStorageManager();
         var tableId = Catalog.getCatalog().getTableSchema(tableName).getTableId();
         var allRecords = storageManager.getAllRecords(tableId);
@@ -157,7 +157,7 @@ public class DDLParser {
         }
     }
 
-    private void deleteAllRecords(String tableName) throws NoTableException {
+    private void deleteAllRecords(String tableName) throws NoTableException, IllegalOperationException {
         var storageManager = StorageManager.GetStorageManager();
         var tableId = Catalog.getCatalog().getTableSchema(tableName).getTableId();
         var allRecords = storageManager.getAllRecords(tableId);

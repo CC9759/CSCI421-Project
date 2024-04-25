@@ -75,9 +75,10 @@ public class BPlusTests {
             int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21, };
             for (int num : deleteValues) {
                 System.out.println("Deleting " + num);
-//                Attribute toDelete = new Attribute(idSchema, num);
                 table.deleteNode(num);
                 newList.remove(Integer.valueOf(num));
+                table.readNode(0).printTree();
+//                table.readNode(0).printTree();
             }
 
             leaves.clear();
@@ -88,6 +89,7 @@ public class BPlusTests {
                 var sk = leaves.get(i).getSearchKeys();
                 var index = leaves.get(i).getIndices();
                 for (int j = 0; j < sk.size(); j++) {
+                    System.out.println(newList.get(listIndex) + " " + sk.get(j).getData());
                     pass = pass && (sk.get(j).getData().equals(newList.get(listIndex))) && (newList.get(listIndex).equals(index.get(j).recordPointer));
                     listIndex++;
                 }
@@ -97,6 +99,14 @@ public class BPlusTests {
             if (!pass) {
                 System.exit(1);
             }
+
+            System.out.println("deleting all");
+            for (int i = 0; i < inserts.length; i++) {
+                System.out.println("Deleting " + inserts[i]);
+                table.deleteNode(inserts[i]);
+                table.readNode(0).printTree();
+            }
+            table.readNode(0).printTree();
 
 
         } catch (Exception e) {

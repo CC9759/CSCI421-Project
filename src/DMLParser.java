@@ -591,6 +591,8 @@ public class DMLParser {
         } catch (PageOverfullException | NoTableException | DuplicateKeyException error) {
             System.err.println(error.getMessage());
             return false;
+        } catch (IllegalOperationException e) {
+            throw new RuntimeException(e.getMessage());
         }
 
         return true;

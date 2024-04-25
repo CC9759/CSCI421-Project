@@ -5,6 +5,7 @@
  */
 package storageManager;
 
+import BPlusTree.Index;
 import Exceptions.IllegalOperationException;
 import Exceptions.PageOverfullException;
 import java.io.ByteArrayOutputStream;
@@ -89,16 +90,18 @@ public class Page {
         this.update();
     }
 
-    public Page splitPage() throws PageOverfullException {
+    public Page splitPage(Table table) throws PageOverfullException, IllegalOperationException {
         int middle = records.size() / 2;
         // Slice the second half of the records in the page
         ArrayList<Record> newPageRecords = new ArrayList<>(records.subList(middle, records.size()));
         records.subList(middle, records.size()).clear();
         this.update();
+        this.updateIndices(table, 0);
 
         // Insert the second half of the records into the new page
         Page newPage = new Page(this.tableId, this.pageId + 1, this.pageSize, newPageRecords);
         newPage.update();
+        newPage.updateIndices(table, 0);
         return newPage;
     }
 
@@ -141,6 +144,13 @@ public class Page {
     public int getHeaderSize() {
         // Page ID | numberofslots | end of free space | slots (position | length)[]
         return 4 + 4 + 4 + (8 * records.size());
+    }
+
+    public void updateIndices(Table table, int updateStart) throws IllegalOperationException {
+        for (int i = updateStart; i < records.size(); i++) {
+            Attribute key = records.get(i).getPrimaryKey();
+            table.updateNode(key, new Index(getPageId(), i));
+        }
     }
 
     public byte[] serializePage() throws IOException, IllegalOperationException {

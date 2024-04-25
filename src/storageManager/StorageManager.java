@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import BPlusTree.Index;
+import BPlusTree.TreeNode;
 import Exceptions.DuplicateKeyException;
 import Exceptions.IllegalOperationException;
 import Exceptions.NoTableException;
@@ -45,12 +46,29 @@ public class StorageManager {
         return bufferManager.getPage(table, pageNumber);
     }
 
-    public void insertRecord(int tableId, Record record) throws PageOverfullException, NoTableException, DuplicateKeyException {
+    public void insertRecord(int tableId, Record record) throws PageOverfullException, NoTableException, DuplicateKeyException, IllegalOperationException {
         Table table = ensureTable(tableId);
         if (table.getNumPages() == 0) {
             Page newPage = table.createPage();
             bufferManager.addToBuffer(table, newPage);
-            bufferManager.insertRecord(newPage, record, 0);
+            bufferManager.insertRecord(table, newPage, record, 0);
+            return;
+        }
+        if (Catalog.getCatalog().getIndexing()) {
+            var existing = getRecordByPrimaryKey(tableId, record.getPrimaryKey());
+            if (existing != null) throw new DuplicateKeyException(record.getPrimaryKey());
+            // Find node it should be inserted in. since it doesnt exist, index.pagenumber will be a node number
+            Index index = table.findIndex(record.getPrimaryKey().getData());
+            int insertPage = findInsertPosition(table, index.pageNumber, record);
+            if (insertPage == -1) { // largest value found,
+                insertPage = table.getNumPages() - 1;
+            }
+            Page page = bufferManager.getPage(table, insertPage);
+            int insertPos = findInsertPosition(page, record);
+            if (insertPos == -1 && page.getPageId() == table.getNumPages() - 1) { // page id is the node number
+                insertPos = page.getRecords().size();
+            }
+            handleSplit(record, table, page, insertPos);
             return;
         }
     
@@ -62,36 +80,43 @@ public class StorageManager {
                 insertPos = page.getRecords().size();
             }
             if (insertPos != -1) {
-                if (page.canInsertRecord(record)) {
-                    bufferManager.insertRecord(page, record, insertPos);
-                } else {
-                    Page newPage = page.splitPage();
-                    bufferManager.updatePageNumbers(table, newPage.getPageId(), 1);
-                    bufferManager.addToBuffer(table, newPage);
-                    insertPos = findInsertPosition(page, record);
-                    if (insertPos == -1) {
-                        insertPos = findInsertPosition(newPage, record);
-                        if (insertPos == -1) {
-                            insertPos = newPage.getRecords().size();
-                        }
-                        bufferManager.insertRecord(newPage, record, insertPos);
-                    } else {
-                        bufferManager.insertRecord(page, record, insertPos);
-                    }
-
-                }
+                handleSplit(record, table, page, insertPos);
                 return;
             }
         }
 
     }
 
-    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException {
+    private void handleSplit(Record record, Table table, Page page, int insertPos) throws PageOverfullException, IllegalOperationException, DuplicateKeyException {
+        if (page.canInsertRecord(record)) {
+            bufferManager.insertRecord(table, page, record, insertPos);
+        } else {
+            Page newPage = page.splitPage(table);
+            bufferManager.updatePageNumbers(table, newPage.getPageId(), 1);
+            bufferManager.addToBuffer(table, newPage);
+            insertPos = findInsertPosition(page, record);
+            if (insertPos == -1) {
+                insertPos = findInsertPosition(newPage, record);
+                if (insertPos == -1) {
+                    insertPos = newPage.getRecords().size();
+                }
+                bufferManager.insertRecord(table, newPage, record, insertPos);
+            } else {
+                bufferManager.insertRecord(table, page, record, insertPos);
+            }
+        }
+    }
+
+    public Record getRecordByPrimaryKey(int tableId, Attribute primaryKey) throws NoTableException, IllegalOperationException {
         Table table = ensureTable(tableId);
 
         if (Catalog.getCatalog().getIndexing()) {
-            // TODO: get by using index
-            return null;
+            Index index = table.findIndex(primaryKey.getData());
+            if (index.recordPointer == -1) { // not found
+                return null;
+            }
+            Page page = this.bufferManager.getPage(table, index.pageNumber);
+            return page.getRecords().get(index.recordPointer);
         }
         return this.bufferManager.getRecordByPrimaryKey(table, primaryKey);
 
@@ -106,15 +131,20 @@ public class StorageManager {
         return result;
     }
 
-    public Record deleteRecord(int tableId, Attribute primaryKey) throws NoTableException {
+    public Record deleteRecord(int tableId, Attribute primaryKey) throws NoTableException, IllegalOperationException {
         Table table = ensureTable(tableId);
+        Index index = null;
         if (Catalog.getCatalog().getIndexing()) {
-            // TODO: delete by using index
-            return null;
+            var record = getRecordByPrimaryKey(tableId, primaryKey);
+            if (record == null) {
+                return null;
+            }
+            // Since the record exists, index will be a page number
+            index = table.findIndex(primaryKey.getData());
         }
-        return this.bufferManager.deleteRecord(table, primaryKey);
+        return this.bufferManager.deleteRecord(table, primaryKey, index);
     }
-    public void updateRecord(int tableId, Record record) throws NoTableException, PageOverfullException, DuplicateKeyException {
+    public void updateRecord(int tableId, Record record) throws NoTableException, PageOverfullException, DuplicateKeyException, IllegalOperationException {
         deleteRecord(tableId, record.getPrimaryKey());
         insertRecord(tableId, record);
     }
@@ -151,6 +181,17 @@ public class StorageManager {
 
     public void flushBuffer() {
         this.bufferManager.flush(this.idToTable);
+    }
+
+    private int findInsertPosition(Table table, int nodeNumber, Record record) throws DuplicateKeyException, IllegalOperationException {
+        TreeNode node = table.readNode(nodeNumber);
+        var sks = node.getSearchKeys();
+        for (int i = 0; i < sks.size(); i++) {
+            if (sks.get(i).compareTo(record.getPrimaryKey()) > 0) {
+                return node.getIndices().get(i).pageNumber;
+            }
+        }
+        return -1;
     }
 
     private int findInsertPosition(Page page, Record record) throws DuplicateKeyException {

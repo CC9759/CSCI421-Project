@@ -220,7 +220,7 @@ public class Main {
             ddlParser.alterTable(catalog, tableName, allConstraints);
         } catch (InsufficientArgumentException | InvalidTypeException e) {
             System.err.println(e.getMessage());
-        } catch (PageOverfullException | NoTableException | DuplicateKeyException e) {
+        } catch (PageOverfullException | NoTableException | DuplicateKeyException | IllegalOperationException e) {
             throw new RuntimeException(e);
         }
     }
