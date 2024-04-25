@@ -24,6 +24,9 @@ public class StorageManager {
     private static StorageManager storageManager;
     private HashMap<Integer, Table> idToTable;
 
+    // for debugging
+    private boolean verbose = false;
+
     public StorageManager(int bufferSize) {
         if (storageManager == null) {
             this.bufferManager = new BufferManager(bufferSize);
@@ -42,6 +45,10 @@ public class StorageManager {
     }
 
     public Page getPage(int tableNumber, int pageNumber) throws NoTableException {
+
+        if (verbose) 
+            System.out.println("Reading Page Number: " + Integer.toString(pageNumber));
+
         Table table = ensureTable(tableNumber);
         return bufferManager.getPage(table, pageNumber);
     }
