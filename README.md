@@ -11,4 +11,4 @@ Database Project for CSCI 421
 ## How to Run
 1. cd ./src/
 2. javac *.java
-3. java Main [dbPath (string)]  [pageSize (int)]  [bufferSize (int)]
+3. java Main [dbPath (string)]  [pageSize (int)]  [bufferSize (int)] [indexing (bool)]

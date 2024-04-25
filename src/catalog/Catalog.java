@@ -53,6 +53,11 @@ public class Catalog implements Serializable {
         return this.indexing;
     }
 
+    /**
+     * setter for indexing
+     * 
+     * @param indexing the new val for indexing
+     */
     public void setIndexing(boolean indexing) {
         this.indexing = indexing;
     }
