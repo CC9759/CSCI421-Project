@@ -8,6 +8,7 @@ package storageManager;
 import BPlusTree.Index;
 import Exceptions.IllegalOperationException;
 import Exceptions.PageOverfullException;
+import catalog.Catalog;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -96,12 +97,16 @@ public class Page {
         ArrayList<Record> newPageRecords = new ArrayList<>(records.subList(middle, records.size()));
         records.subList(middle, records.size()).clear();
         this.update();
-        this.updateIndices(table, 0);
+        if (Catalog.getCatalog().getIndexing()) {
+            this.updateIndices(table, 0);
+        }
 
         // Insert the second half of the records into the new page
         Page newPage = new Page(this.tableId, this.pageId + 1, this.pageSize, newPageRecords);
         newPage.update();
-        newPage.updateIndices(table, 0);
+        if (Catalog.getCatalog().getIndexing()) {
+            newPage.updateIndices(table, 0);
+        }
         return newPage;
     }
 

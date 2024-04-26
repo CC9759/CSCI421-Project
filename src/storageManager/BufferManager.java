@@ -100,7 +100,6 @@ public class BufferManager {
                 int recordIndex = page.getRecordByKey(primaryKey);
                 if (recordIndex != -1) {
                     Record deleted = page.deleteRecord(recordIndex);
-                    page.updateIndices(table, recordIndex);
                     if (page.getRecords().size() == 0) {
                         handleEmptyPageRemoval(table, page);
                     }

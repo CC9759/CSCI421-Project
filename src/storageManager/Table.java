@@ -31,6 +31,12 @@ public class Table {
 
         AttributeSchema primaryKey = schema.getPrimaryKey();
         this.N = Math.floorDiv((Catalog.getCatalog().getPageSize() - getNodeHeaderSpace()), (8 + primaryKey.getSize()));
+        if (Catalog.getCatalog().getIndexing()) {
+            ensureIndex();
+        }
+    }
+
+    public void ensureIndex() {
         this.numNodes = readNumNodes();
         if (this.numNodes == 0) {
             TreeNode root = new TreeNode(this, 0, true);
@@ -116,7 +122,6 @@ public class Table {
 
     public Page readPage(int pageNumber) {
         try {
-            System.out.println("Reading page " + pageNumber);
             String location = schema.getPageLocation();
             RandomAccessFile file = new RandomAccessFile(location, "r");
 
@@ -275,7 +280,7 @@ public class Table {
 
     public int readNumNodes() {
         try {
-            String location = schema.getPageLocation();
+            String location = schema.getNodeLocation();
             File file = new File(location);
 
             if (!file.exists()) {

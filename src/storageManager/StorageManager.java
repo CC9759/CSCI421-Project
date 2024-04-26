@@ -220,9 +220,11 @@ public class StorageManager {
     }
 
     public boolean turnOnIndexing() {
+        System.out.println("Creating indices for existing records in all tables...");
         Catalog.getCatalog().setIndexing(true);
         try {
             for (Table table: idToTable.values()) {
+                table.ensureIndex();
                 for (int i = 0; i < table.getNumPages(); i++) {
                     Page page = getPage(table.schema.getTableId(), i);
                     var records = page.getRecords();
@@ -235,6 +237,7 @@ public class StorageManager {
             System.err.println(nte.getMessage());
             return false;
         }
+        System.out.println("Success");
         return true;
     }
 }

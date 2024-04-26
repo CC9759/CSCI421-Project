@@ -36,7 +36,7 @@ public class BPlusTests {
 
             System.out.println("Treenodes successfully insert");
 
-            int [] inserts = {12, 10, 11, 12, 32, 15, 1, 2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19, 22,
+            int[] inserts = {12, 10, 11, 12, 32, 15, 1, 2, 4, 21, 17, 5, 6, 7, 8, 1, 10, 11, 12, 9, 14, 3, 16, 15, 13, 18, 20, 19, 22,
                     23, 24, 25, 26, 27, 28, 29, 30, 31};
             for (int num : inserts) {
                 System.out.println("Inserting " + num);
@@ -73,13 +73,12 @@ public class BPlusTests {
             }
 
             System.out.println("\nDelete testing\n");
-            int[] deleteValues = { 8, 9, 10, 11, 30, 31, 32, 21, };
+            int[] deleteValues = {8, 9, 10, 11, 30, 31, 32, 21,};
             for (int num : deleteValues) {
                 System.out.println("Deleting " + num);
                 table.deleteNode(num);
                 newList.remove(Integer.valueOf(num));
                 table.readNode(0).printTree();
-//                table.readNode(0).printTree();
             }
 
             leaves.clear();
@@ -119,24 +118,14 @@ public class BPlusTests {
 
     }
 
-    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list)
-    {
-
-        // Create a new ArrayList
+    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {
         ArrayList<T> newList = new ArrayList<T>();
 
-        // Traverse through the first list
         for (T element : list) {
-
-            // If this element is not present in newList
-            // then add it
             if (!newList.contains(element)) {
-
                 newList.add(element);
             }
         }
-
-        // return the new list
         return newList;
     }
 }

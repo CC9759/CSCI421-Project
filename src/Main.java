@@ -121,13 +121,7 @@ public class Main {
                         alterTableParser(ddlParser, catalog, commands);
                         break;
                     case "insert":
-                        System.out.println("beginning");
-                        long startTime = System.nanoTime();
                         insertParser(dmlParser, input);
-                        long endTime = System.nanoTime();
-                        long duration = (endTime - startTime);
-                        double seconds = (double)duration / 1_000_000_000.0;
-                        System.out.println("Elapsed time: " + seconds + " seconds");
                         break;
                     case "display":
                         if(commands[1].equals("info") && commands.length > 2){
