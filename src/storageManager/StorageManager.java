@@ -227,7 +227,7 @@ public class StorageManager {
                     Page page = getPage(table.schema.getTableId(), i);
                     var records = page.getRecords();
                     for (int j = 0; j < records.size(); j++) {
-                        table.insertNode(records.get(i).getPrimaryKey(), new Index(page.getPageId(), i));
+                        table.insertNode(records.get(j).getPrimaryKey(), new Index(page.getPageId(), j));
                     }
                 }
             }
