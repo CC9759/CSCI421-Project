@@ -853,7 +853,9 @@ public class TreeNode {
         public void printValues() {
                 StringBuilder sb = new StringBuilder();
                 sb.append(String.join(" | ",
-                        searchKeys.stream().map(Object::toString).toList()));
+                        searchKeys.stream()
+                                .map(Object::toString)
+                                .collect(Collectors.toList())));
 
 //                sb.append("\t [");
 //                indices.forEach((index)-> {
