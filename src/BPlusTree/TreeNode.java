@@ -353,7 +353,7 @@ public class TreeNode {
                                                 TreeNode mergedInto = table.readNode(mergedIntoId);
                                                 for (int i = 0; i < mergedInto.searchKeys.size(); i++) {
                                                         TreeNode child = table.readNode(mergedInto.indices.get(i + 1).pageNumber);
-                                                        mergedInto.searchKeys.set(i, child.searchKeys.getFirst());
+                                                        mergedInto.searchKeys.set(i, child.searchKeys.get(0));
 
                                                 }
                                                 mergedInto.writeNode();
@@ -377,7 +377,7 @@ public class TreeNode {
                                         TreeNode mergedInto = table.readNode(mergedIntoId);
                                         for (int i = 0; i < mergedInto.searchKeys.size(); i++) {
                                                 TreeNode child = table.readNode(mergedInto.indices.get(i + 1).pageNumber);
-                                                mergedInto.searchKeys.set(i, child.searchKeys.getFirst());
+                                                mergedInto.searchKeys.set(i, child.searchKeys.get(0));
 
                                         }
                                         mergedInto.writeNode();
