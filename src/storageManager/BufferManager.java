@@ -8,6 +8,7 @@ package storageManager;
 import BPlusTree.Index;
 import Exceptions.IllegalOperationException;
 import Exceptions.NoTableException;
+import Exceptions.PageOverfullException;
 import catalog.Catalog;
 
 import java.util.ArrayList;
@@ -45,8 +46,11 @@ public class BufferManager {
                 table.insertNode(record.getPrimaryKey(), new Index(insertPage.getPageId(), insertIndex));
                 insertPage.updateIndices(table, insertIndex);
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        } catch (IndexOutOfBoundsException ioobe) {
+            System.out.println(ioobe.getMessage());
+            System.err.println("Failed to find position to put into indexed page");
+        } catch(IllegalOperationException | PageOverfullException ilo) {
+            System.err.println(ilo.getMessage());
         }
     }
 

@@ -72,7 +72,7 @@ public class StorageManager {
             }
             Page page = bufferManager.getPage(table, insertPage);
             int insertPos = findInsertPosition(page, record);
-            if (insertPos == -1 && page.getPageId() == table.getNumPages() - 1) { // page id is the node number
+            if (insertPos == -1) { // page id is the node number
                 insertPos = page.getRecords().size();
             }
             handleSplit(record, table, page, insertPos);
