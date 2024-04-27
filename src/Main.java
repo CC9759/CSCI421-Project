@@ -83,6 +83,7 @@ public class Main {
         System.out.println("DB location: " + catalog.getLocation());
         System.out.println("Page size: " + catalog.getPageSize());
         System.out.println("Buffer size: " + catalog.getBufferSize());
+        System.out.println("Indexing: " + catalog.getIndexing());
         
         Scanner scanner = new Scanner(System.in);
         //allows us to use non-static methods

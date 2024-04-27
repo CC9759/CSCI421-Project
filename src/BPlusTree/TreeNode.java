@@ -67,6 +67,12 @@ public class TreeNode {
         return find(value, node.indices.get(node.searchKeys.size()).pageNumber);
     }
 
+    /**
+     * Find the index of a record or the page it should be on
+     * @param value primary key
+     * @return index the record is on
+     * @throws IllegalOperationException
+     */
     public Index findIndex(Object value) throws IllegalOperationException {
         TreeNode foundNode = find(value, nodeNumber);
         int numKeys = foundNode.searchKeys.size();
@@ -596,25 +602,6 @@ public class TreeNode {
         return num < Math.floor((double) table.N / 2.0) + 1;
     }
 
-    public void writeNode() {
-        if (!this.wasUpdated) return;
-        try {
-            String location = table.schema.getNodeLocation();
-            Catalog catalog = Catalog.getCatalog();
-            RandomAccessFile file = new RandomAccessFile(location, "rw");
-            long offset = getNodeNumber() * Catalog.getCatalog().getPageSize();
-            byte[] nodeData = serializeNode();
-            if (nodeData.length != catalog.getPageSize()) {
-                throw new IllegalOperationException("Tried to write index page of size " + nodeData.length + " bytes which is not the defined page size");
-            }
-            file.seek(offset);
-            file.write(nodeData);
-            file.close();
-        } catch (IOException | IllegalOperationException error) {
-            System.err.println(error.getMessage());
-        }
-    }
-
     private boolean contains(Object attribute) {
         for (Attribute attr : this.searchKeys) {
             if (Attribute.compareTo(attr.getData(), attribute) == 0) {
@@ -739,6 +726,28 @@ public class TreeNode {
         }
         dos.flush();
         return baos.toByteArray();
+    }
+
+    /**
+     * Write a node to file
+     */
+    public void writeNode() {
+        if (!this.wasUpdated) return;
+        try {
+            String location = table.schema.getNodeLocation();
+            Catalog catalog = Catalog.getCatalog();
+            RandomAccessFile file = new RandomAccessFile(location, "rw");
+            long offset = getNodeNumber() * Catalog.getCatalog().getPageSize();
+            byte[] nodeData = serializeNode();
+            if (nodeData.length != catalog.getPageSize()) {
+                throw new IllegalOperationException("Tried to write index page of size " + nodeData.length + " bytes which is not the defined page size");
+            }
+            file.seek(offset);
+            file.write(nodeData);
+            file.close();
+        } catch (IOException | IllegalOperationException error) {
+            System.err.println(error.getMessage());
+        }
     }
 
     public int getNodeNumber() {
